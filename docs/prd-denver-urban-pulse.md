@@ -7,7 +7,7 @@
 | **Project** | Denver Urban Pulse |
 | **Type** | Public BI dashboard / portfolio project |
 | **Version** | v1.0 |
-| **Status** | Pre-approved — clarifying questions welcome before implementation |
+| **Status** | Approved |
 | **Design reference** | `docs/design/denver-urban-pulse-design.pen` (Overview page) |
 | **Language** | Documentation — Russian; product UI — English |
 
