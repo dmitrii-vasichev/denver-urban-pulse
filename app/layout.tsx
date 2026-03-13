@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Sans, Geist } from "next/font/google";
+import { IBM_Plex_Sans } from "next/font/google";
 import "./globals.css";
-import { cn } from "@/lib/utils";
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+const ibmPlexSans = IBM_Plex_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-sans",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Denver Urban Pulse",
@@ -17,8 +21,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={cn("font-sans", geist.variable)}>
-      <body className={`${geist.variable} antialiased`}>{children}</body>
+    <html lang="en">
+      <body className={`${ibmPlexSans.variable} antialiased`}>{children}</body>
     </html>
   );
 }

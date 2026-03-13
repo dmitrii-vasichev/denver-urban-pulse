@@ -11,7 +11,11 @@ Public BI dashboard built on live Denver open data (crime, traffic crashes, 311 
 - Deploy: Vercel (frontend), Railway (database + cron)
 
 ## Commands
-To be defined after framework initialization.
+- `npm run dev` — start dev server (Turbopack)
+- `npm run build` — production build
+- `npm run lint` — ESLint
+- `npm test` — Jest tests
+- `npm start` — start production server
 
 ## Rules
 - Follow workflow: PRD → Design → Phases → Plan → Issues → Code → Review

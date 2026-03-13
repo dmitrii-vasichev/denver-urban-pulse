@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  /* Color Palette — Design Brief */
+  /* Design Brief — Color Palette */
   --color-text-primary: #102A43;
   --color-text-secondary: #52667A;
   --color-text-muted: #627D98;
@@ -13,8 +13,6 @@
   --color-bg-page: #F4F6F8;
   --color-bg-card: #FFFFFF;
   --color-bg-subtle: #EEF3F8;
-
-  --color-border: #DDE3EA;
 
   --color-accent-blue: #0B4F8C;
   --color-accent-blue-light: #E9F2FF;
@@ -32,87 +30,44 @@
   --color-warning-border: #F1D9B6;
   --color-warning-text: #7C3E00;
 
-  /* Typography */
-  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
-
   /* Layout */
   --radius-card: 14px;
   --shadow-card: 0 2px 6px #102A4310;
 }
 
-body {
-  font-family: var(--font-sans);
-  background-color: var(--color-bg-page);
-  color: var(--color-text-primary);
-}
-
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.809 0.105 251.813);
-  --chart-2: oklch(0.623 0.214 259.815);
-  --chart-3: oklch(0.546 0.245 262.881);
-  --chart-4: oklch(0.488 0.243 264.376);
-  --chart-5: oklch(0.424 0.199 265.638);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
-
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.809 0.105 251.813);
-  --chart-2: oklch(0.623 0.214 259.815);
-  --chart-3: oklch(0.546 0.245 262.881);
-  --chart-4: oklch(0.488 0.243 264.376);
-  --chart-5: oklch(0.424 0.199 265.638);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: #F4F6F8;
+  --foreground: #102A43;
+  --card: #FFFFFF;
+  --card-foreground: #102A43;
+  --popover: #FFFFFF;
+  --popover-foreground: #102A43;
+  --primary: #0B4F8C;
+  --primary-foreground: #FFFFFF;
+  --secondary: #EEF3F8;
+  --secondary-foreground: #102A43;
+  --muted: #EEF3F8;
+  --muted-foreground: #627D98;
+  --accent: #E9F2FF;
+  --accent-foreground: #0B4F8C;
+  --destructive: #DC3545;
+  --border: #DDE3EA;
+  --input: #DDE3EA;
+  --ring: #0B4F8C;
+  --chart-1: #2458C6;
+  --chart-2: #D97904;
+  --chart-3: #198754;
+  --chart-4: #0B4F8C;
+  --chart-5: #163A5D;
+  --radius: 0.875rem;
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #102A43;
+  --sidebar-primary: #0B4F8C;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #E9F2FF;
+  --sidebar-accent-foreground: #0B4F8C;
+  --sidebar-border: #DDE3EA;
+  --sidebar-ring: #0B4F8C;
 }
 
 @theme inline {
@@ -162,9 +117,6 @@ body {
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
-  }
-  html {
-    @apply font-sans;
+    @apply bg-background text-foreground font-sans;
   }
 }
