@@ -1,0 +1,28 @@
+import type { Metadata } from "next";
+import { IBM_Plex_Sans } from "next/font/google";
+import "./globals.css";
+
+const ibmPlexSans = IBM_Plex_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-sans",
+  display: "swap",
+});
+
+export const metadata: Metadata = {
+  title: "Denver Urban Pulse",
+  description:
+    "Public analytical dashboard built on live Denver open data — crime, traffic crashes, 311 requests, and air quality.",
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en">
+      <body className={`${ibmPlexSans.variable} antialiased`}>{children}</body>
+    </html>
+  );
+}
