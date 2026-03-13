@@ -5,7 +5,7 @@ Set up the project infrastructure: frontend framework, database, data source val
 
 ## Tasks
 
-### Task 1: Initialize Next.js application
+### Task 1: Initialize Next.js application — Issue #1
 **Description:** Create a Next.js 14+ project with TypeScript, Tailwind CSS, and shadcn/ui. Configure the project structure per PRD Section 24. Set up IBM Plex Sans font. Configure ESLint and basic Tailwind theme with design brief colors.
 
 **Files:**
@@ -27,7 +27,7 @@ Set up the project infrastructure: frontend framework, database, data source val
 
 ---
 
-### Task 2: Set up PostgreSQL on Railway
+### Task 2: Set up PostgreSQL on Railway — Issue #2
 **Description:** Create a PostgreSQL instance on Railway. Configure connection string as environment variable. Create a database connection utility in the Next.js app. Verify connectivity.
 
 **Files:**
@@ -46,7 +46,7 @@ Set up the project infrastructure: frontend framework, database, data source val
 
 ---
 
-### Task 3: Validate Denver Open Data APIs
+### Task 3: Validate Denver Open Data APIs — Issue #3
 **Description:** Write validation scripts that confirm each Denver Open Data endpoint is accessible, returns expected fields, and supports the required query patterns. Document the exact API URLs, field names, and any quirks discovered. Test both ArcGIS REST API and direct download methods.
 
 **Sources to validate:**
@@ -71,7 +71,7 @@ Set up the project infrastructure: frontend framework, database, data source val
 
 ---
 
-### Task 4: Validate AirNow API
+### Task 4: Validate AirNow API — Issue #4
 **Description:** Obtain and test the AirNow API key. Confirm that the API returns AQI data for Denver metro monitoring stations. Document response format, rate limits, and available historical depth.
 
 **Files:**
@@ -88,7 +88,7 @@ Set up the project infrastructure: frontend framework, database, data source val
 
 ---
 
-### Task 5: Design and create database schema
+### Task 5: Design and create database schema — Issue #5
 **Description:** Create the full three-layer database schema (raw → staging → marts). Write SQL migration scripts. Include the canonical neighborhood mapping table. All 9 mart tables from PRD Section 10.3.
 
 **Schema layers:**
@@ -116,7 +116,7 @@ Set up the project infrastructure: frontend framework, database, data source val
 
 ---
 
-### Task 6: Build ingestion scripts (raw layer)
+### Task 6: Build ingestion scripts (raw layer) — Issue #6
 **Description:** Write Python scripts to fetch data from each source and store in raw tables. Each script handles one data source. Include error handling, logging, and partial failure tolerance (one source failing doesn't block others).
 
 **Files:**
