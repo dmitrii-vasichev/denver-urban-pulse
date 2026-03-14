@@ -51,13 +51,13 @@ LEFT JOIN (
            SUM(CASE WHEN src = '311' THEN 1 ELSE 0 END) AS r311
     FROM (
         SELECT neighborhood, 'crime' AS src FROM stg_crime
-        WHERE reported_date >= CURRENT_DATE - %(days)s AND neighborhood IS NOT NULL
+        WHERE reported_date >= (NOW() AT TIME ZONE 'America/Denver')::date - %(days)s AND neighborhood IS NOT NULL
         UNION ALL
         SELECT neighborhood, 'crashes' FROM stg_crashes
-        WHERE reported_date >= CURRENT_DATE - %(days)s AND neighborhood IS NOT NULL
+        WHERE reported_date >= (NOW() AT TIME ZONE 'America/Denver')::date - %(days)s AND neighborhood IS NOT NULL
         UNION ALL
         SELECT neighborhood, '311' FROM stg_311
-        WHERE case_created_date >= CURRENT_DATE - %(days)s AND neighborhood IS NOT NULL
+        WHERE case_created_date >= (NOW() AT TIME ZONE 'America/Denver')::date - %(days)s AND neighborhood IS NOT NULL
     ) cur_all
     GROUP BY neighborhood
 ) cur ON cur.neighborhood = n.nbhd_name
@@ -68,18 +68,18 @@ LEFT JOIN (
            SUM(CASE WHEN src = '311' THEN 1 ELSE 0 END) AS r311
     FROM (
         SELECT neighborhood, 'crime' AS src FROM stg_crime
-        WHERE reported_date >= CURRENT_DATE - %(days)s * 2
-          AND reported_date < CURRENT_DATE - %(days)s
+        WHERE reported_date >= (NOW() AT TIME ZONE 'America/Denver')::date - %(days)s * 2
+          AND reported_date < (NOW() AT TIME ZONE 'America/Denver')::date - %(days)s
           AND neighborhood IS NOT NULL
         UNION ALL
         SELECT neighborhood, 'crashes' FROM stg_crashes
-        WHERE reported_date >= CURRENT_DATE - %(days)s * 2
-          AND reported_date < CURRENT_DATE - %(days)s
+        WHERE reported_date >= (NOW() AT TIME ZONE 'America/Denver')::date - %(days)s * 2
+          AND reported_date < (NOW() AT TIME ZONE 'America/Denver')::date - %(days)s
           AND neighborhood IS NOT NULL
         UNION ALL
         SELECT neighborhood, '311' FROM stg_311
-        WHERE case_created_date >= CURRENT_DATE - %(days)s * 2
-          AND case_created_date < CURRENT_DATE - %(days)s
+        WHERE case_created_date >= (NOW() AT TIME ZONE 'America/Denver')::date - %(days)s * 2
+          AND case_created_date < (NOW() AT TIME ZONE 'America/Denver')::date - %(days)s
           AND neighborhood IS NOT NULL
     ) prev_all
     GROUP BY neighborhood

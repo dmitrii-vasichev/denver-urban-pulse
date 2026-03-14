@@ -27,7 +27,7 @@ SELECT
     COUNT(*),
     NOW()
 FROM stg_crime
-WHERE reported_date >= CURRENT_DATE - %(days)s
+WHERE reported_date >= (NOW() AT TIME ZONE 'America/Denver')::date - %(days)s
 GROUP BY
     EXTRACT(ISODOW FROM reported_date AT TIME ZONE 'America/Denver'),
     EXTRACT(HOUR FROM reported_date AT TIME ZONE 'America/Denver')
@@ -43,7 +43,7 @@ SELECT
     COUNT(*),
     NOW()
 FROM stg_crashes
-WHERE reported_date >= CURRENT_DATE - %(days)s
+WHERE reported_date >= (NOW() AT TIME ZONE 'America/Denver')::date - %(days)s
 GROUP BY
     EXTRACT(ISODOW FROM reported_date AT TIME ZONE 'America/Denver'),
     EXTRACT(HOUR FROM reported_date AT TIME ZONE 'America/Denver')
@@ -59,7 +59,7 @@ SELECT
     COUNT(*),
     NOW()
 FROM stg_311
-WHERE case_created_date >= CURRENT_DATE - %(days)s
+WHERE case_created_date >= (NOW() AT TIME ZONE 'America/Denver')::date - %(days)s
 GROUP BY
     EXTRACT(ISODOW FROM case_created_date AT TIME ZONE 'America/Denver'),
     EXTRACT(HOUR FROM case_created_date AT TIME ZONE 'America/Denver')
