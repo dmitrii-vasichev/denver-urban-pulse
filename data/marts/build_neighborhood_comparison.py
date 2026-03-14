@@ -25,13 +25,13 @@ SELECT
     %(period)s AS period,
     n.nbhd_name AS neighborhood,
     CASE WHEN n.shape_area > 0
-         THEN ROUND((COALESCE(cur.crime, 0)::numeric / n.shape_area) * 1000000, 4)
+         THEN ROUND((COALESCE(cur.crime, 0)::numeric / n.shape_area::numeric * 1000000)::numeric, 4)
          ELSE 0 END,
     CASE WHEN n.shape_area > 0
-         THEN ROUND((COALESCE(cur.crashes, 0)::numeric / n.shape_area) * 1000000, 4)
+         THEN ROUND((COALESCE(cur.crashes, 0)::numeric / n.shape_area::numeric * 1000000)::numeric, 4)
          ELSE 0 END,
     CASE WHEN n.shape_area > 0
-         THEN ROUND((COALESCE(cur.r311, 0)::numeric / n.shape_area) * 1000000, 4)
+         THEN ROUND((COALESCE(cur.r311, 0)::numeric / n.shape_area::numeric * 1000000)::numeric, 4)
          ELSE 0 END,
     CASE WHEN COALESCE(prev.crime, 0) > 0
          THEN ROUND(((COALESCE(cur.crime, 0) - prev.crime)::numeric / prev.crime * 100)::numeric, 1)
