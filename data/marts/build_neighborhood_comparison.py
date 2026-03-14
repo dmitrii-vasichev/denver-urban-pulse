@@ -34,13 +34,13 @@ SELECT
          THEN ROUND((COALESCE(cur.r311, 0)::numeric / n.shape_area) * 1000000, 4)
          ELSE 0 END,
     CASE WHEN COALESCE(prev.crime, 0) > 0
-         THEN ROUND(((COALESCE(cur.crime, 0) - prev.crime)::numeric / prev.crime) * 100, 1)
+         THEN ROUND(((COALESCE(cur.crime, 0) - prev.crime)::numeric / prev.crime * 100)::numeric, 1)
          ELSE NULL END,
     CASE WHEN COALESCE(prev.crashes, 0) > 0
-         THEN ROUND(((COALESCE(cur.crashes, 0) - prev.crashes)::numeric / prev.crashes) * 100, 1)
+         THEN ROUND(((COALESCE(cur.crashes, 0) - prev.crashes)::numeric / prev.crashes * 100)::numeric, 1)
          ELSE NULL END,
     CASE WHEN COALESCE(prev.r311, 0) > 0
-         THEN ROUND(((COALESCE(cur.r311, 0) - prev.r311)::numeric / prev.r311) * 100, 1)
+         THEN ROUND(((COALESCE(cur.r311, 0) - prev.r311)::numeric / prev.r311 * 100)::numeric, 1)
          ELSE NULL END,
     NOW()
 FROM stg_neighborhoods n
