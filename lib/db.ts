@@ -8,7 +8,7 @@ const pool = new Pool({
   connectionTimeoutMillis: 5_000,
 });
 
-export async function query<T extends Record<string, unknown>>(
+export async function query<T extends object>(
   text: string,
   params?: unknown[]
 ): Promise<T[]> {
