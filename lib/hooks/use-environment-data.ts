@@ -17,6 +17,7 @@ interface EnvironmentData {
   narrative: NarrativeData | null;
   loading: boolean;
   error: string | null;
+  retry: () => void;
 }
 
 async function fetchJson<T>(url: string): Promise<T> {
@@ -31,7 +32,7 @@ export function useEnvironmentData(
   timeWindow: TimeWindow,
   neighborhood: string
 ): EnvironmentData {
-  const [data, setData] = useState<EnvironmentData>({
+  const [data, setData] = useState<Omit<EnvironmentData, "retry">>({
     aqi: { current: null, trend: [] },
     rankings: [],
     comparison: [],
@@ -78,5 +79,5 @@ export function useEnvironmentData(
     fetchAll();
   }, [fetchAll]);
 
-  return data;
+  return { ...data, retry: fetchAll };
 }
