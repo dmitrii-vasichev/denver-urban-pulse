@@ -25,6 +25,21 @@ describe("KpiCard", () => {
     expect(screen.getByText("+5.2%")).toBeInTheDocument();
   });
 
+  it("renders dash for null value", () => {
+    render(
+      <KpiCard title="Crime" value={null} color="#2458C6" />
+    );
+    expect(screen.getByText("Crime")).toBeInTheDocument();
+    expect(screen.getByText("—")).toBeInTheDocument();
+  });
+
+  it("renders dash for undefined value", () => {
+    render(
+      <KpiCard title="Crime" value={undefined} color="#2458C6" />
+    );
+    expect(screen.getByText("—")).toBeInTheDocument();
+  });
+
   it("renders loading skeleton", () => {
     const { container } = render(
       <KpiCard title="Crime" value={0} color="#2458C6" loading={true} />

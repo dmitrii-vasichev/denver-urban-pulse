@@ -10,7 +10,7 @@ interface KpiCardProps {
   title: string;
   tag?: string;
   secondaryTag?: string;
-  value: number;
+  value: number | null | undefined;
   delta?: number;
   deltaPercent?: number;
   sparklineData?: ChartPoint[];
