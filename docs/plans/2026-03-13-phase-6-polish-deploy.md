@@ -25,7 +25,7 @@ Final phase: polish the UI for all breakpoints, handle data edge cases gracefull
 
 ## Tasks
 
-### Task 1: Empty states for charts and data components
+### Task 1: Empty states for charts and data components — #78
 
 **Description:** Add graceful empty state handling to all chart components and pages when API returns empty arrays or null values.
 
@@ -64,7 +64,7 @@ Final phase: polish the UI for all breakpoints, handle data edge cases gracefull
 
 ---
 
-### Task 2: Tablet responsive layout (768–1279px)
+### Task 2: Tablet responsive layout (768–1279px) — #79
 
 **Description:** Add a collapsed sidebar mode for tablet breakpoints per design brief requirements. Currently the sidebar is hidden below xl (1280px) and replaced by a mobile drawer. Tablet should show a narrow icon-only sidebar.
 
@@ -97,7 +97,7 @@ Final phase: polish the UI for all breakpoints, handle data edge cases gracefull
 
 ---
 
-### Task 3: Mobile spacing and filter refinements
+### Task 3: Mobile spacing and filter refinements — #80
 
 **Description:** Refine mobile layout spacing, filter controls, and typography for screens under 768px.
 
@@ -128,7 +128,7 @@ Final phase: polish the UI for all breakpoints, handle data edge cases gracefull
 
 ---
 
-### Task 4: Error state improvements
+### Task 4: Error state improvements — #81
 
 **Description:** Enhance error states with retry functionality and more descriptive messages.
 
@@ -156,7 +156,7 @@ Final phase: polish the UI for all breakpoints, handle data edge cases gracefull
 
 ---
 
-### Task 5: Next.js configuration and performance optimization
+### Task 5: Next.js configuration and performance optimization — #82
 
 **Description:** Configure next.config.ts for production and optimize bundle/assets.
 
@@ -187,7 +187,7 @@ Final phase: polish the UI for all breakpoints, handle data edge cases gracefull
 
 ---
 
-### Task 6: Production deployment configuration
+### Task 6: Production deployment configuration — #83
 
 **Description:** Add Vercel deployment configuration and verify Railway pipeline is production-ready.
 
@@ -220,7 +220,7 @@ Final phase: polish the UI for all breakpoints, handle data edge cases gracefull
 
 ---
 
-### Task 7: Final QA — build, lint, tests, visual check
+### Task 7: Final QA — build, lint, tests, visual check — #84
 
 **Description:** Run comprehensive QA: all tests, lint, build, and visual inspection of both pages with live data.
 
