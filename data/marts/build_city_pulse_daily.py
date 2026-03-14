@@ -27,32 +27,32 @@ SELECT
     COALESCE(ca.fatalities, 0),
     NOW()
 FROM (
-    SELECT reported_date::date AS date FROM stg_crime
+    SELECT (reported_date AT TIME ZONE 'America/Denver')::date AS date FROM stg_crime
     UNION
-    SELECT reported_date::date AS date FROM stg_crashes
+    SELECT (reported_date AT TIME ZONE 'America/Denver')::date AS date FROM stg_crashes
     UNION
-    SELECT case_created_date::date AS date FROM stg_311
+    SELECT (case_created_date AT TIME ZONE 'America/Denver')::date AS date FROM stg_311
 ) d
 LEFT JOIN (
-    SELECT reported_date::date AS date,
+    SELECT (reported_date AT TIME ZONE 'America/Denver')::date AS date,
            COUNT(*) AS crime_count,
            SUM(victim_count) AS victim_count
     FROM stg_crime
-    GROUP BY reported_date::date
+    GROUP BY (reported_date AT TIME ZONE 'America/Denver')::date
 ) cr ON cr.date = d.date
 LEFT JOIN (
-    SELECT reported_date::date AS date,
+    SELECT (reported_date AT TIME ZONE 'America/Denver')::date AS date,
            COUNT(*) AS crash_count,
            SUM(seriously_injured) AS serious_injuries,
            SUM(fatalities) AS fatalities
     FROM stg_crashes
-    GROUP BY reported_date::date
+    GROUP BY (reported_date AT TIME ZONE 'America/Denver')::date
 ) ca ON ca.date = d.date
 LEFT JOIN (
-    SELECT case_created_date::date AS date,
+    SELECT (case_created_date AT TIME ZONE 'America/Denver')::date AS date,
            COUNT(*) AS requests_count
     FROM stg_311
-    GROUP BY case_created_date::date
+    GROUP BY (case_created_date AT TIME ZONE 'America/Denver')::date
 ) r ON r.date = d.date
 ON CONFLICT (date) DO UPDATE SET
     crime_count = EXCLUDED.crime_count,

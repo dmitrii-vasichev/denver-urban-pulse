@@ -17,37 +17,37 @@ INSERT INTO mart_incident_trends (date, domain, category, count, updated_at)
 
 -- Crime by offense_category
 SELECT
-    reported_date::date AS date,
+    (reported_date AT TIME ZONE 'America/Denver')::date AS date,
     'crime' AS domain,
     COALESCE(offense_category, 'Unknown') AS category,
     COUNT(*) AS count,
     NOW()
 FROM stg_crime
-GROUP BY reported_date::date, offense_category
+GROUP BY (reported_date AT TIME ZONE 'America/Denver')::date, offense_category
 
 UNION ALL
 
 -- Crashes by top_offense
 SELECT
-    reported_date::date AS date,
+    (reported_date AT TIME ZONE 'America/Denver')::date AS date,
     'crashes' AS domain,
     COALESCE(top_offense, 'Unknown') AS category,
     COUNT(*) AS count,
     NOW()
 FROM stg_crashes
-GROUP BY reported_date::date, top_offense
+GROUP BY (reported_date AT TIME ZONE 'America/Denver')::date, top_offense
 
 UNION ALL
 
 -- 311 by request_type
 SELECT
-    case_created_date::date AS date,
+    (case_created_date AT TIME ZONE 'America/Denver')::date AS date,
     '311' AS domain,
     COALESCE(request_type, 'Unknown') AS category,
     COUNT(*) AS count,
     NOW()
 FROM stg_311
-GROUP BY case_created_date::date, request_type
+GROUP BY (case_created_date AT TIME ZONE 'America/Denver')::date, request_type
 
 ON CONFLICT (date, domain, category) DO UPDATE SET
     count = EXCLUDED.count,

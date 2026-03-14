@@ -24,7 +24,7 @@ SELECT
     COALESCE(offense_category, 'Unknown'),
     COUNT(*), 0, NOW()
 FROM stg_crime
-WHERE reported_date >= CURRENT_DATE - %(days)s
+WHERE reported_date >= (NOW() AT TIME ZONE 'America/Denver')::date - %(days)s
 GROUP BY offense_category
 
 UNION ALL
@@ -35,7 +35,7 @@ SELECT
     COALESCE(top_offense, 'Unknown'),
     COUNT(*), 0, NOW()
 FROM stg_crashes
-WHERE reported_date >= CURRENT_DATE - %(days)s
+WHERE reported_date >= (NOW() AT TIME ZONE 'America/Denver')::date - %(days)s
 GROUP BY top_offense
 
 UNION ALL
@@ -46,7 +46,7 @@ SELECT
     COALESCE(request_type, 'Unknown'),
     COUNT(*), 0, NOW()
 FROM stg_311
-WHERE case_created_date >= CURRENT_DATE - %(days)s
+WHERE case_created_date >= (NOW() AT TIME ZONE 'America/Denver')::date - %(days)s
 GROUP BY request_type
 
 ON CONFLICT (period, domain, category) DO UPDATE SET
