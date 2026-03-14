@@ -11,7 +11,7 @@ Build the frontend application shell: sidebar navigation, header with filters, r
 
 ## Tasks
 
-### Task 1: Install chart and utility dependencies — Issue #31
+### Task 1: Install chart and utility dependencies
 **Description:** Install Recharts (chart library), react-leaflet + leaflet (map library, needed in Phase 4 but install now to avoid dependency conflicts later), and date-fns (date formatting/manipulation). Add TypeScript type definitions for Leaflet.
 
 **Files:**
@@ -28,7 +28,7 @@ Build the frontend application shell: sidebar navigation, header with filters, r
 
 ---
 
-### Task 2: Define TypeScript types and format utilities — Issue #32
+### Task 2: Define TypeScript types and format utilities
 **Description:** Create shared TypeScript interfaces for all data shapes used across the app (KPI data, chart data, narrative signals, neighborhood list, API responses). Create formatting utilities for numbers, deltas, dates, and AQI values.
 
 **Types to define:**
@@ -63,7 +63,7 @@ Build the frontend application shell: sidebar navigation, header with filters, r
 
 ---
 
-### Task 3: Build API routes — shared endpoints — Issue #33
+### Task 3: Build API routes — shared endpoints
 **Description:** Create the shared API routes that serve neighborhood list, health/status information, and last-update metadata. These are consumed by filters and status indicators across both screens.
 
 **Routes:**
@@ -89,7 +89,7 @@ Build the frontend application shell: sidebar navigation, header with filters, r
 
 ---
 
-### Task 4: Build API routes — City Pulse endpoints — Issue #34
+### Task 4: Build API routes — City Pulse endpoints
 **Description:** Create the API routes that serve the City Pulse screen data. Each route reads from the appropriate mart table(s) and returns JSON.
 
 **Routes:**
@@ -140,7 +140,7 @@ Build the frontend application shell: sidebar navigation, header with filters, r
 
 ---
 
-### Task 5: Build API routes — Environment endpoints — Issue #35
+### Task 5: Build API routes — Environment endpoints
 **Description:** Create the API routes that serve the Environment & Neighborhoods screen.
 
 **Routes:**
@@ -179,7 +179,7 @@ Build the frontend application shell: sidebar navigation, header with filters, r
 
 ---
 
-### Task 6: Build sidebar navigation component — Issue #36
+### Task 6: Build sidebar navigation component
 **Description:** Create the sidebar navigation component following the design brief specs. Fixed 240px width, white background, active state styling. Includes app logo/title at the top, navigation links in the middle, and disabled future items.
 
 **Navigation items:**
@@ -210,7 +210,7 @@ Build the frontend application shell: sidebar navigation, header with filters, r
 
 ---
 
-### Task 7: Build header with filter controls — Issue #37
+### Task 7: Build header with filter controls
 **Description:** Create the page header component with title, subtitle, status indicators, and filter controls (time window selector + neighborhood dropdown). The header sits at the top of the main content area (right of sidebar).
 
 **Header sections:**
@@ -244,7 +244,7 @@ Build the frontend application shell: sidebar navigation, header with filters, r
 
 ---
 
-### Task 8: Build reusable card components (KPI, Chart, Narrative) — Issue #38
+### Task 8: Build reusable card components (KPI, Chart, Narrative)
 **Description:** Create the three core card components that will be used across both screens. These are presentation-only components — they receive data via props and render it.
 
 **KPI Card:**
@@ -285,7 +285,7 @@ Build the frontend application shell: sidebar navigation, header with filters, r
 
 ---
 
-### Task 9: Build app layout and responsive grid — Issue #39
+### Task 9: Build app layout and responsive grid
 **Description:** Wire everything together: root layout with sidebar + main content area, page-level layouts for City Pulse and Environment screens with the correct grid structure (KPI row → hero row → lower analytics row). Both pages show placeholder content in the correct grid positions, ready for Phase 4 and 5 to fill in real charts.
 
 **Layout structure:**
