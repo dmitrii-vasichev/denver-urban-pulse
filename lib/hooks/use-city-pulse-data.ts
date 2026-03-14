@@ -20,6 +20,7 @@ interface CityPulseData {
   narrative: NarrativeData | null;
   loading: boolean;
   error: string | null;
+  retry: () => void;
 }
 
 async function fetchJson<T>(url: string): Promise<T> {
@@ -34,7 +35,7 @@ export function useCityPulseData(
   timeWindow: TimeWindow,
   neighborhood: string
 ): CityPulseData {
-  const [data, setData] = useState<CityPulseData>({
+  const [data, setData] = useState<Omit<CityPulseData, "retry">>({
     kpis: null,
     trends: [],
     categories: {},
@@ -88,5 +89,5 @@ export function useCityPulseData(
     fetchAll();
   }, [fetchAll]);
 
-  return data;
+  return { ...data, retry: fetchAll };
 }

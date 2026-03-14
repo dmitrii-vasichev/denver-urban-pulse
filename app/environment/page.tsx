@@ -12,22 +12,18 @@ import { ChangeLeadersChart } from "@/components/charts/change-leaders-chart";
 import { DenverMapDynamic } from "@/components/map/denver-map-dynamic";
 import { useFilters } from "@/lib/hooks/use-filters";
 import { useEnvironmentData } from "@/lib/hooks/use-environment-data";
+import { ErrorCard } from "@/components/cards/error-card";
 import { formatAqi } from "@/lib/format";
 import geojson from "@/data/geo/denver-neighborhoods.json";
 import type { NeighborhoodRow } from "@/lib/types";
 
 function EnvironmentContent() {
   const { timeWindow, neighborhood } = useFilters();
-  const { aqi, rankings, comparison, narrative, loading, error } =
+  const { aqi, rankings, comparison, narrative, loading, error, retry } =
     useEnvironmentData(timeWindow, neighborhood);
 
   if (error) {
-    return (
-      <div className="rounded-[14px] bg-white border border-[#DDE3EA] p-6 text-center">
-        <p className="text-sm text-[#DC3545] font-medium">Failed to load data</p>
-        <p className="text-xs text-[#627D98] mt-1">{error}</p>
-      </div>
-    );
+    return <ErrorCard message={error} onRetry={retry} />;
   }
 
   const tagLabel = timeWindow.toUpperCase();

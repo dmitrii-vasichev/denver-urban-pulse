@@ -12,20 +12,16 @@ import { NeighborhoodRankingChart } from "@/components/charts/neighborhood-ranki
 import { DenverMapDynamic } from "@/components/map/denver-map-dynamic";
 import { useFilters } from "@/lib/hooks/use-filters";
 import { useCityPulseData } from "@/lib/hooks/use-city-pulse-data";
+import { ErrorCard } from "@/components/cards/error-card";
 import geojson from "@/data/geo/denver-neighborhoods.json";
 
 function CityPulseContent() {
   const { timeWindow, neighborhood } = useFilters();
-  const { kpis, trends, categories, heatmap, neighborhoods, narrative, loading, error } =
+  const { kpis, trends, categories, heatmap, neighborhoods, narrative, loading, error, retry } =
     useCityPulseData(timeWindow, neighborhood);
 
   if (error) {
-    return (
-      <div className="rounded-[14px] bg-white border border-[#DDE3EA] p-6 text-center">
-        <p className="text-sm text-[#DC3545] font-medium">Failed to load data</p>
-        <p className="text-xs text-[#627D98] mt-1">{error}</p>
-      </div>
-    );
+    return <ErrorCard message={error} onRetry={retry} />;
   }
 
   const tagLabel = timeWindow.toUpperCase();

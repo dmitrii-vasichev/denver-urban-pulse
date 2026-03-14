@@ -1,7 +1,8 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { KpiCard } from "@/components/cards/kpi-card";
 import { ChartCard } from "@/components/cards/chart-card";
 import { NarrativeBlock } from "@/components/cards/narrative-block";
+import { ErrorCard } from "@/components/cards/error-card";
 
 // Mock recharts to avoid canvas issues in jsdom
 jest.mock("recharts", () => ({
@@ -92,5 +93,22 @@ describe("NarrativeBlock", () => {
     // Dark bg skeletons use bg-white/10
     const skeletons = container.querySelectorAll(".animate-pulse");
     expect(skeletons.length).toBeGreaterThan(0);
+  });
+});
+
+describe("ErrorCard", () => {
+  it("renders error message and retry button", () => {
+    const onRetry = jest.fn();
+    render(<ErrorCard message="API error: 500" onRetry={onRetry} />);
+    expect(screen.getByText("Failed to load data")).toBeInTheDocument();
+    expect(screen.getByText("API error: 500")).toBeInTheDocument();
+    expect(screen.getByText("Try Again")).toBeInTheDocument();
+  });
+
+  it("calls onRetry when button is clicked", () => {
+    const onRetry = jest.fn();
+    render(<ErrorCard message="Network error" onRetry={onRetry} />);
+    fireEvent.click(screen.getByText("Try Again"));
+    expect(onRetry).toHaveBeenCalledTimes(1);
   });
 });
