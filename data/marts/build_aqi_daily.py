@@ -16,21 +16,29 @@ logger = logging.getLogger(__name__)
 BUILD_SQL = """
 INSERT INTO mart_aqi_daily (date, aqi_ozone, aqi_pm25, aqi_pm10, aqi_max, category, updated_at)
 SELECT
-    (observed_at AT TIME ZONE 'America/Denver')::date AS date,
-    MAX(CASE WHEN parameter_name = 'OZONE' THEN aqi END) AS aqi_ozone,
-    MAX(CASE WHEN parameter_name = 'PM2.5' THEN aqi END) AS aqi_pm25,
-    MAX(CASE WHEN parameter_name = 'PM10' THEN aqi END) AS aqi_pm10,
-    MAX(aqi) AS aqi_max,
-    -- Category from the parameter with the highest AQI
+    d.date,
+    d.aqi_ozone,
+    d.aqi_pm25,
+    d.aqi_pm10,
+    d.aqi_max,
+    -- Category from the row with the highest AQI on that date
     (
         SELECT sq.category FROM stg_aqi sq
-        WHERE (sq.observed_at AT TIME ZONE 'America/Denver')::date = (s.observed_at AT TIME ZONE 'America/Denver')::date
+        WHERE (sq.observed_at AT TIME ZONE 'America/Denver')::date = d.date
         ORDER BY sq.aqi DESC
         LIMIT 1
     ) AS category,
     NOW()
-FROM stg_aqi s
-GROUP BY (observed_at AT TIME ZONE 'America/Denver')::date
+FROM (
+    SELECT
+        (observed_at AT TIME ZONE 'America/Denver')::date AS date,
+        MAX(CASE WHEN parameter_name = 'OZONE' THEN aqi END) AS aqi_ozone,
+        MAX(CASE WHEN parameter_name = 'PM2.5' THEN aqi END) AS aqi_pm25,
+        MAX(CASE WHEN parameter_name = 'PM10' THEN aqi END) AS aqi_pm10,
+        MAX(aqi) AS aqi_max
+    FROM stg_aqi
+    GROUP BY (observed_at AT TIME ZONE 'America/Denver')::date
+) d
 ON CONFLICT (date) DO UPDATE SET
     aqi_ozone = EXCLUDED.aqi_ozone,
     aqi_pm25 = EXCLUDED.aqi_pm25,
