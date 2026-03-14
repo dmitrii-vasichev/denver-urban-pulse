@@ -11,7 +11,7 @@ Build the City Pulse screen — the primary dashboard view showing Denver's oper
 
 ## Tasks
 
-### Task 1: Add Denver neighborhood GeoJSON boundaries — Issue #TBD
+### Task 1: Add Denver neighborhood GeoJSON boundaries — Issue #49
 **Description:** Fetch the Denver Statistical Neighborhoods GeoJSON from Denver Open Data and add it to the project. This is required for the interactive map in Task 6. Normalize neighborhood names to match the `stg_neighborhoods` table.
 
 **Files:**
@@ -29,7 +29,7 @@ Build the City Pulse screen — the primary dashboard view showing Denver's oper
 
 ---
 
-### Task 2: Build incident trend line chart — Issue #TBD
+### Task 2: Build incident trend line chart — Issue #50
 **Description:** Create a multi-line time series chart showing crime, crashes, and 311 requests over the selected time window. Uses Recharts `LineChart` with three color-coded series. Supports tooltip with date + all three values.
 
 **Data source:** `GET /api/city-pulse/trends?timeWindow=X`
@@ -55,7 +55,7 @@ Build the City Pulse screen — the primary dashboard view showing Denver's oper
 
 ---
 
-### Task 3: Build category breakdown chart — Issue #TBD
+### Task 3: Build category breakdown chart — Issue #51
 **Description:** Create a category breakdown visualization showing incident type proportions. Uses Recharts `BarChart` (horizontal bars) or `PieChart` with domain-specific data. Shows top categories per domain with counts and percentages.
 
 **Data source:** `GET /api/city-pulse/categories?timeWindow=X`
@@ -81,7 +81,7 @@ Build the City Pulse screen — the primary dashboard view showing Denver's oper
 
 ---
 
-### Task 4: Build hour × day heatmap chart — Issue #TBD
+### Task 4: Build hour × day heatmap chart — Issue #52
 **Description:** Create a heatmap showing incident intensity by hour of day (rows: 0-23) and day of week (columns: Mon-Sun). Uses a grid of colored cells — darker = more incidents. This is a custom component using either Recharts ScatterChart with custom shapes or a pure CSS/SVG grid.
 
 **Data source:** `GET /api/city-pulse/heatmap?timeWindow=X`
@@ -108,7 +108,7 @@ Build the City Pulse screen — the primary dashboard view showing Denver's oper
 
 ---
 
-### Task 5: Build neighborhood ranking bar chart — Issue #TBD
+### Task 5: Build neighborhood ranking bar chart — Issue #53
 **Description:** Create a horizontal bar chart ranking top neighborhoods by combined incident count. Shows top 10 neighborhoods sorted by total incidents (crime + crashes + 311). Each bar is segmented or stacked by domain.
 
 **Data source:** `GET /api/city-pulse/neighborhoods?timeWindow=X`
@@ -136,7 +136,7 @@ Build the City Pulse screen — the primary dashboard view showing Denver's oper
 
 ---
 
-### Task 6: Build interactive Denver neighborhood map — Issue #TBD
+### Task 6: Build interactive Denver neighborhood map — Issue #54
 **Description:** Create an interactive choropleth map of Denver neighborhoods using React Leaflet. Color-codes neighborhoods by incident density. Supports zoom, pan, and hover tooltips showing neighborhood name and stats.
 
 **Data sources:**
@@ -170,7 +170,7 @@ Build the City Pulse screen — the primary dashboard view showing Denver's oper
 
 ---
 
-### Task 7: Wire City Pulse page with data fetching — Issue #TBD
+### Task 7: Wire City Pulse page with data fetching — Issue #55
 **Description:** Update `app/page.tsx` to fetch data from all City Pulse API routes and pass it to the chart components. Replace all placeholder/loading states with real data-driven components. Handle loading, error, and empty states.
 
 **Data fetching approach:**
