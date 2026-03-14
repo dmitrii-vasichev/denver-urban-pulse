@@ -51,4 +51,38 @@ describe("SidebarItem", () => {
     expect(screen.getByText("Services")).toBeInTheDocument();
     expect(screen.getByText("Soon")).toBeInTheDocument();
   });
+
+  it("renders collapsed item with icon only and title tooltip", () => {
+    render(
+      <SidebarItem
+        href="/"
+        label="City Pulse"
+        icon={<span data-testid="icon">icon</span>}
+        active={true}
+        collapsed
+      />
+    );
+    const link = screen.getByRole("link");
+    expect(link).toHaveAttribute("title", "City Pulse");
+    // Label text should not be rendered
+    expect(screen.queryByText("City Pulse")).not.toBeInTheDocument();
+    expect(screen.getByTestId("icon")).toBeInTheDocument();
+  });
+
+  it("renders collapsed disabled item without 'Soon' badge", () => {
+    render(
+      <SidebarItem
+        href="/services"
+        label="Services"
+        icon={<span data-testid="icon">icon</span>}
+        active={false}
+        disabled
+        collapsed
+      />
+    );
+    expect(screen.queryByText("Soon")).not.toBeInTheDocument();
+    expect(screen.queryByText("Services")).not.toBeInTheDocument();
+    const span = screen.getByTitle("Services");
+    expect(span).toBeInTheDocument();
+  });
 });
