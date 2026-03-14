@@ -120,3 +120,17 @@
     @apply bg-background text-foreground font-sans;
   }
 }
+
+/* Leaflet tooltip overrides */
+.leaflet-tooltip-custom {
+  background: white;
+  border: 1px solid #DDE3EA;
+  border-radius: 8px;
+  padding: 6px 10px;
+  box-shadow: 0 2px 6px rgba(16, 42, 67, 0.1);
+  font-family: inherit;
+}
+
+.leaflet-tooltip-custom::before {
+  border-top-color: #DDE3EA;
+}
