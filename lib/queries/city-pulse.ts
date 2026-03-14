@@ -50,16 +50,38 @@ export async function getKpiTotals(
   neighborhood: string
 ): Promise<NeighborhoodTotalRow | null> {
   if (neighborhood === "all") {
+    const days = daysForWindow(tw);
     const rows = await query<NeighborhoodTotalRow>(
-      `SELECT SUM(crime_count)::int AS crime_count,
-              SUM(crash_count)::int AS crash_count,
-              SUM(requests_311_count)::int AS requests_311_count,
-              AVG(crime_delta_pct) AS crime_delta_pct,
-              AVG(crash_delta_pct) AS crash_delta_pct,
-              AVG(requests_311_delta_pct) AS requests_311_delta_pct
-       FROM mart_city_pulse_neighborhood
-       WHERE period = $1`,
-      [tw]
+      `WITH cur AS (
+         SELECT COALESCE(SUM(crime_count), 0)::int AS crime_count,
+                COALESCE(SUM(crash_count), 0)::int AS crash_count,
+                COALESCE(SUM(requests_311_count), 0)::int AS requests_311_count
+         FROM mart_city_pulse_daily
+         WHERE date >= (NOW() AT TIME ZONE 'America/Denver')::date - $1::int
+       ),
+       prev AS (
+         SELECT COALESCE(SUM(crime_count), 0)::int AS crime_count,
+                COALESCE(SUM(crash_count), 0)::int AS crash_count,
+                COALESCE(SUM(requests_311_count), 0)::int AS requests_311_count
+         FROM mart_city_pulse_daily
+         WHERE date >= (NOW() AT TIME ZONE 'America/Denver')::date - $1::int * 2
+           AND date < (NOW() AT TIME ZONE 'America/Denver')::date - $1::int
+       )
+       SELECT
+         cur.crime_count,
+         cur.crash_count,
+         cur.requests_311_count,
+         CASE WHEN prev.crime_count > 0
+              THEN ROUND(((cur.crime_count - prev.crime_count)::numeric / prev.crime_count) * 100, 1)
+              ELSE NULL END AS crime_delta_pct,
+         CASE WHEN prev.crash_count > 0
+              THEN ROUND(((cur.crash_count - prev.crash_count)::numeric / prev.crash_count) * 100, 1)
+              ELSE NULL END AS crash_delta_pct,
+         CASE WHEN prev.requests_311_count > 0
+              THEN ROUND(((cur.requests_311_count - prev.requests_311_count)::numeric / prev.requests_311_count) * 100, 1)
+              ELSE NULL END AS requests_311_delta_pct
+       FROM cur, prev`,
+      [days]
     );
     return rows[0] ?? null;
   }
