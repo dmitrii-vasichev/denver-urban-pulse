@@ -37,7 +37,7 @@ function CityPulseContent() {
         <KpiCard
           title="Crime Incidents"
           tag={tagLabel}
-          value={kpis?.crime.value ?? 0}
+          value={kpis?.crime.value}
           deltaPercent={kpis?.crime.deltaPercent}
           sparklineData={kpis?.crime.sparkline}
           insight={kpis?.crime.insight}
@@ -47,7 +47,7 @@ function CityPulseContent() {
         <KpiCard
           title="Traffic Crashes"
           tag={tagLabel}
-          value={kpis?.crashes.value ?? 0}
+          value={kpis?.crashes.value}
           deltaPercent={kpis?.crashes.deltaPercent}
           sparklineData={kpis?.crashes.sparkline}
           insight={kpis?.crashes.insight}
@@ -57,7 +57,7 @@ function CityPulseContent() {
         <KpiCard
           title="311 Requests"
           tag={tagLabel}
-          value={kpis?.requests311.value ?? 0}
+          value={kpis?.requests311.value}
           deltaPercent={kpis?.requests311.deltaPercent}
           sparklineData={kpis?.requests311.sparkline}
           insight={kpis?.requests311.insight}

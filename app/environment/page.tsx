@@ -65,7 +65,7 @@ function EnvironmentContent() {
           title="Air Quality Index"
           tag="Current"
           secondaryTag={aqiInfo?.label}
-          value={aqi.current?.aqi ?? 0}
+          value={aqi.current?.aqi}
           insight={narrative?.stats?.[0]?.value}
           color="#0B4F8C"
           loading={loading}
@@ -73,7 +73,7 @@ function EnvironmentContent() {
         <KpiCard
           title="Safest Neighborhood"
           tag={tagLabel}
-          value={safest?.compositeScore ?? 0}
+          value={safest?.compositeScore}
           insight={safest?.neighborhood}
           color="#198754"
           loading={loading}
@@ -81,7 +81,7 @@ function EnvironmentContent() {
         <KpiCard
           title="Most Active Area"
           tag={tagLabel}
-          value={mostActive?.compositeScore ?? 0}
+          value={mostActive?.compositeScore}
           insight={mostActive?.neighborhood}
           color="#D97904"
           loading={loading}
@@ -89,7 +89,7 @@ function EnvironmentContent() {
         <KpiCard
           title="Most Improved"
           tag={tagLabel}
-          value={0}
+          value={mostImproved ? Math.round((mostImproved.crimeDeltaPct + mostImproved.crashDeltaPct + mostImproved.requests311DeltaPct) / 3) : undefined}
           insight={mostImproved?.neighborhood}
           color="#2458C6"
           loading={loading}
