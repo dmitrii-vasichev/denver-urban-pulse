@@ -9,6 +9,7 @@ interface SidebarItemProps {
   icon: React.ReactNode;
   active: boolean;
   disabled?: boolean;
+  collapsed?: boolean;
 }
 
 export function SidebarItem({
@@ -17,21 +18,28 @@ export function SidebarItem({
   icon,
   active,
   disabled,
+  collapsed,
 }: SidebarItemProps) {
   if (disabled) {
     return (
       <span
         className={cn(
-          "flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-sm font-medium",
-          "text-[#9FB3C8] cursor-not-allowed select-none"
+          "flex items-center rounded-[10px] px-3 py-2.5 text-sm font-medium",
+          "text-[#9FB3C8] cursor-not-allowed select-none",
+          collapsed ? "justify-center" : "gap-3"
         )}
         aria-disabled="true"
+        title={collapsed ? label : undefined}
       >
         {icon}
-        <span className="flex-1">{label}</span>
-        <span className="rounded-full bg-[#EEF3F8] px-2 py-0.5 text-[10px] font-semibold text-[#9FB3C8]">
-          Soon
-        </span>
+        {!collapsed && (
+          <>
+            <span className="flex-1">{label}</span>
+            <span className="rounded-full bg-[#EEF3F8] px-2 py-0.5 text-[10px] font-semibold text-[#9FB3C8]">
+              Soon
+            </span>
+          </>
+        )}
       </span>
     );
   }
@@ -40,14 +48,16 @@ export function SidebarItem({
     <Link
       href={href}
       className={cn(
-        "flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-sm font-medium transition-colors",
+        "flex items-center rounded-[10px] px-3 py-2.5 text-sm font-medium transition-colors",
+        collapsed ? "justify-center" : "gap-3",
         active
           ? "bg-[#E9F2FF] text-[#0B4F8C] font-semibold"
           : "text-[#243B53] hover:bg-[#F4F6F8]"
       )}
+      title={collapsed ? label : undefined}
     >
       {icon}
-      <span>{label}</span>
+      {!collapsed && <span>{label}</span>}
     </Link>
   );
 }

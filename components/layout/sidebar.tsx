@@ -30,34 +30,58 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden xl:flex flex-col w-60 shrink-0 border-r border-[#E6E9EE] bg-white h-screen sticky top-0">
-      <div className="px-5 py-5">
-        <h1 className="text-base font-bold text-[#102A43] leading-tight">
+    <aside className="hidden lg:flex flex-col shrink-0 border-r border-[#E6E9EE] bg-white h-screen sticky top-0 w-16 xl:w-60">
+      {/* Logo — icon only on lg, full on xl */}
+      <div className="px-3 py-5 xl:px-5">
+        <h1 className="hidden xl:block text-base font-bold text-[#102A43] leading-tight">
           Denver Urban Pulse
         </h1>
-        <p className="text-[10px] text-[#627D98] mt-0.5">
+        <p className="hidden xl:block text-[10px] text-[#627D98] mt-0.5">
           Live city data dashboard
         </p>
+        {/* Collapsed: show DUP initials */}
+        <span className="xl:hidden text-sm font-bold text-[#102A43] block text-center">
+          DUP
+        </span>
       </div>
 
-      <nav className="flex-1 px-3 space-y-1">
+      <nav className="flex-1 px-1.5 xl:px-3 space-y-1">
         {NAV_ITEMS.map((item) => (
-          <SidebarItem
-            key={item.href}
-            href={item.href}
-            label={item.label}
-            icon={<item.icon size={18} strokeWidth={1.8} />}
-            active={
-              item.href === "/"
-                ? pathname === "/"
-                : pathname.startsWith(item.href)
-            }
-            disabled={item.disabled}
-          />
+          <span key={item.href}>
+            {/* Collapsed sidebar item (lg only) */}
+            <span className="xl:hidden">
+              <SidebarItem
+                href={item.href}
+                label={item.label}
+                icon={<item.icon size={18} strokeWidth={1.8} />}
+                active={
+                  item.href === "/"
+                    ? pathname === "/"
+                    : pathname.startsWith(item.href)
+                }
+                disabled={item.disabled}
+                collapsed
+              />
+            </span>
+            {/* Full sidebar item (xl+) */}
+            <span className="hidden xl:block">
+              <SidebarItem
+                href={item.href}
+                label={item.label}
+                icon={<item.icon size={18} strokeWidth={1.8} />}
+                active={
+                  item.href === "/"
+                    ? pathname === "/"
+                    : pathname.startsWith(item.href)
+                }
+                disabled={item.disabled}
+              />
+            </span>
+          </span>
         ))}
       </nav>
 
-      <div className="px-5 py-4 border-t border-[#E6E9EE]">
+      <div className="hidden xl:block px-5 py-4 border-t border-[#E6E9EE]">
         <p className="text-[10px] text-[#9FB3C8]">
           Data refreshed daily at 06:00 UTC
         </p>

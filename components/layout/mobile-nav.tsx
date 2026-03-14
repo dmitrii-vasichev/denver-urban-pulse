@@ -27,7 +27,7 @@ export function MobileNav() {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="xl:hidden">
+    <div className="lg:hidden">
       <button
         onClick={() => setOpen(true)}
         className="p-2 text-[#102A43] hover:bg-[#F4F6F8] rounded-lg"
