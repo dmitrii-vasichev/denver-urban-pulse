@@ -17,7 +17,7 @@ function HeaderInner({ title, subtitle, lastUpdated }: HeaderProps) {
     useFilters();
 
   return (
-    <header className="flex items-start justify-between gap-4 px-4 py-3 xl:px-5 xl:py-4">
+    <header className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 px-3 py-3 md:px-4 xl:px-5 xl:py-4">
       <div className="flex items-center gap-3">
         <MobileNav />
         <div>
@@ -35,7 +35,7 @@ function HeaderInner({ title, subtitle, lastUpdated }: HeaderProps) {
         </div>
       </div>
 
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex items-center gap-2 w-full sm:w-auto">
         <TimeWindowFilter value={timeWindow} onChange={setTimeWindow} />
         <NeighborhoodFilter value={neighborhood} onChange={setNeighborhood} />
       </div>
@@ -47,7 +47,7 @@ export function Header(props: HeaderProps) {
   return (
     <Suspense
       fallback={
-        <header className="flex items-center justify-between px-4 py-3 xl:px-5 xl:py-4">
+        <header className="flex items-center justify-between px-3 py-3 md:px-4 xl:px-5 xl:py-4">
           <h1 className="text-lg font-bold text-[#102A43]">{props.title}</h1>
         </header>
       }

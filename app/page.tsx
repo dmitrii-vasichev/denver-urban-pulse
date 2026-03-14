@@ -92,7 +92,7 @@ function CityPulseContent() {
           <HeatmapChart data={heatmap} />
         </ChartCard>
         <ChartCard title="Neighborhood Map" loading={loading}>
-          <div className="h-[300px] -m-2 rounded-lg overflow-hidden">
+          <div className="h-64 md:h-[300px] -m-2 rounded-lg overflow-hidden">
             <DenverMapDynamic
               geojson={geojson as unknown as GeoJSON.FeatureCollection}
               data={neighborhoods}
