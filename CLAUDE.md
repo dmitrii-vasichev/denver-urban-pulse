@@ -17,6 +17,14 @@ Public BI dashboard built on live Denver open data (crime, traffic crashes, 311 
 - `npm test` — Jest tests
 - `npm start` — start production server
 
+## Daily Pipeline (Railway Cron)
+- Schedule: every day at 06:00 UTC (midnight Denver MDT)
+- Entry point: `python data/pipeline/run_daily.py`
+- Docker image: `data/pipeline/Dockerfile` (python:3.12-slim)
+- Railway config: `data/pipeline/railway.json`
+- Timeout: 30 min (per-step timeout: 10 min)
+- Pipeline steps: migrations → ingestion → sync neighborhoods → staging → marts
+
 ## Rules
 - Follow workflow: PRD → Design → Phases → Plan → Issues → Code → Review
 - Never push to main directly — PRs only
