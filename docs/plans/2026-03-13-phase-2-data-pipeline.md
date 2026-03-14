@@ -9,7 +9,7 @@ Build the complete data transformation pipeline: staging transformations (raw �
 
 ## Tasks
 
-### Task 1: Build staging transformations — crime and crashes
+### Task 1: Build staging transformations — crime and crashes — Issue #13
 **Description:** Write Python scripts that read from `raw_crime` and `raw_crashes`, clean and normalize the data, resolve neighborhood names via `ref_neighborhoods`, and insert into `stg_crime` and `stg_crashes`. Full refresh strategy (truncate + reload from latest raw snapshot).
 
 **Transformations — Crime:**
@@ -45,7 +45,7 @@ Build the complete data transformation pipeline: staging transformations (raw �
 
 ---
 
-### Task 2: Build staging transformations — 311, AQI, neighborhoods
+### Task 2: Build staging transformations — 311, AQI, neighborhoods — Issue #14
 **Description:** Write Python scripts for the remaining three staging tables.
 
 **Transformations — 311:**
@@ -84,7 +84,7 @@ Build the complete data transformation pipeline: staging transformations (raw �
 
 ---
 
-### Task 3: Build staging orchestrator and ref_neighborhoods sync
+### Task 3: Build staging orchestrator and ref_neighborhoods sync — Issue #15
 **Description:** Create an orchestrator script that runs all staging transformations in order. Also build a script to sync `ref_neighborhoods` alternate name columns by discovering actual neighborhood name variants in raw data.
 
 **Neighborhood sync logic:**
@@ -108,7 +108,7 @@ Build the complete data transformation pipeline: staging transformations (raw �
 
 ---
 
-### Task 4: Build mart layer — daily aggregates and trends
+### Task 4: Build mart layer — daily aggregates and trends — Issue #16
 **Description:** Build the first group of marts that power KPI cards and trend charts.
 
 **Marts:**
@@ -133,7 +133,7 @@ Build the complete data transformation pipeline: staging transformations (raw �
 
 ---
 
-### Task 5: Build mart layer — neighborhood analytics and rankings
+### Task 5: Build mart layer — neighborhood analytics and rankings — Issue #17
 **Description:** Build the neighborhood-focused marts that power the map, ranking charts, and comparison views.
 
 **Marts:**
@@ -162,7 +162,7 @@ Build the complete data transformation pipeline: staging transformations (raw �
 
 ---
 
-### Task 6: Build mart layer — heatmap, category breakdown, narrative signals
+### Task 6: Build mart layer — heatmap, category breakdown, narrative signals — Issue #18
 **Description:** Build the remaining three marts for specialized chart components and narrative blocks.
 
 **Marts:**
@@ -192,7 +192,7 @@ Build the complete data transformation pipeline: staging transformations (raw �
 
 ---
 
-### Task 7: Build mart orchestrator and full pipeline runner
+### Task 7: Build mart orchestrator and full pipeline runner — Issue #19
 **Description:** Create a mart orchestrator and a master pipeline runner that executes the complete daily refresh: ingestion → staging → marts.
 
 **Files:**
@@ -218,7 +218,7 @@ Build the complete data transformation pipeline: staging transformations (raw �
 
 ---
 
-### Task 8: Set up Railway cron job for daily refresh
+### Task 8: Set up Railway cron job for daily refresh — Issue #20
 **Description:** Configure Railway to run the daily pipeline automatically. Set up scheduling, environment variables, and failure alerting.
 
 **Configuration:**
@@ -243,7 +243,7 @@ Build the complete data transformation pipeline: staging transformations (raw �
 
 ---
 
-### Task 9: End-to-end pipeline verification with real data
+### Task 9: End-to-end pipeline verification with real data — Issue #21
 **Description:** Run the complete pipeline with real data and verify data quality at every layer. Document the results and any data quirks discovered.
 
 **Verification checklist:**
