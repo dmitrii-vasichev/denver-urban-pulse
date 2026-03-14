@@ -3,11 +3,13 @@
  */
 import pool, { healthCheck, query } from "@/lib/db";
 
+const hasDb = !!process.env.DATABASE_URL;
+
 afterAll(async () => {
   await pool.end();
 });
 
-describe("Database connection", () => {
+(hasDb ? describe : describe.skip)("Database connection", () => {
   it("passes health check", async () => {
     const ok = await healthCheck();
     expect(ok).toBe(true);
