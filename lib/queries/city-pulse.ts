@@ -193,6 +193,21 @@ export async function getTrends(tw: TimeWindow): Promise<TrendRow[]> {
   );
 }
 
+export async function getEffectiveThrough(tw: TimeWindow): Promise<string | null> {
+  const days = daysForWindow(tw);
+  const rows = await query<{ effective_through: string | null }>(
+    `SELECT MIN(max_date)::text AS effective_through
+     FROM (
+       SELECT domain, MAX(date) AS max_date
+       FROM mart_incident_trends
+       WHERE date >= (NOW() AT TIME ZONE 'America/Denver')::date - $1::int
+       GROUP BY domain
+     ) sub`,
+    [days]
+  );
+  return rows[0]?.effective_through ?? null;
+}
+
 // --- Categories ---
 
 interface CategoryRow {

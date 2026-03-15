@@ -91,6 +91,7 @@ describe("City Pulse API", () => {
         { date: "2026-03-11", domain: "311", count: 20 },
         { date: "2026-03-12", domain: "crime", count: 12 },
       ]);
+      mockQuery.mockResolvedValueOnce([{ effective_through: "2026-03-12" }]);
 
       const res = await getTrends(makeRequest("http://localhost/api/city-pulse/trends"));
       const body = await res.json();
@@ -103,6 +104,34 @@ describe("City Pulse API", () => {
         crashes: 5,
         requests311: 20,
       });
+      expect(body.effectiveThrough).toBe("2026-03-12");
+    });
+
+    it("returns effectiveThrough as the min of max dates across domains", async () => {
+      // 311 has data up to Mar 10, but crime/crashes only up to Mar 09
+      mockQuery.mockResolvedValueOnce([
+        { date: "2026-03-08", domain: "crime", count: 5 },
+        { date: "2026-03-08", domain: "crashes", count: 3 },
+        { date: "2026-03-08", domain: "311", count: 10 },
+        { date: "2026-03-09", domain: "crime", count: 6 },
+        { date: "2026-03-09", domain: "crashes", count: 4 },
+        { date: "2026-03-09", domain: "311", count: 12 },
+        { date: "2026-03-10", domain: "311", count: 15 },
+      ]);
+      // effectiveThrough is Mar 09 (min of max dates: crime=09, crashes=09, 311=10)
+      mockQuery.mockResolvedValueOnce([{ effective_through: "2026-03-09" }]);
+
+      const res = await getTrends(makeRequest("http://localhost/api/city-pulse/trends"));
+      const body = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(body.effectiveThrough).toBe("2026-03-09");
+      // Mar 10 should be trimmed since it's after effectiveThrough
+      expect(body.data.series).toHaveLength(2);
+      expect(body.data.series.map((s: { date: string }) => s.date)).toEqual([
+        "2026-03-08",
+        "2026-03-09",
+      ]);
     });
   });
 
