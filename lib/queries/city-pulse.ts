@@ -62,6 +62,7 @@ export async function getKpiTotals(
                 COALESCE(SUM(requests_311_count), 0)::int AS requests_311_count
          FROM mart_city_pulse_daily
          WHERE date >= (NOW() AT TIME ZONE 'America/Denver')::date - $1::int
+           AND date < (NOW() AT TIME ZONE 'America/Denver')::date
        ),
        prev AS (
          SELECT COALESCE(SUM(crime_count), 0)::int AS crime_count,
