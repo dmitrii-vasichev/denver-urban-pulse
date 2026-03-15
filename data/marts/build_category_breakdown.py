@@ -25,17 +25,18 @@ CRIME_LABEL_SQL = """
 """
 
 # Human-readable label for crash top_offense values
+# Note: values are CHAR(30) padded with trailing spaces, so use TRIM()
 CRASH_LABEL_SQL = """
-    CASE COALESCE(top_offense, 'Unknown')
-        WHEN 'TRAF - ACCIDENT'                        THEN 'Traffic Accident'
-        WHEN 'TRAF - ACCIDENT - HIT AND RUN'          THEN 'Hit & Run'
-        WHEN 'TRAF - ACCIDENT - DUI-DUID'             THEN 'DUI / DUID'
-        WHEN 'TRAF - ACCIDENT - SBI'                  THEN 'Serious Bodily Injury'
-        WHEN 'TRAF - ACCIDENT - POLICE'               THEN 'Police Involved'
-        WHEN 'TRAF - ACCIDENT - FATAL'                THEN 'Fatal Crash'
-        WHEN 'TRAF - HABITUAL OFFENDER'               THEN 'Habitual Offender'
+    CASE TRIM(COALESCE(top_offense, 'Unknown'))
+        WHEN 'TRAF - ACCIDENT'             THEN 'Traffic Accident'
+        WHEN 'TRAF - ACCIDENT - HIT & RUN' THEN 'Hit & Run'
+        WHEN 'TRAF - ACCIDENT - DUI/DUID'  THEN 'DUI / DUID'
+        WHEN 'TRAF - ACCIDENT - SBI'       THEN 'Serious Bodily Injury'
+        WHEN 'TRAF - ACCIDENT - POLICE'    THEN 'Police Involved'
+        WHEN 'TRAF - ACCIDENT - FATAL'     THEN 'Fatal Crash'
+        WHEN 'TRAF - HABITUAL OFFENDER'    THEN 'Habitual Offender'
         ELSE INITCAP(REPLACE(
-            REPLACE(COALESCE(top_offense, 'Unknown'), 'TRAF - ACCIDENT - ', ''),
+            REPLACE(TRIM(COALESCE(top_offense, 'Unknown')), 'TRAF - ACCIDENT - ', ''),
             '-', ' '
         ))
     END
@@ -68,14 +69,14 @@ GROUP BY {crash_label}
 
 UNION ALL
 
--- 311 by topic (request_type is usually NULL, topic has actual categories)
+-- 311 by agency (type and topic are NULL in source data)
 SELECT
     %(period)s, '311',
-    COALESCE(NULLIF(topic, ''), 'Other'),
+    COALESCE(NULLIF(agency, ''), 'Other'),
     COUNT(*), 0, NOW()
 FROM stg_311
 WHERE case_created_date >= (NOW() AT TIME ZONE 'America/Denver')::date - %(days)s
-GROUP BY topic
+GROUP BY agency
 
 ON CONFLICT (period, domain, category) DO UPDATE SET
     count = EXCLUDED.count,
