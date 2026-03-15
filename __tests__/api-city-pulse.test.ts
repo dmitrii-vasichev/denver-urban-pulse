@@ -70,6 +70,8 @@ describe("City Pulse API", () => {
           requests_311_delta_pct: 12.0,
         },
       ]);
+      // effectiveThrough query
+      mockQuery.mockResolvedValueOnce([{ effective_through: "2026-03-12" }]);
 
       const res = await getKpis(makeRequest("http://localhost/api/city-pulse/kpis?timeWindow=30d"));
       const body = await res.json();
@@ -80,6 +82,35 @@ describe("City Pulse API", () => {
       expect(body.data.crashes.value).toBe(100);
       expect(body.data.requests311.value).toBe(500);
       expect(body.data.crime.sparkline).toHaveLength(2);
+      expect(body.effectiveThrough).toBe("2026-03-12");
+    });
+
+    it("returns effectiveThrough in response", async () => {
+      // sparkline query
+      mockQuery.mockResolvedValueOnce([
+        { date: "2026-03-10", crime_count: 5, crash_count: 2, requests_311_count: 10 },
+      ]);
+      // totals query
+      mockQuery.mockResolvedValueOnce([
+        {
+          crime_count: 150,
+          crash_count: 50,
+          requests_311_count: 200,
+          crime_delta_pct: null,
+          crash_delta_pct: null,
+          requests_311_delta_pct: null,
+        },
+      ]);
+      // effectiveThrough query
+      mockQuery.mockResolvedValueOnce([{ effective_through: "2026-03-10" }]);
+
+      const res = await getKpis(makeRequest("http://localhost/api/city-pulse/kpis?timeWindow=7d"));
+      const body = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(body.effectiveThrough).toBe("2026-03-10");
+      expect(body.data).toBeDefined();
+      expect(body.lastUpdated).toBeDefined();
     });
   });
 
