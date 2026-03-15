@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     ) => ({
       value: totals?.[countKey] ?? 0,
       delta: 0,
-      deltaPercent: totals?.[deltaKey] ?? 0,
+      deltaPercent: totals?.[deltaKey] ?? null,
       sparkline: sparkline
         .map((r) => ({ date: r.date, value: r[countKey] }))
         .reverse(),
