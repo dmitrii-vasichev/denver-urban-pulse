@@ -2,7 +2,7 @@
 Build mart_neighborhood_comparison — rates per area and deltas.
 
 For each (period, neighborhood): compute rates (incidents per sq unit from
-stg_neighborhoods.shape_area), compute delta_pct vs prior period.
+stg_neighborhoods.shape_area via ref_neighborhoods), compute delta_pct vs prior period.
 
 Periods: 7d, 30d, 90d
 """
@@ -23,14 +23,14 @@ INSERT INTO mart_neighborhood_comparison (
 )
 SELECT
     %(period)s AS period,
-    n.nbhd_name AS neighborhood,
-    CASE WHEN n.shape_area > 0
+    r.canonical_name AS neighborhood,
+    CASE WHEN COALESCE(n.shape_area, 0) > 0
          THEN ROUND((COALESCE(cur.crime, 0)::numeric / n.shape_area::numeric * 1000000)::numeric, 4)
          ELSE 0 END,
-    CASE WHEN n.shape_area > 0
+    CASE WHEN COALESCE(n.shape_area, 0) > 0
          THEN ROUND((COALESCE(cur.crashes, 0)::numeric / n.shape_area::numeric * 1000000)::numeric, 4)
          ELSE 0 END,
-    CASE WHEN n.shape_area > 0
+    CASE WHEN COALESCE(n.shape_area, 0) > 0
          THEN ROUND((COALESCE(cur.r311, 0)::numeric / n.shape_area::numeric * 1000000)::numeric, 4)
          ELSE 0 END,
     CASE WHEN COALESCE(prev.crime, 0) > 0
@@ -43,7 +43,8 @@ SELECT
          THEN ROUND(((COALESCE(cur.r311, 0) - prev.r311)::numeric / prev.r311 * 100)::numeric, 1)
          ELSE NULL END,
     NOW()
-FROM stg_neighborhoods n
+FROM ref_neighborhoods r
+LEFT JOIN stg_neighborhoods n ON n.nbhd_id = r.nbhd_id
 LEFT JOIN (
     SELECT neighborhood,
            SUM(CASE WHEN src = 'crime' THEN 1 ELSE 0 END) AS crime,
@@ -60,7 +61,7 @@ LEFT JOIN (
         WHERE case_created_date >= (NOW() AT TIME ZONE 'America/Denver')::date - %(days)s AND neighborhood IS NOT NULL
     ) cur_all
     GROUP BY neighborhood
-) cur ON cur.neighborhood = n.nbhd_name
+) cur ON cur.neighborhood = r.canonical_name
 LEFT JOIN (
     SELECT neighborhood,
            SUM(CASE WHEN src = 'crime' THEN 1 ELSE 0 END) AS crime,
@@ -83,7 +84,7 @@ LEFT JOIN (
           AND neighborhood IS NOT NULL
     ) prev_all
     GROUP BY neighborhood
-) prev ON prev.neighborhood = n.nbhd_name
+) prev ON prev.neighborhood = r.canonical_name
 ON CONFLICT (period, neighborhood) DO UPDATE SET
     crime_rate = EXCLUDED.crime_rate,
     crash_rate = EXCLUDED.crash_rate,

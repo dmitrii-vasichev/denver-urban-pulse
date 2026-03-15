@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 # Each signal is a separate INSERT using data from other marts
 SIGNALS = [
-    # top_domain: domain with highest total delta
+    # top_domain: domain with highest volume-weighted delta
     (
         "top_domain",
         """
@@ -29,15 +29,15 @@ SIGNALS = [
                delta_pct, 1, NOW()
         FROM (
             SELECT 'crime' AS domain,
-                   AVG(crime_delta_pct) AS delta_pct
+                   ROUND((SUM(crime_count * crime_delta_pct) / NULLIF(SUM(crime_count), 0))::numeric, 1) AS delta_pct
             FROM mart_city_pulse_neighborhood WHERE period = %(period)s AND crime_delta_pct IS NOT NULL
             UNION ALL
             SELECT 'crashes',
-                   AVG(crash_delta_pct)
+                   ROUND((SUM(crash_count * crash_delta_pct) / NULLIF(SUM(crash_count), 0))::numeric, 1)
             FROM mart_city_pulse_neighborhood WHERE period = %(period)s AND crash_delta_pct IS NOT NULL
             UNION ALL
             SELECT '311',
-                   AVG(requests_311_delta_pct)
+                   ROUND((SUM(requests_311_count * requests_311_delta_pct) / NULLIF(SUM(requests_311_count), 0))::numeric, 1)
             FROM mart_city_pulse_neighborhood WHERE period = %(period)s AND requests_311_delta_pct IS NOT NULL
         ) domains
         ORDER BY delta_pct DESC NULLS LAST

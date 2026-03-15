@@ -25,7 +25,7 @@ SELECT
     (
         SELECT sq.category FROM stg_aqi sq
         WHERE (sq.observed_at AT TIME ZONE 'America/Denver')::date = d.date
-        ORDER BY sq.aqi DESC
+        ORDER BY sq.aqi DESC, sq.parameter_name ASC
         LIMIT 1
     ) AS category,
     NOW()
