@@ -17,8 +17,8 @@ export function DeltaBadge({ value, className }: DeltaBadgeProps) {
     <span
       className={cn(
         "inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-semibold",
-        isPositive && "bg-[#198754]/10 text-[#198754]",
-        isNegative && "bg-[#DC3545]/10 text-[#DC3545]",
+        isPositive && "bg-[#DC3545]/10 text-[#DC3545]",
+        isNegative && "bg-[#198754]/10 text-[#198754]",
         !isPositive && !isNegative && "bg-[#EEF3F8] text-[#627D98]",
         className
       )}
