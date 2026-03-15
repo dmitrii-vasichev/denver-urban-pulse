@@ -27,25 +27,98 @@ export async function getKpiSparkline(
   tw: TimeWindow,
   neighborhood: string
 ): Promise<DailyRow[]> {
-  const days = Math.min(daysForWindow(tw), 30);
+  const days = daysForWindow(tw);
   if (neighborhood === "all") {
+    if (days <= 30) {
+      return query<DailyRow>(
+        `SELECT date::text, crime_count, crash_count, requests_311_count
+         FROM mart_city_pulse_daily
+         WHERE date >= (NOW() AT TIME ZONE 'America/Denver')::date - $1::int
+           AND date < (NOW() AT TIME ZONE 'America/Denver')::date
+         ORDER BY date DESC`,
+        [days]
+      );
+    }
+    // 90d: aggregate by week for a cleaner sparkline
     return query<DailyRow>(
-      `SELECT date::text, crime_count, crash_count, requests_311_count
+      `SELECT DATE_TRUNC('week', date)::date::text AS date,
+              SUM(crime_count)::int AS crime_count,
+              SUM(crash_count)::int AS crash_count,
+              SUM(requests_311_count)::int AS requests_311_count
        FROM mart_city_pulse_daily
        WHERE date >= (NOW() AT TIME ZONE 'America/Denver')::date - $1::int
          AND date < (NOW() AT TIME ZONE 'America/Denver')::date
+       GROUP BY DATE_TRUNC('week', date)
        ORDER BY date DESC`,
       [days]
     );
   }
-  // When neighborhood filter is set, fall back to full daily data
+  // Neighborhood-specific sparkline from staging tables
+  if (days <= 30) {
+    return query<DailyRow>(
+      `SELECT d.date::text,
+              COALESCE(cr.cnt, 0)::int AS crime_count,
+              COALESCE(ca.cnt, 0)::int AS crash_count,
+              COALESCE(r.cnt, 0)::int AS requests_311_count
+       FROM generate_series(
+              (NOW() AT TIME ZONE 'America/Denver')::date - $1::int,
+              (NOW() AT TIME ZONE 'America/Denver')::date - 1,
+              '1 day'::interval
+            ) AS d(date)
+       LEFT JOIN (
+         SELECT (reported_date AT TIME ZONE 'America/Denver')::date AS date, COUNT(*) AS cnt
+         FROM stg_crime WHERE neighborhood = $2
+           AND reported_date >= (NOW() AT TIME ZONE 'America/Denver')::date - $1::int
+         GROUP BY 1
+       ) cr ON cr.date = d.date
+       LEFT JOIN (
+         SELECT (reported_date AT TIME ZONE 'America/Denver')::date AS date, COUNT(*) AS cnt
+         FROM stg_crashes WHERE neighborhood = $2
+           AND reported_date >= (NOW() AT TIME ZONE 'America/Denver')::date - $1::int
+         GROUP BY 1
+       ) ca ON ca.date = d.date
+       LEFT JOIN (
+         SELECT (case_created_date AT TIME ZONE 'America/Denver')::date AS date, COUNT(*) AS cnt
+         FROM stg_311 WHERE neighborhood = $2
+           AND case_created_date >= (NOW() AT TIME ZONE 'America/Denver')::date - $1::int
+         GROUP BY 1
+       ) r ON r.date = d.date
+       ORDER BY d.date DESC`,
+      [days, neighborhood]
+    );
+  }
+  // 90d + neighborhood: aggregate by week
   return query<DailyRow>(
-    `SELECT date::text, crime_count, crash_count, requests_311_count
-     FROM mart_city_pulse_daily
-     WHERE date >= (NOW() AT TIME ZONE 'America/Denver')::date - $1::int
-       AND date < (NOW() AT TIME ZONE 'America/Denver')::date
+    `SELECT DATE_TRUNC('week', d.date)::date::text AS date,
+            SUM(COALESCE(cr.cnt, 0))::int AS crime_count,
+            SUM(COALESCE(ca.cnt, 0))::int AS crash_count,
+            SUM(COALESCE(r.cnt, 0))::int AS requests_311_count
+     FROM generate_series(
+            (NOW() AT TIME ZONE 'America/Denver')::date - $1::int,
+            (NOW() AT TIME ZONE 'America/Denver')::date - 1,
+            '1 day'::interval
+          ) AS d(date)
+     LEFT JOIN (
+       SELECT (reported_date AT TIME ZONE 'America/Denver')::date AS date, COUNT(*) AS cnt
+       FROM stg_crime WHERE neighborhood = $2
+         AND reported_date >= (NOW() AT TIME ZONE 'America/Denver')::date - $1::int
+       GROUP BY 1
+     ) cr ON cr.date = d.date
+     LEFT JOIN (
+       SELECT (reported_date AT TIME ZONE 'America/Denver')::date AS date, COUNT(*) AS cnt
+       FROM stg_crashes WHERE neighborhood = $2
+         AND reported_date >= (NOW() AT TIME ZONE 'America/Denver')::date - $1::int
+       GROUP BY 1
+     ) ca ON ca.date = d.date
+     LEFT JOIN (
+       SELECT (case_created_date AT TIME ZONE 'America/Denver')::date AS date, COUNT(*) AS cnt
+       FROM stg_311 WHERE neighborhood = $2
+         AND case_created_date >= (NOW() AT TIME ZONE 'America/Denver')::date - $1::int
+       GROUP BY 1
+     ) r ON r.date = d.date
+     GROUP BY DATE_TRUNC('week', d.date)
      ORDER BY date DESC`,
-    [days]
+    [days, neighborhood]
   );
 }
 
