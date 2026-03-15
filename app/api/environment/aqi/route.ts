@@ -29,8 +29,8 @@ export async function GET(request: NextRequest) {
             aqiPm10: r.aqi_pm10,
             category: r.category,
           })),
-        effectiveThrough,
       },
+      effectiveThrough,
       lastUpdated: new Date().toISOString(),
     });
   } catch (err) {

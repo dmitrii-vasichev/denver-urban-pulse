@@ -58,7 +58,7 @@ describe("Environment API", () => {
       expect(res.status).toBe(200);
       expect(body.data.current).toEqual({ aqi: 42, category: "Good" });
       expect(body.data.trend).toHaveLength(2);
-      expect(body.data.effectiveThrough).toBe("2026-03-13");
+      expect(body.effectiveThrough).toBe("2026-03-13");
     });
 
     it("returns effectiveThrough and filters trend data", async () => {
@@ -79,7 +79,7 @@ describe("Environment API", () => {
       const body = await res.json();
 
       expect(res.status).toBe(200);
-      expect(body.data.effectiveThrough).toBe("2026-03-13");
+      expect(body.effectiveThrough).toBe("2026-03-13");
       expect(body.data.trend).toHaveLength(2);
       expect(body.data.trend.map((t: { date: string }) => t.date)).toEqual(["2026-03-12", "2026-03-13"]);
     });
