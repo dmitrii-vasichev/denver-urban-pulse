@@ -32,7 +32,9 @@ export async function getKpiSparkline(
     return query<DailyRow>(
       `SELECT date::text, crime_count, crash_count, requests_311_count
        FROM mart_city_pulse_daily
-       ORDER BY date DESC LIMIT $1`,
+       WHERE date >= (NOW() AT TIME ZONE 'America/Denver')::date - $1::int
+         AND date < (NOW() AT TIME ZONE 'America/Denver')::date
+       ORDER BY date DESC`,
       [days]
     );
   }
@@ -40,7 +42,9 @@ export async function getKpiSparkline(
   return query<DailyRow>(
     `SELECT date::text, crime_count, crash_count, requests_311_count
      FROM mart_city_pulse_daily
-     ORDER BY date DESC LIMIT $1`,
+     WHERE date >= (NOW() AT TIME ZONE 'America/Denver')::date - $1::int
+       AND date < (NOW() AT TIME ZONE 'America/Denver')::date
+     ORDER BY date DESC`,
     [days]
   );
 }
@@ -108,7 +112,7 @@ export async function getTrends(tw: TimeWindow): Promise<TrendRow[]> {
   return query<TrendRow>(
     `SELECT date::text, domain, SUM(count)::int AS count
      FROM mart_incident_trends
-     WHERE date >= CURRENT_DATE - $1::int
+     WHERE date >= (NOW() AT TIME ZONE 'America/Denver')::date - $1::int
      GROUP BY date, domain
      ORDER BY date`,
     [days]
