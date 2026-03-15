@@ -15,6 +15,8 @@ interface EnvironmentData {
   rankings: RankingRow[];
   comparison: ComparisonRow[];
   narrative: NarrativeData | null;
+  effectiveThrough: string | null;
+  lastUpdated: string | null;
   loading: boolean;
   error: string | null;
   retry: () => void;
@@ -37,6 +39,8 @@ export function useEnvironmentData(
     rankings: [],
     comparison: [],
     narrative: null,
+    effectiveThrough: null,
+    lastUpdated: null,
     loading: true,
     error: null,
   });
@@ -47,10 +51,11 @@ export function useEnvironmentData(
     try {
       const qs = `timeWindow=${timeWindow}${neighborhood !== "all" ? `&neighborhood=${encodeURIComponent(neighborhood)}` : ""}`;
 
-      const [aqi, rankings, comparison, narrative] = await Promise.all([
-        fetchJson<{ current: AqiCurrent | null; trend: AqiDailyPoint[] }>(
-          `/api/environment/aqi?${qs}`
-        ),
+      const [aqiResp, rankings, comparison, narrative] = await Promise.all([
+        fetch(`/api/environment/aqi?${qs}`).then(async (r) => {
+          if (!r.ok) throw new Error(`API error: ${r.status}`);
+          return r.json();
+        }),
         fetchJson<RankingRow[]>(
           `/api/environment/rankings?timeWindow=${timeWindow}`
         ),
@@ -59,10 +64,12 @@ export function useEnvironmentData(
       ]);
 
       setData({
-        aqi,
+        aqi: aqiResp.data,
         rankings,
         comparison,
         narrative,
+        effectiveThrough: aqiResp.effectiveThrough ?? null,
+        lastUpdated: aqiResp.lastUpdated ?? null,
         loading: false,
         error: null,
       });

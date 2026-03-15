@@ -18,6 +18,8 @@ interface CityPulseData {
   heatmap: HeatmapCell[];
   neighborhoods: NeighborhoodRow[];
   narrative: NarrativeData | null;
+  effectiveThrough: string | null;
+  lastUpdated: string | null;
   loading: boolean;
   error: string | null;
   retry: () => void;
@@ -42,6 +44,8 @@ export function useCityPulseData(
     heatmap: [],
     neighborhoods: [],
     narrative: null,
+    effectiveThrough: null,
+    lastUpdated: null,
     loading: true,
     error: null,
   });
@@ -52,10 +56,13 @@ export function useCityPulseData(
     try {
       const qs = `timeWindow=${timeWindow}${neighborhood !== "all" ? `&neighborhood=${encodeURIComponent(neighborhood)}` : ""}`;
 
-      const [kpis, trends, categories, heatmap, neighborhoods, narrative] =
+      const [kpis, trendsResp, categories, heatmap, neighborhoods, narrative] =
         await Promise.all([
           fetchJson<CityPulseData["kpis"]>(`/api/city-pulse/kpis?${qs}`),
-          fetchJson<{ series: TrendPoint[] }>(`/api/city-pulse/trends?${qs}`),
+          fetch(`/api/city-pulse/trends?${qs}`).then(async (r) => {
+            if (!r.ok) throw new Error(`API error: ${r.status}`);
+            return r.json();
+          }),
           fetchJson<Record<string, CategoryBreakdown[]>>(
             `/api/city-pulse/categories?${qs}`
           ),
@@ -68,11 +75,13 @@ export function useCityPulseData(
 
       setData({
         kpis,
-        trends: trends.series,
+        trends: trendsResp.data.series,
         categories,
         heatmap,
         neighborhoods,
         narrative,
+        effectiveThrough: trendsResp.effectiveThrough ?? null,
+        lastUpdated: trendsResp.lastUpdated ?? null,
         loading: false,
         error: null,
       });
