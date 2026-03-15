@@ -8,6 +8,7 @@ import { ErrorCard } from "@/components/cards/error-card";
 jest.mock("recharts", () => ({
   AreaChart: ({ children }: { children: React.ReactNode }) => <div data-testid="area-chart">{children}</div>,
   Area: () => <div />,
+  Tooltip: () => <div />,
   ResponsiveContainer: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 

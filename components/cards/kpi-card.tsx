@@ -14,6 +14,7 @@ interface KpiCardProps {
   delta?: number;
   deltaPercent?: number;
   sparklineData?: ChartPoint[];
+  sparklineLabel?: string;
   insight?: string;
   color: string;
   loading?: boolean;
@@ -26,6 +27,7 @@ export function KpiCard({
   value,
   deltaPercent,
   sparklineData = [],
+  sparklineLabel,
   insight,
   color,
   loading,
@@ -38,11 +40,8 @@ export function KpiCard({
           <Skeleton className="h-3 w-10" />
         </div>
         <Skeleton className="h-8 w-24 mb-2" />
-        <div className="flex items-center gap-2">
-          <Skeleton className="h-4 w-14" />
-          <Skeleton className="h-7 w-20" />
-        </div>
-        <Skeleton className="h-2.5 w-full mt-2" />
+        <Skeleton className="h-4 w-14 mb-2" />
+        <Skeleton className="h-9 w-full" />
       </div>
     );
   }
@@ -60,17 +59,24 @@ export function KpiCard({
         )}
       </div>
 
-      <div className="text-[34px] font-bold text-[#102A43] leading-none mb-1">
-        {formatNumber(value)}
+      <div className="flex items-end gap-2 mb-1">
+        <span className="text-[34px] font-bold text-[#102A43] leading-none">
+          {formatNumber(value)}
+        </span>
+        <div className="mb-1">
+          <DeltaBadge value={deltaPercent} />
+        </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        <DeltaBadge value={deltaPercent} />
-        <Sparkline data={sparklineData} color={color} />
-      </div>
+      <Sparkline
+        data={sparklineData}
+        color={color}
+        label={sparklineLabel}
+        height={40}
+      />
 
       {insight && (
-        <p className="text-[10px] text-[#627D98] mt-2 leading-tight line-clamp-1">
+        <p className="text-[10px] text-[#627D98] mt-1.5 leading-tight line-clamp-1">
           {insight}
         </p>
       )}

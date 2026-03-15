@@ -36,6 +36,7 @@ function CityPulseContent() {
           value={kpis?.crime.value}
           deltaPercent={kpis?.crime.deltaPercent}
           sparklineData={kpis?.crime.sparkline}
+          sparklineLabel="incidents"
           insight={kpis?.crime.insight}
           color="#2458C6"
           loading={loading}
@@ -46,6 +47,7 @@ function CityPulseContent() {
           value={kpis?.crashes.value}
           deltaPercent={kpis?.crashes.deltaPercent}
           sparklineData={kpis?.crashes.sparkline}
+          sparklineLabel="crashes"
           insight={kpis?.crashes.insight}
           color="#D97904"
           loading={loading}
@@ -56,6 +58,7 @@ function CityPulseContent() {
           value={kpis?.requests311.value}
           deltaPercent={kpis?.requests311.deltaPercent}
           sparklineData={kpis?.requests311.sparkline}
+          sparklineLabel="requests"
           insight={kpis?.requests311.insight}
           color="#198754"
           loading={loading}
