@@ -83,7 +83,10 @@ export function Sidebar() {
 
       <div className="hidden xl:block px-5 py-4 border-t border-[#E6E9EE]">
         <p className="text-[10px] text-[#9FB3C8]">
-          Data refreshed daily at 06:00 UTC
+          Refreshed daily at 06:00 UTC
+        </p>
+        <p className="text-[10px] text-[#9FB3C8]">
+          Crime & crash data delayed 5–7 days
         </p>
       </div>
     </aside>

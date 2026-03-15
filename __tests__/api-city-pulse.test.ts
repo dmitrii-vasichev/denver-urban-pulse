@@ -70,6 +70,8 @@ describe("City Pulse API", () => {
           requests_311_delta_pct: 12.0,
         },
       ]);
+      // effectiveThrough query
+      mockQuery.mockResolvedValueOnce([{ effective_through: "2026-03-12" }]);
 
       const res = await getKpis(makeRequest("http://localhost/api/city-pulse/kpis?timeWindow=30d"));
       const body = await res.json();
@@ -80,6 +82,35 @@ describe("City Pulse API", () => {
       expect(body.data.crashes.value).toBe(100);
       expect(body.data.requests311.value).toBe(500);
       expect(body.data.crime.sparkline).toHaveLength(2);
+      expect(body.effectiveThrough).toBe("2026-03-12");
+    });
+
+    it("returns effectiveThrough in response", async () => {
+      // sparkline query
+      mockQuery.mockResolvedValueOnce([
+        { date: "2026-03-10", crime_count: 5, crash_count: 2, requests_311_count: 10 },
+      ]);
+      // totals query
+      mockQuery.mockResolvedValueOnce([
+        {
+          crime_count: 150,
+          crash_count: 50,
+          requests_311_count: 200,
+          crime_delta_pct: null,
+          crash_delta_pct: null,
+          requests_311_delta_pct: null,
+        },
+      ]);
+      // effectiveThrough query
+      mockQuery.mockResolvedValueOnce([{ effective_through: "2026-03-10" }]);
+
+      const res = await getKpis(makeRequest("http://localhost/api/city-pulse/kpis?timeWindow=7d"));
+      const body = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(body.effectiveThrough).toBe("2026-03-10");
+      expect(body.data).toBeDefined();
+      expect(body.lastUpdated).toBeDefined();
     });
   });
 
@@ -91,6 +122,7 @@ describe("City Pulse API", () => {
         { date: "2026-03-11", domain: "311", count: 20 },
         { date: "2026-03-12", domain: "crime", count: 12 },
       ]);
+      mockQuery.mockResolvedValueOnce([{ effective_through: "2026-03-12" }]);
 
       const res = await getTrends(makeRequest("http://localhost/api/city-pulse/trends"));
       const body = await res.json();
@@ -103,6 +135,34 @@ describe("City Pulse API", () => {
         crashes: 5,
         requests311: 20,
       });
+      expect(body.effectiveThrough).toBe("2026-03-12");
+    });
+
+    it("returns effectiveThrough as the min of max dates across domains", async () => {
+      // 311 has data up to Mar 10, but crime/crashes only up to Mar 09
+      mockQuery.mockResolvedValueOnce([
+        { date: "2026-03-08", domain: "crime", count: 5 },
+        { date: "2026-03-08", domain: "crashes", count: 3 },
+        { date: "2026-03-08", domain: "311", count: 10 },
+        { date: "2026-03-09", domain: "crime", count: 6 },
+        { date: "2026-03-09", domain: "crashes", count: 4 },
+        { date: "2026-03-09", domain: "311", count: 12 },
+        { date: "2026-03-10", domain: "311", count: 15 },
+      ]);
+      // effectiveThrough is Mar 09 (min of max dates: crime=09, crashes=09, 311=10)
+      mockQuery.mockResolvedValueOnce([{ effective_through: "2026-03-09" }]);
+
+      const res = await getTrends(makeRequest("http://localhost/api/city-pulse/trends"));
+      const body = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(body.effectiveThrough).toBe("2026-03-09");
+      // Mar 10 should be trimmed since it's after effectiveThrough
+      expect(body.data.series).toHaveLength(2);
+      expect(body.data.series.map((s: { date: string }) => s.date)).toEqual([
+        "2026-03-08",
+        "2026-03-09",
+      ]);
     });
   });
 

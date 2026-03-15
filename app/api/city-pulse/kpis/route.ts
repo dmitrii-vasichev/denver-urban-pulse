@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getKpiSparkline, getKpiTotals } from "@/lib/queries/city-pulse";
+import { getKpiSparkline, getKpiTotals, getEffectiveThrough } from "@/lib/queries/city-pulse";
 import type { TimeWindow } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -19,9 +19,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const [sparkline, totals] = await Promise.all([
+    const [sparkline, totals, effectiveThrough] = await Promise.all([
       getKpiSparkline(tw, neighborhood),
       getKpiTotals(tw, neighborhood),
+      getEffectiveThrough(tw),
     ]);
 
     const toKpi = (
@@ -45,6 +46,7 @@ export async function GET(request: NextRequest) {
         requests311: toKpi("requests_311_count", "requests_311_delta_pct"),
       },
       lastUpdated: new Date().toISOString(),
+      effectiveThrough,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getTrends } from "@/lib/queries/city-pulse";
+import { getTrends, getEffectiveThrough } from "@/lib/queries/city-pulse";
 import type { TimeWindow } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -7,7 +7,10 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   try {
     const tw = (request.nextUrl.searchParams.get("timeWindow") ?? "30d") as TimeWindow;
-    const rows = await getTrends(tw);
+    const [rows, effectiveThrough] = await Promise.all([
+      getTrends(tw),
+      getEffectiveThrough(tw),
+    ]);
 
     // Pivot: group by date, spread domains into columns
     const byDate = new Map<string, { crime: number; crashes: number; requests311: number }>();
@@ -23,10 +26,12 @@ export async function GET(request: NextRequest) {
 
     const series = Array.from(byDate.entries())
       .map(([date, vals]) => ({ date, ...vals }))
+      .filter((p) => !effectiveThrough || p.date <= effectiveThrough)
       .sort((a, b) => a.date.localeCompare(b.date));
 
     return NextResponse.json({
       data: { series },
+      effectiveThrough,
       lastUpdated: new Date().toISOString(),
     });
   } catch (err) {
