@@ -54,6 +54,8 @@ describe("City Pulse API", () => {
 
   describe("GET /api/city-pulse/kpis", () => {
     it("returns KPI data with correct shape", async () => {
+      // effectiveThrough query (called first)
+      mockQuery.mockResolvedValueOnce([{ effective_through: "2026-03-12" }]);
       // sparkline query
       mockQuery.mockResolvedValueOnce([
         { date: "2026-03-12", crime_count: 10, crash_count: 5, requests_311_count: 20 },
@@ -70,8 +72,6 @@ describe("City Pulse API", () => {
           requests_311_delta_pct: 12.0,
         },
       ]);
-      // effectiveThrough query
-      mockQuery.mockResolvedValueOnce([{ effective_through: "2026-03-12" }]);
 
       const res = await getKpis(makeRequest("http://localhost/api/city-pulse/kpis?timeWindow=30d"));
       const body = await res.json();
@@ -86,6 +86,8 @@ describe("City Pulse API", () => {
     });
 
     it("returns effectiveThrough in response", async () => {
+      // effectiveThrough query (called first)
+      mockQuery.mockResolvedValueOnce([{ effective_through: "2026-03-10" }]);
       // sparkline query
       mockQuery.mockResolvedValueOnce([
         { date: "2026-03-10", crime_count: 5, crash_count: 2, requests_311_count: 10 },
@@ -101,8 +103,6 @@ describe("City Pulse API", () => {
           requests_311_delta_pct: null,
         },
       ]);
-      // effectiveThrough query
-      mockQuery.mockResolvedValueOnce([{ effective_through: "2026-03-10" }]);
 
       const res = await getKpis(makeRequest("http://localhost/api/city-pulse/kpis?timeWindow=7d"));
       const body = await res.json();

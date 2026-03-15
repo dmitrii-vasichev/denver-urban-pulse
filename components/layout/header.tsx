@@ -42,14 +42,11 @@ function HeaderInner({ title, subtitle, lastUpdated, effectiveThrough }: HeaderP
           {subtitle && (
             <p className="text-[11px] text-[#627D98] mt-0.5">{subtitle}</p>
           )}
-          {lastUpdated && (
+          {(lastUpdated || effectiveThrough) && (
             <p className="text-[10px] text-[#9FB3C8] mt-0.5">
-              Pipeline ran: {formatPipelineDate(lastUpdated)}
-            </p>
-          )}
-          {effectiveThrough && (
-            <p className="text-[10px] text-[#9FB3C8]">
-              Data complete through: {formatDateShort(effectiveThrough)}
+              {lastUpdated && <>Pipeline ran: {formatPipelineDate(lastUpdated)}</>}
+              {lastUpdated && effectiveThrough && <span className="mx-1">·</span>}
+              {effectiveThrough && <>Data complete through: {formatDateShort(effectiveThrough)}</>}
             </p>
           )}
         </div>
