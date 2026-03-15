@@ -39,9 +39,13 @@ export function KpiCard({
           <Skeleton className="h-3 w-20" />
           <Skeleton className="h-3 w-10" />
         </div>
-        <Skeleton className="h-8 w-24 mb-2" />
-        <Skeleton className="h-4 w-14 mb-2" />
-        <Skeleton className="h-9 w-full" />
+        <div className="flex items-end gap-3">
+          <div className="shrink-0">
+            <Skeleton className="h-8 w-24 mb-2" />
+            <Skeleton className="h-4 w-14" />
+          </div>
+          <Skeleton className="h-12 flex-1" />
+        </div>
       </div>
     );
   }
@@ -59,21 +63,22 @@ export function KpiCard({
         )}
       </div>
 
-      <div className="flex items-end gap-2 mb-1">
-        <span className="text-[34px] font-bold text-[#102A43] leading-none">
-          {formatNumber(value)}
-        </span>
-        <div className="mb-1">
+      <div className="flex items-end gap-3">
+        <div className="shrink-0">
+          <div className="text-[34px] font-bold text-[#102A43] leading-none mb-1">
+            {formatNumber(value)}
+          </div>
           <DeltaBadge value={deltaPercent} />
         </div>
+        <div className="min-w-0 flex-1 self-center">
+          <Sparkline
+            data={sparklineData}
+            color={color}
+            label={sparklineLabel}
+            height={48}
+          />
+        </div>
       </div>
-
-      <Sparkline
-        data={sparklineData}
-        color={color}
-        label={sparklineLabel}
-        height={40}
-      />
 
       {insight && (
         <p className="text-[10px] text-[#627D98] mt-1.5 leading-tight line-clamp-1">
