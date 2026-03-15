@@ -68,6 +68,20 @@ describe("CategoryChart", () => {
     render(<CategoryChart data={{}} />);
     expect(screen.getByText("No category data available")).toBeInTheDocument();
   });
+
+  it("shows summary line for single-category domain", () => {
+    const singleCategory: Record<string, CategoryBreakdown[]> = {
+      crime: [{ category: "Larceny", count: 500, percent: 100 }],
+      crashes: [],
+      requests311: [],
+    };
+    render(<CategoryChart data={singleCategory} />);
+    expect(screen.getByText("Crime")).toBeInTheDocument();
+    expect(screen.getByText("Total")).toBeInTheDocument();
+    expect(screen.getByText("500")).toBeInTheDocument();
+    // Should not render bar for single-category domain
+    expect(screen.queryByText("Larceny")).not.toBeInTheDocument();
+  });
 });
 
 const sampleHeatmap: HeatmapCell[] = [
