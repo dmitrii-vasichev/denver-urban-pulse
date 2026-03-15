@@ -49,6 +49,8 @@ describe("Environment API", () => {
         { date: "2026-03-12", aqi_max: 55, aqi_ozone: 50, aqi_pm25: 55, aqi_pm10: 30, category: "Moderate" },
         { date: "2026-03-13", aqi_max: 42, aqi_ozone: 38, aqi_pm25: 42, aqi_pm10: 20, category: "Good" },
       ]);
+      // effectiveThrough
+      mockQuery.mockResolvedValueOnce([{ effective_through: "2026-03-13" }]);
 
       const res = await getAqi(req("http://localhost/api/environment/aqi"));
       const body = await res.json();
@@ -56,6 +58,30 @@ describe("Environment API", () => {
       expect(res.status).toBe(200);
       expect(body.data.current).toEqual({ aqi: 42, category: "Good" });
       expect(body.data.trend).toHaveLength(2);
+      expect(body.data.effectiveThrough).toBe("2026-03-13");
+    });
+
+    it("returns effectiveThrough and filters trend data", async () => {
+      // current
+      mockQuery.mockResolvedValueOnce([
+        { date: "2026-03-14", aqi_max: 50, aqi_ozone: 40, aqi_pm25: 50, aqi_pm10: 25, category: "Good" },
+      ]);
+      // trend — includes a date beyond effectiveThrough
+      mockQuery.mockResolvedValueOnce([
+        { date: "2026-03-12", aqi_max: 55, aqi_ozone: 50, aqi_pm25: 55, aqi_pm10: 30, category: "Moderate" },
+        { date: "2026-03-13", aqi_max: 42, aqi_ozone: 38, aqi_pm25: 42, aqi_pm10: 20, category: "Good" },
+        { date: "2026-03-14", aqi_max: 50, aqi_ozone: 40, aqi_pm25: 50, aqi_pm10: 25, category: "Good" },
+      ]);
+      // effectiveThrough — only up to 03-13
+      mockQuery.mockResolvedValueOnce([{ effective_through: "2026-03-13" }]);
+
+      const res = await getAqi(req("http://localhost/api/environment/aqi"));
+      const body = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(body.data.effectiveThrough).toBe("2026-03-13");
+      expect(body.data.trend).toHaveLength(2);
+      expect(body.data.trend.map((t: { date: string }) => t.date)).toEqual(["2026-03-12", "2026-03-13"]);
     });
   });
 

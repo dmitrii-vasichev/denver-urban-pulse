@@ -36,6 +36,17 @@ export async function getAqiCurrent(): Promise<AqiRow | null> {
   return rows[0] ?? null;
 }
 
+export async function getAqiEffectiveThrough(tw: TimeWindow): Promise<string | null> {
+  const days = daysForWindow(tw);
+  const rows = await query<{ effective_through: string }>(
+    `SELECT MAX(date)::text AS effective_through
+     FROM mart_aqi_daily
+     WHERE date >= CURRENT_DATE - $1::int`,
+    [days]
+  );
+  return rows[0]?.effective_through ?? null;
+}
+
 // --- Rankings ---
 
 interface RankingRow {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAqiCurrent, getAqiTrend } from "@/lib/queries/environment";
+import { getAqiCurrent, getAqiEffectiveThrough, getAqiTrend } from "@/lib/queries/environment";
 import type { TimeWindow } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -8,9 +8,10 @@ export async function GET(request: NextRequest) {
   try {
     const tw = (request.nextUrl.searchParams.get("timeWindow") ?? "30d") as TimeWindow;
 
-    const [current, trend] = await Promise.all([
+    const [current, trend, effectiveThrough] = await Promise.all([
       getAqiCurrent(),
       getAqiTrend(tw),
+      getAqiEffectiveThrough(tw),
     ]);
 
     return NextResponse.json({
@@ -18,14 +19,17 @@ export async function GET(request: NextRequest) {
         current: current
           ? { aqi: current.aqi_max, category: current.category }
           : null,
-        trend: trend.map((r) => ({
-          date: r.date,
-          aqiMax: r.aqi_max,
-          aqiOzone: r.aqi_ozone,
-          aqiPm25: r.aqi_pm25,
-          aqiPm10: r.aqi_pm10,
-          category: r.category,
-        })),
+        trend: trend
+          .filter((r) => !effectiveThrough || r.date <= effectiveThrough)
+          .map((r) => ({
+            date: r.date,
+            aqiMax: r.aqi_max,
+            aqiOzone: r.aqi_ozone,
+            aqiPm25: r.aqi_pm25,
+            aqiPm10: r.aqi_pm10,
+            category: r.category,
+          })),
+        effectiveThrough,
       },
       lastUpdated: new Date().toISOString(),
     });
