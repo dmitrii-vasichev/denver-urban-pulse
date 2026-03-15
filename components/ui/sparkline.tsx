@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import {
   AreaChart,
   Area,
@@ -14,31 +15,8 @@ interface SparklineProps {
   color: string;
   width?: number | string;
   height?: number;
-  label?: string;
+  metricLabel?: string;
   interactive?: boolean;
-}
-
-function SparklineTooltip({
-  active,
-  payload,
-  label: metricLabel,
-}: {
-  active?: boolean;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  payload?: any[];
-  label?: string;
-}) {
-  if (!active || !payload?.length) return null;
-  const point = payload[0];
-  const date = formatDateShort(point.payload?.date);
-  const value = formatNumber(point.value as number);
-  return (
-    <div className="rounded-lg bg-[#102A43] px-2.5 py-1.5 text-[11px] text-white shadow-lg">
-      <span className="font-medium">{date}</span>
-      <span className="mx-1 text-white/50">·</span>
-      <span>{value} {metricLabel ?? "incidents"}</span>
-    </div>
-  );
 }
 
 export function Sparkline({
@@ -46,9 +24,24 @@ export function Sparkline({
   color,
   width = "100%",
   height = 36,
-  label,
+  metricLabel = "incidents",
   interactive = true,
 }: SparklineProps) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const renderTooltip = useCallback(({ active, payload }: any) => {
+    if (!active || !payload?.length) return null;
+    const point = payload[0];
+    const date = formatDateShort(point.payload?.date);
+    const value = formatNumber(point.value as number);
+    return (
+      <div className="rounded-lg bg-[#102A43] px-2.5 py-1.5 text-[11px] text-white shadow-lg">
+        <span className="font-medium">{date}</span>
+        <span className="mx-1 text-white/50">·</span>
+        <span>{value} {metricLabel}</span>
+      </div>
+    );
+  }, [metricLabel]);
+
   if (data.length === 0) return null;
 
   return (
@@ -66,7 +59,7 @@ export function Sparkline({
           </defs>
           {interactive && (
             <Tooltip
-              content={<SparklineTooltip label={label} />}
+              content={renderTooltip}
               cursor={{ stroke: color, strokeOpacity: 0.3, strokeWidth: 1 }}
               isAnimationActive={false}
             />

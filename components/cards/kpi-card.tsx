@@ -74,7 +74,7 @@ export function KpiCard({
           <Sparkline
             data={sparklineData}
             color={color}
-            label={sparklineLabel}
+            metricLabel={sparklineLabel}
             height={48}
           />
         </div>
