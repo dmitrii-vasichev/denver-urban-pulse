@@ -17,17 +17,29 @@ import geojson from "@/data/geo/denver-neighborhoods.json";
 
 function CityPulseContent() {
   const { timeWindow, neighborhood } = useFilters();
-  const { kpis, trends, categories, heatmap, neighborhoods, narrative, loading, error, retry } =
+  const { kpis, trends, categories, heatmap, neighborhoods, narrative, loading, error, retry, effectiveThrough, lastUpdated } =
     useCityPulseData(timeWindow, neighborhood);
 
   if (error) {
-    return <ErrorCard message={error} onRetry={retry} />;
+    return (
+      <PageShell
+        title="City Pulse"
+        subtitle="Crime, crashes, and 311 requests across Denver"
+      >
+        <ErrorCard message={error} onRetry={retry} />
+      </PageShell>
+    );
   }
 
   const tagLabel = timeWindow.toUpperCase();
 
   return (
-    <>
+    <PageShell
+      title="City Pulse"
+      subtitle="Crime, crashes, and 311 requests across Denver"
+      lastUpdated={lastUpdated}
+      effectiveThrough={effectiveThrough}
+    >
       {/* KPI Row */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <KpiCard
@@ -103,26 +115,24 @@ function CityPulseContent() {
           <NeighborhoodRankingChart data={neighborhoods} />
         </ChartCard>
       </div>
-    </>
+    </PageShell>
   );
 }
 
 export default function CityPulsePage() {
   return (
-    <PageShell
-      title="City Pulse"
-      subtitle="Crime, crashes, and 311 requests across Denver"
-    >
-      <Suspense fallback={<CityPulseSkeleton />}>
-        <CityPulseContent />
-      </Suspense>
-    </PageShell>
+    <Suspense fallback={<CityPulseSkeleton />}>
+      <CityPulseContent />
+    </Suspense>
   );
 }
 
 function CityPulseSkeleton() {
   return (
-    <>
+    <PageShell
+      title="City Pulse"
+      subtitle="Crime, crashes, and 311 requests across Denver"
+    >
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {[0, 1, 2].map((i) => (
           <KpiCard key={i} title="" value={0} color="#ccc" loading />
@@ -145,6 +155,6 @@ function CityPulseSkeleton() {
           </ChartCard>
         ))}
       </div>
-    </>
+    </PageShell>
   );
 }

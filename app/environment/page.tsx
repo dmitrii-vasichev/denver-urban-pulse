@@ -19,11 +19,18 @@ import type { NeighborhoodRow } from "@/lib/types";
 
 function EnvironmentContent() {
   const { timeWindow, neighborhood } = useFilters();
-  const { aqi, rankings, comparison, narrative, loading, error, retry } =
+  const { aqi, rankings, comparison, narrative, loading, error, retry, effectiveThrough, lastUpdated } =
     useEnvironmentData(timeWindow, neighborhood);
 
   if (error) {
-    return <ErrorCard message={error} onRetry={retry} />;
+    return (
+      <PageShell
+        title="Environment & Neighborhoods"
+        subtitle="Air quality and neighborhood analytics"
+      >
+        <ErrorCard message={error} onRetry={retry} />
+      </PageShell>
+    );
   }
 
   const tagLabel = timeWindow.toUpperCase();
@@ -54,7 +61,12 @@ function EnvironmentContent() {
   }));
 
   return (
-    <>
+    <PageShell
+      title="Environment & Neighborhoods"
+      subtitle="Air quality and neighborhood analytics"
+      lastUpdated={lastUpdated}
+      effectiveThrough={effectiveThrough}
+    >
       {/* KPI Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <KpiCard
@@ -130,26 +142,24 @@ function EnvironmentContent() {
           <ChangeLeadersChart data={comparison} />
         </ChartCard>
       </div>
-    </>
+    </PageShell>
   );
 }
 
 export default function EnvironmentPage() {
   return (
-    <PageShell
-      title="Environment & Neighborhoods"
-      subtitle="Air quality and neighborhood analytics"
-    >
-      <Suspense fallback={<EnvironmentSkeleton />}>
-        <EnvironmentContent />
-      </Suspense>
-    </PageShell>
+    <Suspense fallback={<EnvironmentSkeleton />}>
+      <EnvironmentContent />
+    </Suspense>
   );
 }
 
 function EnvironmentSkeleton() {
   return (
-    <>
+    <PageShell
+      title="Environment & Neighborhoods"
+      subtitle="Air quality and neighborhood analytics"
+    >
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {[0, 1, 2, 3].map((i) => (
           <KpiCard key={i} title="" value={0} color="#ccc" loading />
@@ -172,6 +182,6 @@ function EnvironmentSkeleton() {
           </ChartCard>
         ))}
       </div>
-    </>
+    </PageShell>
   );
 }

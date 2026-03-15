@@ -5,14 +5,29 @@ import { MobileNav } from "./mobile-nav";
 import { TimeWindowFilter } from "./time-window-filter";
 import { NeighborhoodFilter } from "./neighborhood-filter";
 import { useFilters } from "@/lib/hooks/use-filters";
+import { formatDateShort } from "@/lib/format";
 
 interface HeaderProps {
   title: string;
   subtitle?: string;
   lastUpdated?: string | null;
+  effectiveThrough?: string | null;
 }
 
-function HeaderInner({ title, subtitle, lastUpdated }: HeaderProps) {
+function formatPipelineDate(iso: string): string {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "UTC",
+  }) + " UTC";
+}
+
+function HeaderInner({ title, subtitle, lastUpdated, effectiveThrough }: HeaderProps) {
   const { timeWindow, neighborhood, setTimeWindow, setNeighborhood } =
     useFilters();
 
@@ -29,7 +44,12 @@ function HeaderInner({ title, subtitle, lastUpdated }: HeaderProps) {
           )}
           {lastUpdated && (
             <p className="text-[10px] text-[#9FB3C8] mt-0.5">
-              Last updated: {lastUpdated}
+              Pipeline ran: {formatPipelineDate(lastUpdated)}
+            </p>
+          )}
+          {effectiveThrough && (
+            <p className="text-[10px] text-[#9FB3C8]">
+              Data complete through: {formatDateShort(effectiveThrough)}
             </p>
           )}
         </div>
