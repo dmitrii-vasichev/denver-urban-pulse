@@ -13,46 +13,74 @@ from db import execute_sql, truncate_table
 
 logger = logging.getLogger(__name__)
 
+# Human-readable label for crime offense_category slugs
+CRIME_LABEL_SQL = """
+    CASE COALESCE(offense_category, 'unknown')
+        WHEN 'all-other-crimes'        THEN 'Other'
+        WHEN 'theft-from-motor-vehicle' THEN 'Vehicle Theft'
+        WHEN 'white-collar-crime'       THEN 'White-Collar Crime'
+        WHEN 'murder'                   THEN 'Homicide'
+        ELSE INITCAP(REPLACE(COALESCE(offense_category, 'Unknown'), '-', ' '))
+    END
+"""
+
+# Human-readable label for crash top_offense values
+CRASH_LABEL_SQL = """
+    CASE COALESCE(top_offense, 'Unknown')
+        WHEN 'TRAF - ACCIDENT'                        THEN 'Traffic Accident'
+        WHEN 'TRAF - ACCIDENT - HIT AND RUN'          THEN 'Hit & Run'
+        WHEN 'TRAF - ACCIDENT - DUI-DUID'             THEN 'DUI / DUID'
+        WHEN 'TRAF - ACCIDENT - SBI'                  THEN 'Serious Bodily Injury'
+        WHEN 'TRAF - ACCIDENT - POLICE'               THEN 'Police Involved'
+        WHEN 'TRAF - ACCIDENT - FATAL'                THEN 'Fatal Crash'
+        WHEN 'TRAF - HABITUAL OFFENDER'               THEN 'Habitual Offender'
+        ELSE INITCAP(REPLACE(
+            REPLACE(COALESCE(top_offense, 'Unknown'), 'TRAF - ACCIDENT - ', ''),
+            '-', ' '
+        ))
+    END
+"""
+
 # Insert counts first, then update percentages
 INSERT_SQL = """
 INSERT INTO mart_category_breakdown (
     period, domain, category, count, pct_of_total, updated_at
 )
--- Crime by offense_category
+-- Crime by offense_category (human-readable labels)
 SELECT
     %(period)s, 'crime',
-    COALESCE(offense_category, 'Unknown'),
+    {crime_label},
     COUNT(*), 0, NOW()
 FROM stg_crime
 WHERE reported_date >= (NOW() AT TIME ZONE 'America/Denver')::date - %(days)s
-GROUP BY offense_category
+GROUP BY {crime_label}
 
 UNION ALL
 
--- Crashes by top_offense
+-- Crashes by top_offense (human-readable labels)
 SELECT
     %(period)s, 'crashes',
-    COALESCE(top_offense, 'Unknown'),
+    {crash_label},
     COUNT(*), 0, NOW()
 FROM stg_crashes
 WHERE reported_date >= (NOW() AT TIME ZONE 'America/Denver')::date - %(days)s
-GROUP BY top_offense
+GROUP BY {crash_label}
 
 UNION ALL
 
--- 311 by request_type
+-- 311 by topic (request_type is usually NULL, topic has actual categories)
 SELECT
     %(period)s, '311',
-    COALESCE(request_type, 'Unknown'),
+    COALESCE(NULLIF(topic, ''), 'Other'),
     COUNT(*), 0, NOW()
 FROM stg_311
 WHERE case_created_date >= (NOW() AT TIME ZONE 'America/Denver')::date - %(days)s
-GROUP BY request_type
+GROUP BY topic
 
 ON CONFLICT (period, domain, category) DO UPDATE SET
     count = EXCLUDED.count,
     updated_at = NOW()
-"""
+""".format(crime_label=CRIME_LABEL_SQL, crash_label=CRASH_LABEL_SQL)
 
 UPDATE_PCT_SQL = """
 UPDATE mart_category_breakdown cb
