@@ -19,11 +19,16 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const [sparkline, totals, effectiveThrough] = await Promise.all([
+    const effectiveThrough = await getEffectiveThrough(tw);
+
+    const [sparkline, totals] = await Promise.all([
       getKpiSparkline(tw, neighborhood),
-      getKpiTotals(tw, neighborhood),
-      getEffectiveThrough(tw),
+      getKpiTotals(tw, neighborhood, effectiveThrough),
     ]);
+
+    const trimmedSparkline = effectiveThrough
+      ? sparkline.filter((r) => r.date <= effectiveThrough)
+      : sparkline;
 
     const toKpi = (
       countKey: "crime_count" | "crash_count" | "requests_311_count",
@@ -32,7 +37,7 @@ export async function GET(request: NextRequest) {
       value: totals?.[countKey] ?? 0,
       delta: 0,
       deltaPercent: totals?.[deltaKey] ?? null,
-      sparkline: sparkline
+      sparkline: trimmedSparkline
         .map((r) => ({ date: r.date, value: r[countKey] }))
         .reverse(),
       insight: "",

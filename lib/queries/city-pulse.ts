@@ -124,26 +124,36 @@ export async function getKpiSparkline(
 
 export async function getKpiTotals(
   tw: TimeWindow,
-  neighborhood: string
+  neighborhood: string,
+  effectiveThrough?: string | null
 ): Promise<NeighborhoodTotalRow | null> {
   if (neighborhood === "all") {
     const days = daysForWindow(tw);
+    const upperBound = effectiveThrough
+      ? `$2::date + 1`
+      : `(NOW() AT TIME ZONE 'America/Denver')::date`;
+    const prevUpperBound = effectiveThrough
+      ? `$2::date + 1 - $1::int`
+      : `(NOW() AT TIME ZONE 'America/Denver')::date - $1::int`;
+    const params: (number | string)[] = effectiveThrough
+      ? [days, effectiveThrough]
+      : [days];
     const rows = await query<NeighborhoodTotalRow>(
       `WITH cur AS (
          SELECT COALESCE(SUM(crime_count), 0)::int AS crime_count,
                 COALESCE(SUM(crash_count), 0)::int AS crash_count,
                 COALESCE(SUM(requests_311_count), 0)::int AS requests_311_count
          FROM mart_city_pulse_daily
-         WHERE date >= (NOW() AT TIME ZONE 'America/Denver')::date - $1::int
-           AND date < (NOW() AT TIME ZONE 'America/Denver')::date
+         WHERE date >= ${upperBound} - $1::int
+           AND date < ${upperBound}
        ),
        prev AS (
          SELECT COALESCE(SUM(crime_count), 0)::int AS crime_count,
                 COALESCE(SUM(crash_count), 0)::int AS crash_count,
                 COALESCE(SUM(requests_311_count), 0)::int AS requests_311_count
          FROM mart_city_pulse_daily
-         WHERE date >= (NOW() AT TIME ZONE 'America/Denver')::date - $1::int * 2
-           AND date < (NOW() AT TIME ZONE 'America/Denver')::date - $1::int
+         WHERE date >= ${prevUpperBound} - $1::int
+           AND date < ${prevUpperBound}
        )
        SELECT
          cur.crime_count,
@@ -159,7 +169,7 @@ export async function getKpiTotals(
               THEN ROUND(((cur.requests_311_count - prev.requests_311_count)::numeric / prev.requests_311_count) * 100, 1)
               ELSE NULL END AS requests_311_delta_pct
        FROM cur, prev`,
-      [days]
+      params
     );
     return rows[0] ?? null;
   }
