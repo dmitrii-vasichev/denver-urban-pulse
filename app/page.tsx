@@ -12,6 +12,7 @@ import { NeighborhoodRankingChart } from "@/components/charts/neighborhood-ranki
 import { DenverMapDynamic } from "@/components/map/denver-map-dynamic";
 import { useFilters } from "@/lib/hooks/use-filters";
 import { useCityPulseData } from "@/lib/hooks/use-city-pulse-data";
+import { useEnvironmentData } from "@/lib/hooks/use-environment-data";
 import { ErrorCard } from "@/components/cards/error-card";
 import geojson from "@/data/geo/denver-neighborhoods.json";
 
@@ -19,14 +20,19 @@ function CityPulseContent() {
   const { timeWindow, neighborhood } = useFilters();
   const { kpis, trends, categories, heatmap, neighborhoods, narrative, loading, error, retry, effectiveThrough, lastUpdated } =
     useCityPulseData(timeWindow, neighborhood);
+  const { aqi, rankings, loading: envLoading, error: envError, retry: envRetry } =
+    useEnvironmentData(timeWindow, neighborhood);
 
-  if (error) {
+  const combinedError = error || envError;
+  const combinedLoading = loading || envLoading;
+
+  if (combinedError) {
     return (
       <PageShell
         title="City Pulse"
         subtitle="Crime, crashes, and 311 requests across Denver"
       >
-        <ErrorCard message={error} onRetry={retry} />
+        <ErrorCard message={combinedError} onRetry={() => { retry(); envRetry(); }} />
       </PageShell>
     );
   }
