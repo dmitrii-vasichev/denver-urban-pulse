@@ -70,6 +70,31 @@ describe("ChartCard", () => {
     const skeletons = container.querySelectorAll(".animate-pulse");
     expect(skeletons.length).toBeGreaterThan(0);
   });
+
+  it("uses flex layout for height stretching", () => {
+    const { container } = render(
+      <ChartCard title="Map" className="h-full">
+        <div>content</div>
+      </ChartCard>
+    );
+    const card = container.firstChild as HTMLElement;
+    expect(card.className).toContain("flex");
+    expect(card.className).toContain("flex-col");
+    expect(card.className).toContain("h-full");
+    // inner content area should grow
+    const inner = card.querySelector(".flex-1");
+    expect(inner).toBeInTheDocument();
+  });
+
+  it("passes custom className", () => {
+    const { container } = render(
+      <ChartCard title="Test" className="custom-class">
+        <div />
+      </ChartCard>
+    );
+    const card = container.firstChild as HTMLElement;
+    expect(card.className).toContain("custom-class");
+  });
 });
 
 describe("ErrorCard", () => {
