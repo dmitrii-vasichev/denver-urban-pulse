@@ -95,7 +95,7 @@ describe("EnvironmentPage", () => {
     });
 
     render(<EnvironmentPage />);
-    expect(screen.getByText("Environment & Neighborhoods")).toBeInTheDocument();
+    expect(screen.getByText("Denver Urban Pulse")).toBeInTheDocument();
     expect(screen.getByText("Air quality is good.")).toBeInTheDocument();
     expect(screen.getAllByText("42").length).toBeGreaterThanOrEqual(1);
   });

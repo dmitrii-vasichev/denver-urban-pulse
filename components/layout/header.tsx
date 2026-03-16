@@ -1,7 +1,6 @@
 "use client";
 
 import { Suspense } from "react";
-import { MobileNav } from "./mobile-nav";
 import { TimeWindowFilter } from "./time-window-filter";
 import { NeighborhoodFilter } from "./neighborhood-filter";
 import { useFilters } from "@/lib/hooks/use-filters";
@@ -27,21 +26,17 @@ function formatPipelineDate(iso: string): string {
   }) + " UTC";
 }
 
-function HeaderInner({ title, subtitle, lastUpdated, effectiveThrough }: HeaderProps) {
+function HeaderInner({ lastUpdated, effectiveThrough }: HeaderProps) {
   const { timeWindow, neighborhood, setTimeWindow, setNeighborhood } =
     useFilters();
 
   return (
-    <header className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 px-3 py-3 md:px-4 xl:px-5 xl:py-4">
+    <header className="sticky top-0 z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 px-3 py-3 md:px-4 xl:px-5 bg-white border-b border-[#E6E9EE]">
       <div className="flex items-center gap-3">
-        <MobileNav />
         <div>
-          <h1 className="text-lg font-bold text-[#102A43] leading-tight">
-            {title}
+          <h1 className="text-base font-bold text-[#102A43] leading-tight">
+            Denver Urban Pulse
           </h1>
-          {subtitle && (
-            <p className="text-[11px] text-[#627D98] mt-0.5">{subtitle}</p>
-          )}
           {(lastUpdated || effectiveThrough) && (
             <p className="text-[10px] text-[#9FB3C8] mt-0.5">
               {lastUpdated && <>Pipeline ran: {formatPipelineDate(lastUpdated)}</>}
@@ -64,8 +59,8 @@ export function Header(props: HeaderProps) {
   return (
     <Suspense
       fallback={
-        <header className="flex items-center justify-between px-3 py-3 md:px-4 xl:px-5 xl:py-4">
-          <h1 className="text-lg font-bold text-[#102A43]">{props.title}</h1>
+        <header className="sticky top-0 z-10 flex items-center justify-between px-3 py-3 md:px-4 xl:px-5 bg-white border-b border-[#E6E9EE]">
+          <h1 className="text-base font-bold text-[#102A43]">Denver Urban Pulse</h1>
         </header>
       }
     >

@@ -12,7 +12,7 @@ interface PageShellProps {
 
 export function PageShell({ title, subtitle, lastUpdated, effectiveThrough, children }: PageShellProps) {
   return (
-    <div className="flex-1 min-h-screen bg-[#F4F6F8] overflow-auto">
+    <div className="min-h-screen bg-[#F4F6F8]">
       <Header title={title} subtitle={subtitle} lastUpdated={lastUpdated} effectiveThrough={effectiveThrough} />
       <div className="px-3 pb-6 md:px-4 xl:px-5 space-y-4">{children}</div>
     </div>

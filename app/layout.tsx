@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Sans } from "next/font/google";
-import { Sidebar } from "@/components/layout/sidebar";
 import "./globals.css";
 
 const ibmPlexSans = IBM_Plex_Sans({
@@ -32,10 +31,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${ibmPlexSans.variable} antialiased`}>
-        <div className="flex min-h-screen">
-          <Sidebar />
-          {children}
-        </div>
+        {children}
       </body>
     </html>
   );
