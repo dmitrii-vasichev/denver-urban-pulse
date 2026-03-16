@@ -231,7 +231,7 @@ export async function getHeatmap(
 ): Promise<HeatmapRow[]> {
   if (domain === "all") {
     return query<HeatmapRow>(
-      `SELECT day_of_week, hour_of_day, SUM(count)::int AS count
+      `SELECT day_of_week, hour_of_day, ROUND(AVG(count))::int AS count
        FROM mart_heatmap_hour_day
        WHERE period = $1
        GROUP BY day_of_week, hour_of_day
