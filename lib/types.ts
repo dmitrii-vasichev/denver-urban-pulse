@@ -17,24 +17,6 @@ export interface ChartPoint {
   value: number;
 }
 
-export interface NarrativeData {
-  title: string;
-  content: string;
-  stats: NarrativeStat[];
-}
-
-export interface NarrativeStat {
-  label: string;
-  value: string;
-}
-
-export interface NarrativeSignal {
-  signalType: string;
-  signalKey: string;
-  signalValue: string;
-  signalNumeric: number | null;
-}
-
 export interface NeighborhoodInfo {
   name: string;
 }
@@ -70,13 +52,6 @@ export interface AqiInfo {
   level: AqiLevel;
 }
 
-export interface TrendPoint {
-  date: string;
-  crime: number;
-  crashes: number;
-  requests311: number;
-}
-
 export interface CategoryBreakdown {
   category: string;
   count: number;
@@ -95,15 +70,6 @@ export interface NeighborhoodRow {
   crashCount: number;
   requests311Count: number;
   totalDeltaPct: number;
-}
-
-export interface RankingRow {
-  neighborhood: string;
-  crimeCount: number;
-  crashCount: number;
-  requests311Count: number;
-  compositeScore: number;
-  rank: number;
 }
 
 export interface ComparisonRow {

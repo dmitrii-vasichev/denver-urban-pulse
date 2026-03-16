@@ -183,26 +183,6 @@ export async function getKpiTotals(
   return rows[0] ?? null;
 }
 
-// --- Trends ---
-
-interface TrendRow {
-  date: string;
-  domain: string;
-  count: number;
-}
-
-export async function getTrends(tw: TimeWindow): Promise<TrendRow[]> {
-  const days = daysForWindow(tw);
-  return query<TrendRow>(
-    `SELECT date::text, domain, SUM(count)::int AS count
-     FROM mart_incident_trends
-     WHERE date >= (NOW() AT TIME ZONE 'America/Denver')::date - $1::int
-     GROUP BY date, domain
-     ORDER BY date`,
-    [days]
-  );
-}
-
 export async function getEffectiveThrough(tw: TimeWindow): Promise<string | null> {
   const days = daysForWindow(tw);
   const rows = await query<{ effective_through: string | null }>(
@@ -290,23 +270,3 @@ export async function getNeighborhoodBreakdown(
   );
 }
 
-// --- Narrative ---
-
-interface NarrativeRow {
-  signal_type: string;
-  signal_key: string | null;
-  signal_value: string | null;
-  signal_numeric: number | null;
-}
-
-export async function getNarrativeSignals(
-  tw: TimeWindow
-): Promise<NarrativeRow[]> {
-  return query<NarrativeRow>(
-    `SELECT signal_type, signal_key, signal_value, signal_numeric
-     FROM mart_narrative_signals
-     WHERE period = $1
-     ORDER BY signal_type, rank`,
-    [tw]
-  );
-}

@@ -68,9 +68,7 @@ const mockUseEnvironmentData = useEnvironmentData as jest.MockedFunction<typeof 
 
 const defaultEnvData = {
   aqi: { current: { aqi: 42, status: "Good" }, trend: [] },
-  rankings: [],
   comparison: [],
-  narrative: null,
   effectiveThrough: null,
   lastUpdated: null,
   loading: false,
@@ -86,11 +84,9 @@ describe("CityPulsePage", () => {
   it("renders loading state", () => {
     mockUseCityPulseData.mockReturnValue({
       kpis: null,
-      trends: [],
       categories: {},
       heatmap: [],
       neighborhoods: [],
-      narrative: null,
       loading: true,
       error: null,
     });
@@ -107,11 +103,9 @@ describe("CityPulsePage", () => {
         crashes: { value: 300, delta: 0, deltaPercent: -2.1, sparkline: [], insight: "", tag: "30D" },
         requests311: { value: 2500, delta: 0, deltaPercent: 1.0, sparkline: [], insight: "", tag: "30D" },
       },
-      trends: [{ date: "2026-03-01", crime: 100, crashes: 30, requests311: 200 }],
       categories: { crime: [{ category: "Theft", count: 500, percent: 40 }] },
       heatmap: [{ dayOfWeek: 0, hourOfDay: 12, count: 50 }],
       neighborhoods: [{ neighborhood: "Five Points", crimeCount: 100, crashCount: 20, requests311Count: 50, totalDeltaPct: 3.5 }],
-      narrative: { title: "City Pulse Today", content: "Crime leads volume.", stats: [{ label: "crime", value: "1,200" }] },
       loading: false,
       error: null,
     });
@@ -128,11 +122,9 @@ describe("CityPulsePage", () => {
         crashes: { value: 50, delta: 0, deltaPercent: 0, sparkline: [], insight: "", tag: "30D" },
         requests311: { value: 200, delta: 0, deltaPercent: 0, sparkline: [], insight: "", tag: "30D" },
       },
-      trends: [],
       categories: {},
       heatmap: [],
       neighborhoods: [],
-      narrative: null,
       loading: false,
       error: null,
     });
@@ -147,11 +139,9 @@ describe("CityPulsePage", () => {
   it("renders all visualization sections", () => {
     mockUseCityPulseData.mockReturnValue({
       kpis: null,
-      trends: [],
       categories: {},
       heatmap: [],
       neighborhoods: [],
-      narrative: null,
       loading: false,
       error: null,
     });
@@ -167,11 +157,9 @@ describe("CityPulsePage", () => {
   it("renders error state", () => {
     mockUseCityPulseData.mockReturnValue({
       kpis: null,
-      trends: [],
       categories: {},
       heatmap: [],
       neighborhoods: [],
-      narrative: null,
       loading: false,
       error: "Connection refused",
     });
@@ -179,25 +167,5 @@ describe("CityPulsePage", () => {
     render(<CityPulsePage />);
     expect(screen.getByText("Failed to load data")).toBeInTheDocument();
     expect(screen.getByText("Connection refused")).toBeInTheDocument();
-  });
-});
-
-describe("useCityPulseData hook", () => {
-  it("returns correct initial structure", () => {
-    mockUseCityPulseData.mockReturnValue({
-      kpis: null,
-      trends: [],
-      categories: {},
-      heatmap: [],
-      neighborhoods: [],
-      narrative: null,
-      loading: true,
-      error: null,
-    });
-
-    const result = mockUseCityPulseData("30d", "all");
-    expect(result.loading).toBe(true);
-    expect(result.kpis).toBeNull();
-    expect(result.trends).toEqual([]);
   });
 });
