@@ -7,7 +7,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "staging"
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from build_city_pulse_daily import BUILD_SQL as DAILY_SQL
-from build_incident_trends import BUILD_SQL as TRENDS_SQL
+from build_incident_trends import BUILD_SQL as TRENDS_SQL, CRIME_LABEL_SQL as TRENDS_CRIME_LABEL, CRASH_LABEL_SQL as TRENDS_CRASH_LABEL
+from build_category_breakdown import CRIME_LABEL_SQL as BREAKDOWN_CRIME_LABEL, CRASH_LABEL_SQL as BREAKDOWN_CRASH_LABEL
 from build_aqi_daily import BUILD_SQL as AQI_SQL
 
 
@@ -57,8 +58,22 @@ class TestIncidentTrendsSQL:
     def test_uses_top_offense_for_crashes(self):
         assert "top_offense" in TRENDS_SQL
 
-    def test_uses_request_type_for_311(self):
-        assert "request_type" in TRENDS_SQL
+    def test_uses_agency_for_311(self):
+        assert "agency" in TRENDS_SQL
+
+    def test_uses_human_readable_crime_labels(self):
+        assert "Vehicle Theft" in TRENDS_SQL
+        assert "INITCAP" in TRENDS_SQL
+
+    def test_uses_human_readable_crash_labels(self):
+        assert "Traffic Accident" in TRENDS_SQL
+        assert "Hit & Run" in TRENDS_SQL
+
+    def test_crime_labels_match_category_breakdown(self):
+        assert TRENDS_CRIME_LABEL.strip() == BREAKDOWN_CRIME_LABEL.strip()
+
+    def test_crash_labels_match_category_breakdown(self):
+        assert TRENDS_CRASH_LABEL.strip() == BREAKDOWN_CRASH_LABEL.strip()
 
 
 class TestAqiDailySQL:
