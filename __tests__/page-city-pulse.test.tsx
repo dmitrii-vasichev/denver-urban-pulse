@@ -38,6 +38,7 @@ jest.mock("recharts", () => ({
     <div data-testid="area-chart">{children}</div>
   ),
   Area: () => <div />,
+  ReferenceArea: () => <div />,
 }));
 
 // Mock react-leaflet
@@ -58,11 +59,30 @@ jest.mock("@/data/geo/denver-neighborhoods.json", () => ({
 
 import CityPulsePage from "@/app/page";
 import { useCityPulseData } from "@/lib/hooks/use-city-pulse-data";
+import { useEnvironmentData } from "@/lib/hooks/use-environment-data";
 
 jest.mock("@/lib/hooks/use-city-pulse-data");
+jest.mock("@/lib/hooks/use-environment-data");
 const mockUseCityPulseData = useCityPulseData as jest.MockedFunction<typeof useCityPulseData>;
+const mockUseEnvironmentData = useEnvironmentData as jest.MockedFunction<typeof useEnvironmentData>;
+
+const defaultEnvData = {
+  aqi: { current: { aqi: 42, status: "Good" }, trend: [] },
+  rankings: [],
+  comparison: [],
+  narrative: null,
+  effectiveThrough: null,
+  lastUpdated: null,
+  loading: false,
+  error: null,
+  retry: jest.fn(),
+};
 
 describe("CityPulsePage", () => {
+  beforeEach(() => {
+    mockUseEnvironmentData.mockReturnValue(defaultEnvData as ReturnType<typeof useEnvironmentData>);
+  });
+
   it("renders loading state", () => {
     mockUseCityPulseData.mockReturnValue({
       kpis: null,
@@ -99,7 +119,6 @@ describe("CityPulsePage", () => {
     render(<CityPulsePage />);
     expect(screen.getByText("Denver Urban Pulse")).toBeInTheDocument();
     expect(screen.getAllByText("1,200").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText("Crime leads volume.")).toBeInTheDocument();
   });
 
   it("renders error state", () => {

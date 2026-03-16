@@ -4,27 +4,26 @@ import { Suspense } from "react";
 import { PageShell } from "@/components/layout/page-shell";
 import { KpiCard } from "@/components/cards/kpi-card";
 import { ChartCard } from "@/components/cards/chart-card";
-import { NarrativeBlock } from "@/components/cards/narrative-block";
-import { TrendChart } from "@/components/charts/trend-chart";
 import { CategoryChart } from "@/components/charts/category-chart";
 import { HeatmapChart } from "@/components/charts/heatmap-chart";
-import { NeighborhoodRankingChart } from "@/components/charts/neighborhood-ranking-chart";
+import { AqiTrendChart } from "@/components/charts/aqi-trend-chart";
+import { ChangeLeadersChart } from "@/components/charts/change-leaders-chart";
 import { DenverMapDynamic } from "@/components/map/denver-map-dynamic";
 import { useFilters } from "@/lib/hooks/use-filters";
 import { useCityPulseData } from "@/lib/hooks/use-city-pulse-data";
 import { useEnvironmentData } from "@/lib/hooks/use-environment-data";
 import { ErrorCard } from "@/components/cards/error-card";
+import { formatAqi } from "@/lib/format";
 import geojson from "@/data/geo/denver-neighborhoods.json";
 
 function CityPulseContent() {
   const { timeWindow, neighborhood } = useFilters();
-  const { kpis, trends, categories, heatmap, neighborhoods, narrative, loading, error, retry, effectiveThrough, lastUpdated } =
+  const { kpis, categories, heatmap, neighborhoods, loading, error, retry, effectiveThrough, lastUpdated } =
     useCityPulseData(timeWindow, neighborhood);
-  const { aqi, rankings, loading: envLoading, error: envError, retry: envRetry } =
+  const { aqi, comparison, loading: envLoading, error: envError, retry: envRetry } =
     useEnvironmentData(timeWindow, neighborhood);
 
   const combinedError = error || envError;
-  const combinedLoading = loading || envLoading;
 
   if (combinedError) {
     return (
@@ -38,16 +37,17 @@ function CityPulseContent() {
   }
 
   const tagLabel = timeWindow.toUpperCase();
+  const aqiInfo = aqi.current ? formatAqi(aqi.current.aqi) : null;
 
   return (
     <PageShell
-      title="City Pulse"
-      subtitle="Crime, crashes, and 311 requests across Denver"
+      title="Denver Urban Pulse"
+      subtitle="Crime, crashes, 311 requests, and air quality across Denver"
       lastUpdated={lastUpdated}
       effectiveThrough={effectiveThrough}
     >
-      {/* KPI Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      {/* Row 1: KPI Strip — 4 cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <KpiCard
           title="Crime Incidents"
           tag={tagLabel}
@@ -81,46 +81,50 @@ function CityPulseContent() {
           color="#198754"
           loading={loading}
         />
+        <KpiCard
+          title="Air Quality Index"
+          tag="Current"
+          secondaryTag={aqiInfo?.label}
+          value={aqi.current?.aqi}
+          color="#0B4F8C"
+          loading={envLoading}
+        />
       </div>
 
-      {/* Hero Row — 60/40 split */}
+      {/* Row 2: Neighborhood Map (60%) + Category Breakdown (40%) */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-3">
         <div className="lg:col-span-3">
-          <ChartCard title="Incident Trends" loading={loading}>
-            <TrendChart data={trends} />
+          <ChartCard title="Neighborhood Map" loading={loading}>
+            <div className="h-64 md:h-[300px] -m-2 rounded-lg overflow-hidden">
+              <DenverMapDynamic
+                geojson={geojson as unknown as GeoJSON.FeatureCollection}
+                data={neighborhoods}
+                selectedNeighborhood={neighborhood !== "all" ? neighborhood : undefined}
+              />
+            </div>
           </ChartCard>
         </div>
         <div className="lg:col-span-2">
-          <NarrativeBlock
-            title={narrative?.title ?? "City Pulse Today"}
-            content={narrative?.content ?? ""}
-            stats={narrative?.stats}
-            loading={loading}
-          />
+          <ChartCard title="Category Breakdown" loading={loading}>
+            <CategoryChart data={categories} />
+          </ChartCard>
         </div>
       </div>
 
-      {/* Lower Analytics — 2×2 grid */}
+      {/* Row 3: AQI Trend (50%) + Time Heatmap (50%) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <ChartCard title="Category Breakdown" loading={loading}>
-          <CategoryChart data={categories} />
+        <ChartCard title="AQI Trend" loading={envLoading}>
+          <AqiTrendChart data={aqi.trend} />
         </ChartCard>
         <ChartCard title="Time Heatmap" loading={loading}>
           <HeatmapChart data={heatmap} />
         </ChartCard>
-        <ChartCard title="Neighborhood Map" loading={loading}>
-          <div className="h-64 md:h-[300px] -m-2 rounded-lg overflow-hidden">
-            <DenverMapDynamic
-              geojson={geojson as unknown as GeoJSON.FeatureCollection}
-              data={neighborhoods}
-              selectedNeighborhood={neighborhood !== "all" ? neighborhood : undefined}
-            />
-          </div>
-        </ChartCard>
-        <ChartCard title="Top Neighborhoods" loading={loading}>
-          <NeighborhoodRankingChart data={neighborhoods} />
-        </ChartCard>
       </div>
+
+      {/* Row 4: Change Leaders (full-width) */}
+      <ChartCard title="Change Leaders" loading={envLoading}>
+        <ChangeLeadersChart data={comparison} />
+      </ChartCard>
     </PageShell>
   );
 }
@@ -136,31 +140,37 @@ export default function CityPulsePage() {
 function CityPulseSkeleton() {
   return (
     <PageShell
-      title="City Pulse"
-      subtitle="Crime, crashes, and 311 requests across Denver"
+      title="Denver Urban Pulse"
+      subtitle="Crime, crashes, 311 requests, and air quality across Denver"
     >
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {[0, 1, 2].map((i) => (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        {[0, 1, 2, 3].map((i) => (
           <KpiCard key={i} title="" value={0} color="#ccc" loading />
         ))}
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-3">
         <div className="lg:col-span-3">
-          <ChartCard title="Incident Trends" loading>
+          <ChartCard title="Neighborhood Map" loading>
             <div className="h-48" />
           </ChartCard>
         </div>
         <div className="lg:col-span-2">
-          <NarrativeBlock title="" content="" loading />
+          <ChartCard title="Category Breakdown" loading>
+            <div className="h-48" />
+          </ChartCard>
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {[0, 1, 2, 3].map((i) => (
-          <ChartCard key={i} title="" loading>
-            <div className="h-48" />
-          </ChartCard>
-        ))}
+        <ChartCard title="AQI Trend" loading>
+          <div className="h-48" />
+        </ChartCard>
+        <ChartCard title="Time Heatmap" loading>
+          <div className="h-48" />
+        </ChartCard>
       </div>
+      <ChartCard title="Change Leaders" loading>
+        <div className="h-48" />
+      </ChartCard>
     </PageShell>
   );
 }
