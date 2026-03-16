@@ -118,7 +118,7 @@ export function HeatmapChart({ data }: HeatmapChartProps) {
           style={{ left: tooltip.x, top: tooltip.y }}
         >
           <p className="text-[10px] text-[#102A43] font-medium whitespace-nowrap">
-            {DAY_LABELS[tooltip.day]} {HOUR_LABELS[tooltip.hour]} — {tooltip.count} incidents
+            {DAY_LABELS[tooltip.day]} {HOUR_LABELS[tooltip.hour]} — Avg per week: {tooltip.count} incidents
           </p>
         </div>
       )}
