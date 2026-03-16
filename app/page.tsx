@@ -109,7 +109,7 @@ function CityPulseContent() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-stretch">
         <div className="lg:col-span-7">
           <ChartCard title="Neighborhood Map" loading={loading} className="h-full">
-            <div className="h-64 md:h-[300px] -m-2 rounded-lg overflow-hidden">
+            <div className="flex-1 min-h-[200px] -m-2 rounded-lg overflow-hidden">
               <DenverMapDynamic
                 geojson={geojson as unknown as GeoJSON.FeatureCollection}
                 data={neighborhoods}
