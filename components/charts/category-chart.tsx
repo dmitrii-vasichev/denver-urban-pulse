@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useCallback } from "react";
 import type { CategoryBreakdown, CategoryTrends, ChartPoint } from "@/lib/types";
 import { formatNumber } from "@/lib/format";
 import { Sparkline } from "@/components/ui/sparkline";
@@ -29,7 +29,6 @@ const DOMAINS = [
 
 export function CategoryChart({ data, trends = {} }: CategoryChartProps) {
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   const handleMouseEnter = useCallback(
     (
@@ -37,9 +36,6 @@ export function CategoryChart({ data, trends = {} }: CategoryChartProps) {
       domain: { key: string; color: string },
       item: CategoryBreakdown
     ) => {
-      const container = containerRef.current;
-      if (!container) return;
-      const containerRect = container.getBoundingClientRect();
       const targetRect = (e.currentTarget as HTMLElement).getBoundingClientRect();
 
       setTooltip({
@@ -49,8 +45,8 @@ export function CategoryChart({ data, trends = {} }: CategoryChartProps) {
         count: item.count,
         percent: item.percent,
         sparkline: trends[domain.key]?.[item.category] ?? [],
-        x: targetRect.left - containerRect.left + targetRect.width / 2,
-        y: targetRect.top - containerRect.top,
+        x: targetRect.left + targetRect.width / 2,
+        y: targetRect.top,
       });
     },
     [trends]
@@ -71,7 +67,7 @@ export function CategoryChart({ data, trends = {} }: CategoryChartProps) {
   }
 
   return (
-    <div className="space-y-3 relative" ref={containerRef}>
+    <div className="space-y-3">
       {DOMAINS.map((domain) => {
         const items = data[domain.key];
         if (!items?.length) return null;
@@ -138,9 +134,9 @@ export function CategoryChart({ data, trends = {} }: CategoryChartProps) {
       {/* Tooltip */}
       {tooltip && (
         <div
-          className="absolute z-50 pointer-events-none animate-fade-in"
+          className="fixed z-50 pointer-events-none animate-fade-in"
           style={{
-            left: `clamp(0px, ${tooltip.x}px - 100px, calc(100% - 200px))`,
+            left: `clamp(8px, ${tooltip.x - 100}px, calc(100vw - 208px))`,
             top: `${tooltip.y - 8}px`,
             transform: "translateY(-100%)",
           }}
