@@ -49,6 +49,26 @@ function CityPulseContent() {
   const tagLabel = timeWindow.toUpperCase();
   const aqiInfo = aqi.current ? formatAqi(aqi.current.aqi) : null;
 
+  // AQI sparkline: convert trend to ChartPoint[]
+  const aqiSparkline = trimmedAqiTrend.map((p) => ({
+    date: p.date,
+    value: p.aqiMax,
+  }));
+
+  // Dominant pollutant label from latest trend point
+  const aqiInsight = (() => {
+    const latest = trimmedAqiTrend[trimmedAqiTrend.length - 1];
+    if (!latest) return undefined;
+    const pollutants = [
+      { value: latest.aqiOzone, label: "Ozone" },
+      { value: latest.aqiPm25, label: "Fine Particles" },
+      { value: latest.aqiPm10, label: "Coarse Particles" },
+    ].filter((p) => p.value != null);
+    if (pollutants.length === 0) return undefined;
+    const dominant = pollutants.reduce((a, b) => (b.value > a.value ? b : a));
+    return `Driven by ${dominant.label}`;
+  })();
+
   return (
     <PageShell
       title="Denver Urban Pulse"
@@ -100,6 +120,9 @@ function CityPulseContent() {
           tag="Current"
           secondaryTag={aqiInfo?.label}
           value={aqi.current?.aqi}
+          sparklineData={aqiSparkline}
+          sparklineLabel="AQI"
+          insight={aqiInsight}
           color="#0B4F8C"
           loading={envLoading}
         />
