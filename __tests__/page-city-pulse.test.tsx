@@ -154,6 +154,25 @@ describe("CityPulsePage", () => {
     expect(screen.getByText("Change Leaders")).toBeInTheDocument();
   });
 
+  it("uses responsive grid classes for layout", () => {
+    mockUseCityPulseData.mockReturnValue({
+      kpis: null,
+      categories: {},
+      heatmap: [],
+      neighborhoods: [],
+      loading: false,
+      error: null,
+    });
+
+    const { container } = render(<CityPulsePage />);
+    // KPI row: 1-col mobile, 2-col sm, 4-col lg
+    expect(container.querySelector(".grid-cols-1.sm\\:grid-cols-2.lg\\:grid-cols-4")).toBeInTheDocument();
+    // Map + categories row: 1-col mobile, 5-col lg
+    expect(container.querySelector(".grid-cols-1.lg\\:grid-cols-5")).toBeInTheDocument();
+    // AQI + heatmap row: 1-col mobile, 2-col md
+    expect(container.querySelector(".grid-cols-1.md\\:grid-cols-2")).toBeInTheDocument();
+  });
+
   it("renders error state", () => {
     mockUseCityPulseData.mockReturnValue({
       kpis: null,
