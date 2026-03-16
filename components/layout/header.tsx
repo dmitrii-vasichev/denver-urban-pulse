@@ -47,7 +47,7 @@ function HeaderInner({ lastUpdated, effectiveThrough }: HeaderProps) {
         </div>
       </div>
 
-      <div className="flex items-center gap-2 w-full sm:w-auto">
+      <div className="flex items-center gap-2 w-full sm:w-auto min-w-0">
         <TimeWindowFilter value={timeWindow} onChange={setTimeWindow} />
         <NeighborhoodFilter value={neighborhood} onChange={setNeighborhood} />
       </div>
