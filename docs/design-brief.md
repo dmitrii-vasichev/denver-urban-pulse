@@ -41,14 +41,20 @@
 - Small labels: 10–11px, `#627D98`
 
 ## Layout
-- Sidebar navigation: 240px fixed width, white background, right border `#E6E9EE`
-- Main content area: flexible width, `#F4F6F8` background, padding 16–20px
+- Navigation: Top header bar (no sidebar) — dashboard title left, filters + freshness info right
+- Header height: ~56px, white background, bottom border `#E6E9EE`
+- Main content area: full viewport width, `#F4F6F8` background, padding 16–20px
 - Card corner radius: 14px
 - Card shadow: `0 2px 6px #102A4310`
 - Card border: 1px `#DDE3EA`
 - Card padding: 14px
 - Content gap: 16px (between major sections), 10–12px (between cards in a row)
 - Max content width: none (fluid within main area)
+- Page grid (single page, no tabs):
+  - Row 1: KPI Strip — 4 cards (Crime, Crashes, 311, AQI)
+  - Row 2: Neighborhood Map (60%) + Category Breakdown (40%)
+  - Row 3: AQI Trend (50%) + Time Heatmap (50%)
+  - Row 4: Change Leaders (full-width)
 
 ## Design Reference
 - Pencil mockup: `docs/design/denver-urban-pulse-design.pen`
@@ -70,32 +76,27 @@
 - Chart area with subtle background (`#F8FAFC`)
 - Footer insight text: 10px, `#6B7B8D`
 
-### Narrative Block (City Pulse Today)
-- Dark background: `#163A5D`
-- 14px corner radius, stronger shadow
-- Title: white, 700 weight
-- Body text: `#D7E5F5`, 11px, line-height 1.45
-- Stat badges: semi-transparent white background (`#FFFFFF14`)
-
 ### Map Card
 - Full-width within its column (720px in hero row)
 - Map background: `#EEF3F8`
 - Choropleth bubbles with domain colors (crime blue, crash orange, 311 green)
 - Floating legend and controls with glass-like background (`#FFFFFFE8`)
 
-### Navigation
-- Active item: `#E9F2FF` bg, `#0B4F8C` text, 600 weight
-- Inactive item: white bg, `#243B53` text, 500 weight
-- Item padding: 10px 12px, corner radius 10px
+### Top Header
+- White background, bottom border `#E6E9EE`
+- Left: Dashboard title ("Denver Urban Pulse"), 16px, 700, `#102A43`
+- Right: Time window filter + Neighborhood filter + Freshness info
+- Freshness info: muted text (11px, `#627D98`), shows pipeline run time and data-complete-through date
+- Sticky on scroll
 
 ### Filters
 - Date chip: dark (`#102A43` bg, white text), pill shape
 - Filter chip: light (`#EEF4FA` bg, `#C7D5E6` border), pill shape
 
 ## Responsive Breakpoints
-- Desktop: ≥1280px — full sidebar + multi-column layout
-- Tablet: 768–1279px — collapsed sidebar, 2-column content
-- Mobile: <768px — no sidebar, single-column stack
+- Desktop: ≥1280px — full multi-column layout, header with inline filters
+- Tablet: 768–1279px — 2-column content, filters may wrap in header
+- Mobile: <768px — single-column stack, filters stack below title
 
 ## Design Guardrails
 - NO IoT/device dashboard aesthetics
