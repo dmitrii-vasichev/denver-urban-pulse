@@ -116,7 +116,7 @@ export function ChangeLeadersChart({ data }: ChangeLeadersChartProps) {
         />
         <ReferenceLine x={0} stroke="#DDE3EA" />
         <Tooltip content={<CustomTooltip />} />
-        <Bar dataKey="delta" isAnimationActive={false} radius={[2, 2, 2, 2]}>
+        <Bar dataKey="delta" isAnimationActive={false} radius={[4, 4, 4, 4]}>
           {leaders.map((entry, i) => (
             <Cell
               key={i}
