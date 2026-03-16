@@ -59,6 +59,16 @@ function CustomTooltip({
   );
 }
 
+export function evenlySpacedTicks(data: AqiDailyPoint[], maxTicks = 5): string[] {
+  if (data.length <= maxTicks) return data.map((d) => d.date);
+  const ticks: string[] = [];
+  const step = (data.length - 1) / (maxTicks - 1);
+  for (let i = 0; i < maxTicks; i++) {
+    ticks.push(data[Math.round(i * step)].date);
+  }
+  return ticks;
+}
+
 export function AqiTrendChart({ data }: AqiTrendChartProps) {
   if (data.length === 0) {
     return (
@@ -67,6 +77,8 @@ export function AqiTrendChart({ data }: AqiTrendChartProps) {
       </div>
     );
   }
+
+  const ticks = evenlySpacedTicks(data);
 
   return (
     <ResponsiveContainer width="100%" height={220}>
@@ -91,11 +103,11 @@ export function AqiTrendChart({ data }: AqiTrendChartProps) {
         <CartesianGrid strokeDasharray="3 3" stroke="#EEF3F8" />
         <XAxis
           dataKey="date"
+          ticks={ticks}
           tickFormatter={formatDateShort}
           tick={{ fontSize: 10, fill: "#627D98" }}
           axisLine={{ stroke: "#DDE3EA" }}
           tickLine={false}
-          interval="preserveStartEnd"
         />
         <YAxis
           domain={[0, (max: number) => Math.max(max + 10, 100)]}

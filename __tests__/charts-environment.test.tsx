@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { AqiTrendChart } from "@/components/charts/aqi-trend-chart";
+import { AqiTrendChart, evenlySpacedTicks } from "@/components/charts/aqi-trend-chart";
 import { ChangeLeadersChart, computeLeaders } from "@/components/charts/change-leaders-chart";
 import type { AqiDailyPoint, ComparisonRow } from "@/lib/types";
 
@@ -41,6 +41,35 @@ describe("AqiTrendChart", () => {
   it("shows empty message for no data", () => {
     render(<AqiTrendChart data={[]} />);
     expect(screen.getByText("No AQI data available")).toBeInTheDocument();
+  });
+
+  describe("evenlySpacedTicks", () => {
+    it("returns all dates when data fits within maxTicks", () => {
+      const ticks = evenlySpacedTicks(sampleAqi, 5);
+      expect(ticks).toEqual(["2026-03-01", "2026-03-02", "2026-03-03"]);
+    });
+
+    it("returns evenly spaced ticks for 30-day dataset", () => {
+      const data: AqiDailyPoint[] = [];
+      const start = new Date("2026-02-14");
+      for (let i = 0; i < 30; i++) {
+        const dt = new Date(start);
+        dt.setDate(start.getDate() + i);
+        const iso = dt.toISOString().slice(0, 10);
+        data.push({ date: iso, aqiMax: 40, aqiOzone: 30, aqiPm25: 40, aqiPm10: 10, category: "Good" });
+      }
+
+      const ticks = evenlySpacedTicks(data, 5);
+      expect(ticks).toHaveLength(5);
+      expect(ticks[0]).toBe("2026-02-14");
+      expect(ticks[4]).toBe(data[data.length - 1].date);
+
+      // Verify even spacing: intervals between consecutive ticks should be equal
+      const indices = ticks.map((t) => data.findIndex((d) => d.date === t));
+      const gaps = indices.slice(1).map((idx, i) => idx - indices[i]);
+      const allEqual = gaps.every((g) => Math.abs(g - gaps[0]) <= 1);
+      expect(allEqual).toBe(true);
+    });
   });
 });
 
