@@ -12,7 +12,7 @@ Strategy: Upsert (not truncate) to preserve historical data.
 
 import logging
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 
 from db import bulk_upsert, fetch_raw_data
 
@@ -42,22 +42,25 @@ RAW_QUERY = """
            reporting_area, parameter_name, aqi, category_name,
            latitude, longitude
     FROM raw_aqi
-    WHERE reporting_area = 'Denver'
+    WHERE reporting_area IN ('Denver', 'Denver-Boulder')
 """
 
 
 def _build_observed_at(
-    date_str: str | None,
+    date_val: str | date | None,
     hour: int | None,
     tz_abbr: str | None,
 ) -> datetime | None:
     """Combine date + hour + timezone into a TIMESTAMPTZ value."""
-    if not date_str:
+    if not date_val:
         return None
 
     try:
-        # AirNow date format: "2024-06-15 " (with trailing space sometimes)
-        dt = datetime.strptime(date_str.strip(), "%Y-%m-%d")
+        if isinstance(date_val, (date, datetime)):
+            dt = datetime(date_val.year, date_val.month, date_val.day)
+        else:
+            # AirNow date format: "2024-06-15 " (with trailing space sometimes)
+            dt = datetime.strptime(date_val.strip(), "%Y-%m-%d")
     except (ValueError, AttributeError):
         return None
 
