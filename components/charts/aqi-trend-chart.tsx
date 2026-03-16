@@ -8,6 +8,7 @@ import {
   CartesianGrid,
   Tooltip,
   ReferenceArea,
+  Label,
   ResponsiveContainer,
 } from "recharts";
 import type { AqiDailyPoint } from "@/lib/types";
@@ -18,10 +19,10 @@ interface AqiTrendChartProps {
 }
 
 const AQI_BANDS = [
-  { y1: 0, y2: 50, fill: "#22c55e", label: "Good" },
-  { y1: 50, y2: 100, fill: "#eab308", label: "Moderate" },
-  { y1: 100, y2: 150, fill: "#f97316", label: "USG" },
-  { y1: 150, y2: 300, fill: "#ef4444", label: "Unhealthy" },
+  { y1: 0, y2: 50, fill: "#22c55e", label: "Good", opacity: 0.15 },
+  { y1: 50, y2: 100, fill: "#eab308", label: "Moderate", opacity: 0.13 },
+  { y1: 100, y2: 150, fill: "#f97316", label: "USG", opacity: 0.15 },
+  { y1: 150, y2: 300, fill: "#ef4444", label: "Unhealthy", opacity: 0.15 },
 ];
 
 function aqiCategory(value: number): string {
@@ -76,8 +77,16 @@ export function AqiTrendChart({ data }: AqiTrendChartProps) {
             y1={band.y1}
             y2={band.y2}
             fill={band.fill}
-            fillOpacity={0.08}
-          />
+            fillOpacity={band.opacity}
+            ifOverflow="hidden"
+          >
+            <Label
+              value={band.label}
+              position="insideTopRight"
+              style={{ fontSize: 9, fill: "#627D98", fontWeight: 500 }}
+              offset={4}
+            />
+          </ReferenceArea>
         ))}
         <CartesianGrid strokeDasharray="3 3" stroke="#EEF3F8" />
         <XAxis
