@@ -158,6 +158,7 @@ export function CategoryChart({ data, trends = {} }: CategoryChartProps) {
               <Sparkline
                 data={tooltip.sparkline}
                 color={tooltip.color}
+                width={176}
                 height={40}
                 interactive={false}
               />

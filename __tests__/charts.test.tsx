@@ -1,6 +1,7 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { CategoryChart } from "@/components/charts/category-chart";
 import { HeatmapChart } from "@/components/charts/heatmap-chart";
+import { Sparkline } from "@/components/ui/sparkline";
 import type { CategoryBreakdown, CategoryTrends, HeatmapCell } from "@/lib/types";
 
 // Mock recharts to avoid canvas issues in jsdom
@@ -98,6 +99,31 @@ describe("CategoryChart", () => {
     expect(screen.getByText("500")).toBeInTheDocument();
     // Should not render bar for single-category domain
     expect(screen.queryByText("Larceny")).not.toBeInTheDocument();
+  });
+});
+
+describe("Sparkline regression: numeric width bypasses ResponsiveContainer", () => {
+  const trendData = [
+    { date: "2026-03-10", value: 10 },
+    { date: "2026-03-11", value: 20 },
+  ];
+
+  it("renders AreaChart directly when width is a number (tooltip context)", () => {
+    const { container } = render(
+      <Sparkline data={trendData} color="#2458C6" width={176} height={40} interactive={false} />
+    );
+    // AreaChart should render (mocked as area-chart testid)
+    expect(screen.getByTestId("area-chart")).toBeInTheDocument();
+    // Should NOT have ResponsiveContainer wrapper (no extra nesting)
+    const wrapper = container.firstChild as HTMLElement;
+    expect(wrapper.style.width).toBe("176px");
+  });
+
+  it("uses ResponsiveContainer when width is a string", () => {
+    render(
+      <Sparkline data={trendData} color="#2458C6" width="100%" height={40} interactive={false} />
+    );
+    expect(screen.getByTestId("area-chart")).toBeInTheDocument();
   });
 });
 
