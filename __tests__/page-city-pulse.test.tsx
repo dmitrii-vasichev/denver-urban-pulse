@@ -121,6 +121,49 @@ describe("CityPulsePage", () => {
     expect(screen.getAllByText("1,200").length).toBeGreaterThanOrEqual(1);
   });
 
+  it("renders 4 KPI cards", () => {
+    mockUseCityPulseData.mockReturnValue({
+      kpis: {
+        crime: { value: 100, delta: 0, deltaPercent: 0, sparkline: [], insight: "", tag: "30D" },
+        crashes: { value: 50, delta: 0, deltaPercent: 0, sparkline: [], insight: "", tag: "30D" },
+        requests311: { value: 200, delta: 0, deltaPercent: 0, sparkline: [], insight: "", tag: "30D" },
+      },
+      trends: [],
+      categories: {},
+      heatmap: [],
+      neighborhoods: [],
+      narrative: null,
+      loading: false,
+      error: null,
+    });
+
+    render(<CityPulsePage />);
+    expect(screen.getByText("Crime Incidents")).toBeInTheDocument();
+    expect(screen.getByText("Traffic Crashes")).toBeInTheDocument();
+    expect(screen.getByText("311 Requests")).toBeInTheDocument();
+    expect(screen.getByText("Air Quality Index")).toBeInTheDocument();
+  });
+
+  it("renders all visualization sections", () => {
+    mockUseCityPulseData.mockReturnValue({
+      kpis: null,
+      trends: [],
+      categories: {},
+      heatmap: [],
+      neighborhoods: [],
+      narrative: null,
+      loading: false,
+      error: null,
+    });
+
+    render(<CityPulsePage />);
+    expect(screen.getByText("Neighborhood Map")).toBeInTheDocument();
+    expect(screen.getByText("Category Breakdown")).toBeInTheDocument();
+    expect(screen.getByText("AQI Trend")).toBeInTheDocument();
+    expect(screen.getByText("Time Heatmap")).toBeInTheDocument();
+    expect(screen.getByText("Change Leaders")).toBeInTheDocument();
+  });
+
   it("renders error state", () => {
     mockUseCityPulseData.mockReturnValue({
       kpis: null,
