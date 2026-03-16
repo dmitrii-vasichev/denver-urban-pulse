@@ -18,6 +18,7 @@ interface KpiCardProps {
   insight?: string;
   color: string;
   loading?: boolean;
+  className?: string;
 }
 
 export function KpiCard({
@@ -31,10 +32,11 @@ export function KpiCard({
   insight,
   color,
   loading,
+  className,
 }: KpiCardProps) {
   if (loading) {
     return (
-      <div className="rounded-[14px] bg-white border border-[#DDE3EA] p-3.5 shadow-[0_2px_6px_#102A4310]">
+      <div className={`rounded-[14px] bg-white border border-[#DDE3EA] p-3.5 shadow-[0_2px_6px_#102A4310] ${className ?? ""}`}>
         <div className="flex items-center justify-between mb-2">
           <Skeleton className="h-3 w-20" />
           <Skeleton className="h-3 w-10" />
@@ -51,7 +53,7 @@ export function KpiCard({
   }
 
   return (
-    <div className="rounded-[14px] bg-white border border-[#DDE3EA] p-3.5 shadow-[0_2px_6px_#102A4310]">
+    <div className={`rounded-[14px] bg-white border border-[#DDE3EA] p-3.5 shadow-[0_2px_6px_#102A4310] ${className ?? ""}`}>
       <div className="flex items-center justify-between mb-1">
         <span className="text-[11px] font-bold text-[#52667A] uppercase tracking-wide">
           {title}
