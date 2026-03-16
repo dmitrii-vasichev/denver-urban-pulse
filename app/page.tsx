@@ -57,8 +57,9 @@ function CityPulseContent() {
       effectiveThrough={globalEffectiveThrough}
     >
       {/* Row 1: KPI Strip — 4 cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
         <KpiCard
+          className="lg:col-span-3"
           title="Crime Incidents"
           tag={tagLabel}
           value={kpis?.crime.value}
@@ -70,6 +71,7 @@ function CityPulseContent() {
           loading={loading}
         />
         <KpiCard
+          className="lg:col-span-3"
           title="Traffic Crashes"
           tag={tagLabel}
           value={kpis?.crashes.value}
@@ -81,6 +83,7 @@ function CityPulseContent() {
           loading={loading}
         />
         <KpiCard
+          className="lg:col-span-3"
           title="311 Requests"
           tag={tagLabel}
           value={kpis?.requests311.value}
@@ -92,6 +95,7 @@ function CityPulseContent() {
           loading={loading}
         />
         <KpiCard
+          className="lg:col-span-3"
           title="Air Quality Index"
           tag="Current"
           secondaryTag={aqiInfo?.label}
@@ -101,9 +105,9 @@ function CityPulseContent() {
         />
       </div>
 
-      {/* Row 2: Neighborhood Map (60%) + Category Breakdown (40%) */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-3 items-stretch">
-        <div className="lg:col-span-3">
+      {/* Row 2: Neighborhood Map (7/12) + Category Breakdown (5/12) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-stretch">
+        <div className="lg:col-span-7">
           <ChartCard title="Neighborhood Map" loading={loading} className="h-full">
             <div className="h-64 md:h-[300px] -m-2 rounded-lg overflow-hidden">
               <DenverMapDynamic
@@ -114,19 +118,19 @@ function CityPulseContent() {
             </div>
           </ChartCard>
         </div>
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-5">
           <ChartCard title="Category Breakdown" loading={loading} className="h-full">
             <CategoryChart data={categories} />
           </ChartCard>
         </div>
       </div>
 
-      {/* Row 3: AQI Trend (50%) + Time Heatmap (50%) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <ChartCard title="AQI Trend" loading={envLoading}>
+      {/* Row 3: AQI Trend (6/12) + Time Heatmap (6/12) */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+        <ChartCard title="AQI Trend" loading={envLoading} className="md:col-span-6">
           <AqiTrendChart data={trimmedAqiTrend} />
         </ChartCard>
-        <ChartCard title="Time Heatmap" loading={loading}>
+        <ChartCard title="Time Heatmap" loading={loading} className="md:col-span-6">
           <HeatmapChart data={heatmap} />
         </ChartCard>
       </div>
@@ -153,28 +157,28 @@ function CityPulseSkeleton() {
       title="Denver Urban Pulse"
       subtitle="Crime, crashes, 311 requests, and air quality across Denver"
     >
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
         {[0, 1, 2, 3].map((i) => (
-          <KpiCard key={i} title="" value={0} color="#ccc" loading />
+          <KpiCard key={i} className="lg:col-span-3" title="" value={0} color="#ccc" loading />
         ))}
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-3">
-        <div className="lg:col-span-3">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
+        <div className="lg:col-span-7">
           <ChartCard title="Neighborhood Map" loading>
             <div className="h-48" />
           </ChartCard>
         </div>
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-5">
           <ChartCard title="Category Breakdown" loading>
             <div className="h-48" />
           </ChartCard>
         </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <ChartCard title="AQI Trend" loading>
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+        <ChartCard title="AQI Trend" loading className="md:col-span-6">
           <div className="h-48" />
         </ChartCard>
-        <ChartCard title="Time Heatmap" loading>
+        <ChartCard title="Time Heatmap" loading className="md:col-span-6">
           <div className="h-48" />
         </ChartCard>
       </div>
