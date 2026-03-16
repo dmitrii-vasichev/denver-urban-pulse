@@ -30,16 +30,11 @@ const mockQuery = query as jest.MockedFunction<typeof query>;
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { GET: getKpis } = require("@/app/api/city-pulse/kpis/route");
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { GET: getTrends } = require("@/app/api/city-pulse/trends/route");
-// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { GET: getCategories } = require("@/app/api/city-pulse/categories/route");
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { GET: getHeatmap } = require("@/app/api/city-pulse/heatmap/route");
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { GET: getNeighborhoods } = require("@/app/api/city-pulse/neighborhoods/route");
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { GET: getNarrative } = require("@/app/api/city-pulse/narrative/route");
-
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { NextRequest } = require("next/server");
 
@@ -114,58 +109,6 @@ describe("City Pulse API", () => {
     });
   });
 
-  describe("GET /api/city-pulse/trends", () => {
-    it("returns pivoted trend series", async () => {
-      mockQuery.mockResolvedValueOnce([
-        { date: "2026-03-11", domain: "crime", count: 10 },
-        { date: "2026-03-11", domain: "crashes", count: 5 },
-        { date: "2026-03-11", domain: "311", count: 20 },
-        { date: "2026-03-12", domain: "crime", count: 12 },
-      ]);
-      mockQuery.mockResolvedValueOnce([{ effective_through: "2026-03-12" }]);
-
-      const res = await getTrends(makeRequest("http://localhost/api/city-pulse/trends"));
-      const body = await res.json();
-
-      expect(res.status).toBe(200);
-      expect(body.data.series).toHaveLength(2);
-      expect(body.data.series[0]).toEqual({
-        date: "2026-03-11",
-        crime: 10,
-        crashes: 5,
-        requests311: 20,
-      });
-      expect(body.effectiveThrough).toBe("2026-03-12");
-    });
-
-    it("returns effectiveThrough as the min of max dates across domains", async () => {
-      // 311 has data up to Mar 10, but crime/crashes only up to Mar 09
-      mockQuery.mockResolvedValueOnce([
-        { date: "2026-03-08", domain: "crime", count: 5 },
-        { date: "2026-03-08", domain: "crashes", count: 3 },
-        { date: "2026-03-08", domain: "311", count: 10 },
-        { date: "2026-03-09", domain: "crime", count: 6 },
-        { date: "2026-03-09", domain: "crashes", count: 4 },
-        { date: "2026-03-09", domain: "311", count: 12 },
-        { date: "2026-03-10", domain: "311", count: 15 },
-      ]);
-      // effectiveThrough is Mar 09 (min of max dates: crime=09, crashes=09, 311=10)
-      mockQuery.mockResolvedValueOnce([{ effective_through: "2026-03-09" }]);
-
-      const res = await getTrends(makeRequest("http://localhost/api/city-pulse/trends"));
-      const body = await res.json();
-
-      expect(res.status).toBe(200);
-      expect(body.effectiveThrough).toBe("2026-03-09");
-      // Mar 10 should be trimmed since it's after effectiveThrough
-      expect(body.data.series).toHaveLength(2);
-      expect(body.data.series.map((s: { date: string }) => s.date)).toEqual([
-        "2026-03-08",
-        "2026-03-09",
-      ]);
-    });
-  });
-
   describe("GET /api/city-pulse/categories", () => {
     it("groups by domain", async () => {
       mockQuery.mockResolvedValueOnce([
@@ -218,21 +161,4 @@ describe("City Pulse API", () => {
     });
   });
 
-  describe("GET /api/city-pulse/narrative", () => {
-    it("assembles narrative from signals", async () => {
-      mockQuery.mockResolvedValueOnce([
-        { signal_type: "top_domain", signal_key: "crime", signal_value: "Crime", signal_numeric: 1200 },
-        { signal_type: "top_neighborhood", signal_key: "Capitol Hill", signal_value: null, signal_numeric: 150 },
-      ]);
-
-      const res = await getNarrative(makeRequest("http://localhost/api/city-pulse/narrative"));
-      const body = await res.json();
-
-      expect(res.status).toBe(200);
-      expect(body.data.title).toBe("City Pulse Today");
-      expect(body.data.content).toContain("Crime");
-      expect(body.data.content).toContain("Capitol Hill");
-      expect(body.data.stats).toHaveLength(2);
-    });
-  });
 });

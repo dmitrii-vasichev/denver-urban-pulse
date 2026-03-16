@@ -4,17 +4,13 @@ import { useState, useEffect, useCallback } from "react";
 import type {
   AqiDailyPoint,
   AqiCurrent,
-  RankingRow,
   ComparisonRow,
-  NarrativeData,
   TimeWindow,
 } from "@/lib/types";
 
 interface EnvironmentData {
   aqi: { current: AqiCurrent | null; trend: AqiDailyPoint[] };
-  rankings: RankingRow[];
   comparison: ComparisonRow[];
-  narrative: NarrativeData | null;
   effectiveThrough: string | null;
   lastUpdated: string | null;
   loading: boolean;
@@ -36,9 +32,7 @@ export function useEnvironmentData(
 ): EnvironmentData {
   const [data, setData] = useState<Omit<EnvironmentData, "retry">>({
     aqi: { current: null, trend: [] },
-    rankings: [],
     comparison: [],
-    narrative: null,
     effectiveThrough: null,
     lastUpdated: null,
     loading: true,
@@ -51,23 +45,17 @@ export function useEnvironmentData(
     try {
       const qs = `timeWindow=${timeWindow}${neighborhood !== "all" ? `&neighborhood=${encodeURIComponent(neighborhood)}` : ""}`;
 
-      const [aqiResp, rankings, comparison, narrative] = await Promise.all([
+      const [aqiResp, comparison] = await Promise.all([
         fetch(`/api/environment/aqi?${qs}`).then(async (r) => {
           if (!r.ok) throw new Error(`API error: ${r.status}`);
           return r.json();
         }),
-        fetchJson<RankingRow[]>(
-          `/api/environment/rankings?timeWindow=${timeWindow}`
-        ),
         fetchJson<ComparisonRow[]>(`/api/environment/comparison?${qs}`),
-        fetchJson<NarrativeData>(`/api/environment/narrative?${qs}`),
       ]);
 
       setData({
         aqi: aqiResp.data,
-        rankings,
         comparison,
-        narrative,
         effectiveThrough: aqiResp.effectiveThrough ?? null,
         lastUpdated: aqiResp.lastUpdated ?? null,
         loading: false,

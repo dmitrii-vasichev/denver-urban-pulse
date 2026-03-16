@@ -47,28 +47,6 @@ export async function getAqiEffectiveThrough(tw: TimeWindow): Promise<string | n
   return rows[0]?.effective_through ?? null;
 }
 
-// --- Rankings ---
-
-interface RankingRow {
-  neighborhood: string;
-  crime_count: number;
-  crash_count: number;
-  requests_311_count: number;
-  composite_score: number;
-  rank: number;
-}
-
-export async function getRankings(tw: TimeWindow): Promise<RankingRow[]> {
-  return query<RankingRow>(
-    `SELECT neighborhood, crime_count, crash_count, requests_311_count,
-            composite_score, rank
-     FROM mart_neighborhood_ranking
-     WHERE period = $1
-     ORDER BY composite_score DESC`,
-    [tw]
-  );
-}
-
 // --- Comparison ---
 
 interface ComparisonRow {
@@ -105,23 +83,3 @@ export async function getComparison(
   );
 }
 
-// --- Narrative ---
-
-interface NarrativeRow {
-  signal_type: string;
-  signal_key: string | null;
-  signal_value: string | null;
-  signal_numeric: number | null;
-}
-
-export async function getEnvironmentNarrativeSignals(
-  tw: TimeWindow
-): Promise<NarrativeRow[]> {
-  return query<NarrativeRow>(
-    `SELECT signal_type, signal_key, signal_value, signal_numeric
-     FROM mart_narrative_signals
-     WHERE period = $1 AND signal_type LIKE 'aqi%'
-     ORDER BY signal_type, rank`,
-    [tw]
-  );
-}

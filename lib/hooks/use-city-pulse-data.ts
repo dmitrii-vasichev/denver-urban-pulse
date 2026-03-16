@@ -3,21 +3,17 @@
 import { useState, useEffect, useCallback } from "react";
 import type {
   KpiData,
-  TrendPoint,
   CategoryBreakdown,
   HeatmapCell,
   NeighborhoodRow,
-  NarrativeData,
   TimeWindow,
 } from "@/lib/types";
 
 interface CityPulseData {
   kpis: { crime: KpiData; crashes: KpiData; requests311: KpiData } | null;
-  trends: TrendPoint[];
   categories: Record<string, CategoryBreakdown[]>;
   heatmap: HeatmapCell[];
   neighborhoods: NeighborhoodRow[];
-  narrative: NarrativeData | null;
   effectiveThrough: string | null;
   lastUpdated: string | null;
   loading: boolean;
@@ -39,11 +35,9 @@ export function useCityPulseData(
 ): CityPulseData {
   const [data, setData] = useState<Omit<CityPulseData, "retry">>({
     kpis: null,
-    trends: [],
     categories: {},
     heatmap: [],
     neighborhoods: [],
-    narrative: null,
     effectiveThrough: null,
     lastUpdated: null,
     loading: true,
@@ -56,32 +50,29 @@ export function useCityPulseData(
     try {
       const qs = `timeWindow=${timeWindow}${neighborhood !== "all" ? `&neighborhood=${encodeURIComponent(neighborhood)}` : ""}`;
 
-      const [kpis, trendsResp, categories, heatmap, neighborhoods, narrative] =
-        await Promise.all([
-          fetchJson<CityPulseData["kpis"]>(`/api/city-pulse/kpis?${qs}`),
-          fetch(`/api/city-pulse/trends?${qs}`).then(async (r) => {
-            if (!r.ok) throw new Error(`API error: ${r.status}`);
-            return r.json();
-          }),
-          fetchJson<Record<string, CategoryBreakdown[]>>(
-            `/api/city-pulse/categories?${qs}`
-          ),
-          fetchJson<HeatmapCell[]>(`/api/city-pulse/heatmap?${qs}`),
-          fetchJson<NeighborhoodRow[]>(
-            `/api/city-pulse/neighborhoods?timeWindow=${timeWindow}`
-          ),
-          fetchJson<NarrativeData>(`/api/city-pulse/narrative?${qs}`),
-        ]);
+      const kpisUrl = `/api/city-pulse/kpis?${qs}`;
+      const kpisResp = await fetch(kpisUrl).then(async (r) => {
+        if (!r.ok) throw new Error(`API error: ${r.status}`);
+        return r.json();
+      });
+
+      const [categories, heatmap, neighborhoods] = await Promise.all([
+        fetchJson<Record<string, CategoryBreakdown[]>>(
+          `/api/city-pulse/categories?${qs}`
+        ),
+        fetchJson<HeatmapCell[]>(`/api/city-pulse/heatmap?${qs}`),
+        fetchJson<NeighborhoodRow[]>(
+          `/api/city-pulse/neighborhoods?timeWindow=${timeWindow}`
+        ),
+      ]);
 
       setData({
-        kpis,
-        trends: trendsResp.data.series,
+        kpis: kpisResp.data,
         categories,
         heatmap,
         neighborhoods,
-        narrative,
-        effectiveThrough: trendsResp.effectiveThrough ?? null,
-        lastUpdated: trendsResp.lastUpdated ?? null,
+        effectiveThrough: kpisResp.effectiveThrough ?? null,
+        lastUpdated: kpisResp.lastUpdated ?? null,
         loading: false,
         error: null,
       });

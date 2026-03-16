@@ -23,11 +23,7 @@ const mockQuery = query as jest.MockedFunction<typeof query>;
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { GET: getAqi } = require("@/app/api/environment/aqi/route");
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { GET: getRankings } = require("@/app/api/environment/rankings/route");
-// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { GET: getComparison } = require("@/app/api/environment/comparison/route");
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { GET: getNarrative } = require("@/app/api/environment/narrative/route");
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { NextRequest } = require("next/server");
 
@@ -85,21 +81,6 @@ describe("Environment API", () => {
     });
   });
 
-  describe("GET /api/environment/rankings", () => {
-    it("returns neighborhood rankings", async () => {
-      mockQuery.mockResolvedValueOnce([
-        { neighborhood: "Five Points", crime_count: 80, crash_count: 20, requests_311_count: 100, composite_score: 95.5, rank: 1 },
-      ]);
-
-      const res = await getRankings(req("http://localhost/api/environment/rankings"));
-      const body = await res.json();
-
-      expect(res.status).toBe(200);
-      expect(body.data[0].neighborhood).toBe("Five Points");
-      expect(body.data[0].rank).toBe(1);
-    });
-  });
-
   describe("GET /api/environment/comparison", () => {
     it("returns comparison with neighborhood filter", async () => {
       mockQuery.mockResolvedValueOnce([
@@ -115,19 +96,4 @@ describe("Environment API", () => {
     });
   });
 
-  describe("GET /api/environment/narrative", () => {
-    it("assembles environment narrative", async () => {
-      mockQuery.mockResolvedValueOnce([
-        { signal_type: "aqi_status", signal_key: "current", signal_value: "Good", signal_numeric: 42 },
-      ]);
-
-      const res = await getNarrative(req("http://localhost/api/environment/narrative"));
-      const body = await res.json();
-
-      expect(res.status).toBe(200);
-      expect(body.data.title).toBe("Environment Today");
-      expect(body.data.content).toContain("Good");
-      expect(body.data.stats[0].value).toBe("42");
-    });
-  });
 });
