@@ -1,10 +1,24 @@
 "use client";
 
-import type { CategoryBreakdown } from "@/lib/types";
+import { useState, useRef, useCallback } from "react";
+import type { CategoryBreakdown, CategoryTrends, ChartPoint } from "@/lib/types";
 import { formatNumber } from "@/lib/format";
+import { Sparkline } from "@/components/ui/sparkline";
 
 interface CategoryChartProps {
   data: Record<string, CategoryBreakdown[]>;
+  trends?: CategoryTrends;
+}
+
+interface TooltipState {
+  domain: string;
+  color: string;
+  category: string;
+  count: number;
+  percent: number;
+  sparkline: ChartPoint[];
+  x: number;
+  y: number;
 }
 
 const DOMAINS = [
@@ -13,7 +27,39 @@ const DOMAINS = [
   { key: "requests311", label: "311 Requests", color: "#198754" },
 ];
 
-export function CategoryChart({ data }: CategoryChartProps) {
+export function CategoryChart({ data, trends = {} }: CategoryChartProps) {
+  const [tooltip, setTooltip] = useState<TooltipState | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseEnter = useCallback(
+    (
+      e: React.MouseEvent,
+      domain: { key: string; color: string },
+      item: CategoryBreakdown
+    ) => {
+      const container = containerRef.current;
+      if (!container) return;
+      const containerRect = container.getBoundingClientRect();
+      const targetRect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+
+      setTooltip({
+        domain: domain.key,
+        color: domain.color,
+        category: item.category,
+        count: item.count,
+        percent: item.percent,
+        sparkline: trends[domain.key]?.[item.category] ?? [],
+        x: targetRect.left - containerRect.left + targetRect.width / 2,
+        y: targetRect.top - containerRect.top,
+      });
+    },
+    [trends]
+  );
+
+  const handleMouseLeave = useCallback(() => {
+    setTooltip(null);
+  }, []);
+
   const hasDomains = DOMAINS.some((d) => data[d.key]?.length);
 
   if (!hasDomains) {
@@ -25,7 +71,7 @@ export function CategoryChart({ data }: CategoryChartProps) {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 relative" ref={containerRef}>
       {DOMAINS.map((domain) => {
         const items = data[domain.key];
         if (!items?.length) return null;
@@ -57,7 +103,12 @@ export function CategoryChart({ data }: CategoryChartProps) {
             </p>
             <div className="space-y-1">
               {items.slice(0, 6).map((item) => (
-                <div key={item.category} className="flex items-center gap-2">
+                <div
+                  key={item.category}
+                  className="flex items-center gap-2 cursor-default"
+                  onMouseEnter={(e) => handleMouseEnter(e, domain, item)}
+                  onMouseLeave={handleMouseLeave}
+                >
                   <span className="text-[9px] text-[#52667A] w-24 truncate shrink-0 text-right" title={item.category}>
                     {item.category}
                   </span>
@@ -83,6 +134,37 @@ export function CategoryChart({ data }: CategoryChartProps) {
           </div>
         );
       })}
+
+      {/* Tooltip */}
+      {tooltip && (
+        <div
+          className="absolute z-50 pointer-events-none animate-fade-in"
+          style={{
+            left: `clamp(0px, ${tooltip.x}px - 100px, calc(100% - 200px))`,
+            top: `${tooltip.y - 8}px`,
+            transform: "translateY(-100%)",
+          }}
+        >
+          <div className="bg-[#102A43] text-white rounded-lg shadow-lg px-3 py-2.5 w-[200px]">
+            <p className="text-[11px] font-medium leading-tight mb-1">
+              {tooltip.category}
+            </p>
+            <div className="flex items-center gap-2 text-[10px] text-white/70 mb-2">
+              <span>{formatNumber(tooltip.count)}</span>
+              <span className="text-white/40">·</span>
+              <span>{tooltip.percent.toFixed(1)}%</span>
+            </div>
+            {tooltip.sparkline.length > 1 && (
+              <Sparkline
+                data={tooltip.sparkline}
+                color={tooltip.color}
+                height={40}
+                interactive={false}
+              />
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

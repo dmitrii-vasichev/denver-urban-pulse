@@ -18,7 +18,7 @@ import geojson from "@/data/geo/denver-neighborhoods.json";
 
 function CityPulseContent() {
   const { timeWindow, neighborhood } = useFilters();
-  const { kpis, categories, heatmap, neighborhoods, loading, error, retry, effectiveThrough, lastUpdated } =
+  const { kpis, categories, categoryTrends, heatmap, neighborhoods, loading, error, retry, effectiveThrough, lastUpdated } =
     useCityPulseData(timeWindow, neighborhood);
   const { aqi, comparison, loading: envLoading, error: envError, retry: envRetry, effectiveThrough: envEffectiveThrough } =
     useEnvironmentData(timeWindow, neighborhood);
@@ -120,7 +120,7 @@ function CityPulseContent() {
         </div>
         <div className="lg:col-span-5">
           <ChartCard title="Category Breakdown" loading={loading} className="h-full">
-            <CategoryChart data={categories} />
+            <CategoryChart data={categories} trends={categoryTrends} />
           </ChartCard>
         </div>
       </div>

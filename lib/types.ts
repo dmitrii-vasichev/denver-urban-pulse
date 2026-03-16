@@ -58,6 +58,8 @@ export interface CategoryBreakdown {
   percent: number;
 }
 
+export type CategoryTrends = Record<string, Record<string, ChartPoint[]>>;
+
 export interface HeatmapCell {
   dayOfWeek: number;
   hourOfDay: number;

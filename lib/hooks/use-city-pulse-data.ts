@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import type {
   KpiData,
   CategoryBreakdown,
+  CategoryTrends,
   HeatmapCell,
   NeighborhoodRow,
   TimeWindow,
@@ -12,6 +13,7 @@ import type {
 interface CityPulseData {
   kpis: { crime: KpiData; crashes: KpiData; requests311: KpiData } | null;
   categories: Record<string, CategoryBreakdown[]>;
+  categoryTrends: CategoryTrends;
   heatmap: HeatmapCell[];
   neighborhoods: NeighborhoodRow[];
   effectiveThrough: string | null;
@@ -36,6 +38,7 @@ export function useCityPulseData(
   const [data, setData] = useState<Omit<CityPulseData, "retry">>({
     kpis: null,
     categories: {},
+    categoryTrends: {},
     heatmap: [],
     neighborhoods: [],
     effectiveThrough: null,
@@ -56,9 +59,12 @@ export function useCityPulseData(
         return r.json();
       });
 
-      const [categories, heatmap, neighborhoods] = await Promise.all([
+      const [categories, categoryTrends, heatmap, neighborhoods] = await Promise.all([
         fetchJson<Record<string, CategoryBreakdown[]>>(
           `/api/city-pulse/categories?${qs}`
+        ),
+        fetchJson<CategoryTrends>(
+          `/api/city-pulse/category-trends?timeWindow=${timeWindow}`
         ),
         fetchJson<HeatmapCell[]>(`/api/city-pulse/heatmap?${qs}`),
         fetchJson<NeighborhoodRow[]>(
@@ -69,6 +75,7 @@ export function useCityPulseData(
       setData({
         kpis: kpisResp.data,
         categories,
+        categoryTrends,
         heatmap,
         neighborhoods,
         effectiveThrough: kpisResp.effectiveThrough ?? null,
