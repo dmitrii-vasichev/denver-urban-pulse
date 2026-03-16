@@ -72,6 +72,29 @@ The current two-tab dashboard (City Pulse + Environment & Neighborhoods) has sev
 - Mobile-specific navigation (hamburger menu) — deferred
 - Map interactivity improvements
 
+## Implementation Phases
+
+### Phase 1: Layout Restructuring
+Replace sidebar with top header, consolidate two tabs into single page, implement new grid layout.
+- FR-1: Remove Environment tab and sidebar navigation
+- FR-2: Create top header bar (title, filters, freshness info)
+- FR-3: Remove Incident Trends chart
+- FR-4: Remove both Narrative blocks
+- FR-5: Remove Neighborhood Ranking chart (×2)
+- FR-6: Remove Neighborhood Comparison chart
+- FR-7: Remove KPI cards (Safest, Most Active, Most Improved)
+- FR-8: Add AQI KPI card to main strip
+- FR-9: Move AQI Trend + Change Leaders to single page
+- FR-10: Implement new 4-row grid layout
+
+### Phase 2: Chart Improvements & Cleanup
+Refine chart behavior, unify styling, remove dead code.
+- FR-11: Heatmap aggregation SUM → AVG
+- FR-12: Rounded bars on Change Leaders
+- FR-13: Highlight "Most Improved" in Change Leaders
+- FR-14: Responsive layout verification
+- FR-15: Clean up unused components, routes, hooks
+
 ## Acceptance Criteria
 - [ ] AC-1: Dashboard renders as a single page with no tab navigation
 - [ ] AC-2: No sidebar — header at top with title, freshness info, and filters
