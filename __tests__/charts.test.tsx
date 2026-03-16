@@ -1,7 +1,7 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { CategoryChart } from "@/components/charts/category-chart";
 import { HeatmapChart } from "@/components/charts/heatmap-chart";
-import type { CategoryBreakdown, HeatmapCell } from "@/lib/types";
+import type { CategoryBreakdown, CategoryTrends, HeatmapCell } from "@/lib/types";
 
 // Mock recharts to avoid canvas issues in jsdom
 jest.mock("recharts", () => ({
@@ -9,6 +9,10 @@ jest.mock("recharts", () => ({
     <div data-testid="line-chart">{children}</div>
   ),
   Line: () => <div />,
+  AreaChart: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="area-chart">{children}</div>
+  ),
+  Area: () => <div />,
   BarChart: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="bar-chart">{children}</div>
   ),
@@ -47,6 +51,39 @@ describe("CategoryChart", () => {
   it("shows empty message for no data", () => {
     render(<CategoryChart data={{}} />);
     expect(screen.getByText("No category data available")).toBeInTheDocument();
+  });
+
+  it("shows tooltip with sparkline on hover", () => {
+    const trends: CategoryTrends = {
+      crime: {
+        Theft: [
+          { date: "2026-03-10", value: 12 },
+          { date: "2026-03-11", value: 15 },
+        ],
+      },
+    };
+    render(<CategoryChart data={sampleCategories} trends={trends} />);
+
+    // Hover over the Theft bar row
+    const theftLabel = screen.getByText("Theft");
+    const barRow = theftLabel.closest("[class*='flex']")!;
+    fireEvent.mouseEnter(barRow);
+
+    // Tooltip should render — check for the tooltip container
+    const tooltipContainer = document.querySelector(".animate-fade-in");
+    expect(tooltipContainer).toBeInTheDocument();
+
+    // Tooltip should contain category name, count, and percent
+    expect(tooltipContainer!.textContent).toContain("Theft");
+    expect(tooltipContainer!.textContent).toContain("500");
+    expect(tooltipContainer!.textContent).toContain("40.0%");
+
+    // Sparkline should render (mocked as area-chart)
+    expect(screen.getByTestId("area-chart")).toBeInTheDocument();
+
+    // Mouse leave hides tooltip
+    fireEvent.mouseLeave(barRow);
+    expect(document.querySelector(".animate-fade-in")).not.toBeInTheDocument();
   });
 
   it("shows summary line for single-category domain", () => {

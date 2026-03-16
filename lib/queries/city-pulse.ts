@@ -198,6 +198,43 @@ export async function getEffectiveThrough(tw: TimeWindow): Promise<string | null
   return rows[0]?.effective_through ?? null;
 }
 
+// --- Category Trends (sparklines per category) ---
+
+interface CategoryTrendRow {
+  domain: string;
+  category: string;
+  date: string;
+  count: number;
+}
+
+export async function getCategoryTrends(
+  tw: TimeWindow
+): Promise<CategoryTrendRow[]> {
+  const days = daysForWindow(tw);
+  if (days <= 30) {
+    return query<CategoryTrendRow>(
+      `SELECT domain, category, date::text, count
+       FROM mart_incident_trends
+       WHERE date >= (NOW() AT TIME ZONE 'America/Denver')::date - $1::int
+         AND date < (NOW() AT TIME ZONE 'America/Denver')::date
+       ORDER BY domain, category, date`,
+      [days]
+    );
+  }
+  // 90d: aggregate by week for cleaner sparklines
+  return query<CategoryTrendRow>(
+    `SELECT domain, category,
+            DATE_TRUNC('week', date)::date::text AS date,
+            SUM(count)::int AS count
+     FROM mart_incident_trends
+     WHERE date >= (NOW() AT TIME ZONE 'America/Denver')::date - $1::int
+       AND date < (NOW() AT TIME ZONE 'America/Denver')::date
+     GROUP BY domain, category, DATE_TRUNC('week', date)
+     ORDER BY domain, category, date`,
+    [days]
+  );
+}
+
 // --- Categories ---
 
 interface CategoryRow {

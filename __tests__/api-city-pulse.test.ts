@@ -36,6 +36,8 @@ const { GET: getHeatmap } = require("@/app/api/city-pulse/heatmap/route");
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { GET: getNeighborhoods } = require("@/app/api/city-pulse/neighborhoods/route");
 // eslint-disable-next-line @typescript-eslint/no-require-imports
+const { GET: getCategoryTrends } = require("@/app/api/city-pulse/category-trends/route");
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { NextRequest } = require("next/server");
 
 function makeRequest(url: string) {
@@ -158,6 +160,40 @@ describe("City Pulse API", () => {
       expect(res.status).toBe(200);
       expect(body.data[0].neighborhood).toBe("Five Points");
       expect(body.data[0].crimeCount).toBe(80);
+    });
+  });
+
+  describe("GET /api/city-pulse/category-trends", () => {
+    it("groups trend rows by domain and category", async () => {
+      mockQuery.mockResolvedValueOnce([
+        { domain: "crime", category: "Theft", date: "2026-03-10", count: 12 },
+        { domain: "crime", category: "Theft", date: "2026-03-11", count: 15 },
+        { domain: "crime", category: "Assault", date: "2026-03-10", count: 5 },
+        { domain: "311", category: "Graffiti", date: "2026-03-10", count: 8 },
+      ]);
+
+      const res = await getCategoryTrends(
+        makeRequest("http://localhost/api/city-pulse/category-trends?timeWindow=7d")
+      );
+      const body = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(body.data.crime.Theft).toHaveLength(2);
+      expect(body.data.crime.Theft[0]).toEqual({ date: "2026-03-10", value: 12 });
+      expect(body.data.crime.Assault).toHaveLength(1);
+      expect(body.data.requests311.Graffiti).toHaveLength(1);
+    });
+
+    it("returns 500 on error", async () => {
+      mockQuery.mockRejectedValueOnce(new Error("DB connection failed"));
+
+      const res = await getCategoryTrends(
+        makeRequest("http://localhost/api/city-pulse/category-trends?timeWindow=30d")
+      );
+      const body = await res.json();
+
+      expect(res.status).toBe(500);
+      expect(body.error).toBe("DB connection failed");
     });
   });
 
