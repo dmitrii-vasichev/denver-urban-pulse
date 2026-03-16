@@ -24,7 +24,7 @@ describe("CityPulsePage", () => {
   it("renders the page heading", () => {
     render(<CityPulsePage />);
     expect(
-      screen.getByRole("heading", { name: /city pulse/i })
+      screen.getByRole("heading", { name: /denver urban pulse/i })
     ).toBeInTheDocument();
   });
 

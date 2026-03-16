@@ -97,7 +97,7 @@ describe("CityPulsePage", () => {
     });
 
     render(<CityPulsePage />);
-    expect(screen.getByText("City Pulse")).toBeInTheDocument();
+    expect(screen.getByText("Denver Urban Pulse")).toBeInTheDocument();
     expect(screen.getAllByText("1,200").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("Crime leads volume.")).toBeInTheDocument();
   });
