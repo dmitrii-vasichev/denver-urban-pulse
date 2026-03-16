@@ -19,6 +19,7 @@ interface ChangeLeadersChartProps {
 interface LeaderEntry {
   neighborhood: string;
   delta: number;
+  isMostImproved?: boolean;
 }
 
 function truncate(s: string, max: number): string {
@@ -47,7 +48,7 @@ function CustomTooltip({
   );
 }
 
-function computeLeaders(data: ComparisonRow[]): LeaderEntry[] {
+export function computeLeaders(data: ComparisonRow[]): LeaderEntry[] {
   const withDelta = data
     .map((r) => ({
       neighborhood: r.neighborhood,
@@ -65,11 +66,20 @@ function computeLeaders(data: ComparisonRow[]): LeaderEntry[] {
 
   const combined = [...worst, ...best];
   const seen = new Set<string>();
-  return combined.filter((r) => {
+  const result = combined.filter((r) => {
     if (seen.has(r.neighborhood)) return false;
     seen.add(r.neighborhood);
     return true;
   });
+
+  // Mark the entry with the lowest (most negative) delta
+  const mostImproved = result.reduce<LeaderEntry | null>(
+    (best, r) => (r.delta < 0 && (!best || r.delta < best.delta) ? r : best),
+    null
+  );
+  if (mostImproved) mostImproved.isMostImproved = true;
+
+  return result;
 }
 
 export function ChangeLeadersChart({ data }: ChangeLeadersChartProps) {
@@ -82,6 +92,7 @@ export function ChangeLeadersChart({ data }: ChangeLeadersChartProps) {
   }
 
   const leaders = computeLeaders(data);
+  const mostImprovedName = leaders.find((l) => l.isMostImproved)?.neighborhood;
 
   if (leaders.length === 0) {
     return (
@@ -109,8 +120,25 @@ export function ChangeLeadersChart({ data }: ChangeLeadersChartProps) {
           type="category"
           dataKey="neighborhood"
           width={90}
-          tickFormatter={(v: string) => truncate(v, 14)}
-          tick={{ fontSize: 9, fill: "#627D98" }}
+          tick={(props: Record<string, unknown>) => {
+            const x = Number(props.x);
+            const y = Number(props.y);
+            const value = String((props.payload as { value: string })?.value ?? "");
+            const isMI = value === mostImprovedName;
+            return (
+              <text
+                x={x}
+                y={y}
+                textAnchor="end"
+                fontSize={9}
+                fill={isMI ? "#0D6E3F" : "#627D98"}
+                fontWeight={isMI ? 700 : 400}
+                dominantBaseline="central"
+              >
+                {isMI ? "★ " : ""}{truncate(value, 14)}
+              </text>
+            );
+          }}
           axisLine={false}
           tickLine={false}
         />
@@ -120,7 +148,7 @@ export function ChangeLeadersChart({ data }: ChangeLeadersChartProps) {
           {leaders.map((entry, i) => (
             <Cell
               key={i}
-              fill={entry.delta <= 0 ? "#198754" : "#DC3545"}
+              fill={entry.isMostImproved ? "#0D6E3F" : entry.delta <= 0 ? "#198754" : "#DC3545"}
             />
           ))}
         </Bar>

@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { AqiTrendChart } from "@/components/charts/aqi-trend-chart";
-import { ChangeLeadersChart } from "@/components/charts/change-leaders-chart";
+import { ChangeLeadersChart, computeLeaders } from "@/components/charts/change-leaders-chart";
 import type { AqiDailyPoint, ComparisonRow } from "@/lib/types";
 
 // Mock recharts to avoid canvas issues in jsdom
@@ -66,5 +66,13 @@ describe("ChangeLeadersChart", () => {
   it("shows empty message for no data", () => {
     render(<ChangeLeadersChart data={[]} />);
     expect(screen.getByText("No change data available")).toBeInTheDocument();
+  });
+
+  it("marks the most improved neighborhood", () => {
+    const leaders = computeLeaders(sampleComparison);
+    const mostImproved = leaders.filter((l) => l.isMostImproved);
+    expect(mostImproved).toHaveLength(1);
+    // Baker has the lowest avg delta: (-5 + -4 + -6) / 3 = -5.0
+    expect(mostImproved[0].neighborhood).toBe("Baker");
   });
 });
