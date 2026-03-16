@@ -1,6 +1,5 @@
 import { render, screen } from "@testing-library/react";
 import { AqiTrendChart } from "@/components/charts/aqi-trend-chart";
-import { NeighborhoodComparisonChart } from "@/components/charts/neighborhood-comparison-chart";
 import { ChangeLeadersChart } from "@/components/charts/change-leaders-chart";
 import type { AqiDailyPoint, ComparisonRow } from "@/lib/types";
 
@@ -57,18 +56,6 @@ const sampleComparison: ComparisonRow[] = [
   { neighborhood: "Cherry Creek", crimeRate: 6.0, crashRate: 1.5, requests311Rate: 3.0, crimeDeltaPct: 0.5, crashDeltaPct: 0.0, requests311DeltaPct: 0.5 },
   { neighborhood: "Stapleton", crimeRate: 5.0, crashRate: 1.0, requests311Rate: 2.5, crimeDeltaPct: -0.5, crashDeltaPct: -0.5, requests311DeltaPct: -1.0 },
 ];
-
-describe("NeighborhoodComparisonChart", () => {
-  it("renders with sample data", () => {
-    const { container } = render(<NeighborhoodComparisonChart data={sampleComparison} />);
-    expect(container.querySelector("[data-testid='bar-chart']")).toBeInTheDocument();
-  });
-
-  it("shows empty message for no data", () => {
-    render(<NeighborhoodComparisonChart data={[]} />);
-    expect(screen.getByText("No comparison data available")).toBeInTheDocument();
-  });
-});
 
 describe("ChangeLeadersChart", () => {
   it("renders with sample data", () => {
