@@ -44,41 +44,55 @@ export function Sparkline({
 
   if (data.length === 0) return null;
 
+  const numericWidth = typeof width === "number" ? width : undefined;
+
+  const chart = (
+    <AreaChart
+      data={data}
+      width={numericWidth}
+      height={numericWidth ? height : undefined}
+      margin={{ top: 2, right: 2, bottom: 0, left: 2 }}
+    >
+      <defs>
+        <linearGradient id={`spark-${color}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity={0.3} />
+          <stop offset="100%" stopColor={color} stopOpacity={0.05} />
+        </linearGradient>
+      </defs>
+      {interactive && (
+        <Tooltip
+          content={renderTooltip}
+          cursor={{ stroke: color, strokeOpacity: 0.3, strokeWidth: 1 }}
+          isAnimationActive={false}
+        />
+      )}
+      <Area
+        type="monotone"
+        dataKey="value"
+        stroke={color}
+        strokeWidth={1.5}
+        fill={`url(#spark-${color})`}
+        isAnimationActive={false}
+        activeDot={{
+          r: 3,
+          fill: color,
+          stroke: "#fff",
+          strokeWidth: 1.5,
+        }}
+      />
+    </AreaChart>
+  );
+
+  // When width is a fixed number, render AreaChart directly — ResponsiveContainer
+  // fails inside CSS-transformed / pointer-events-none containers (e.g. tooltips).
+  if (numericWidth) {
+    return <div style={{ width, height }}>{chart}</div>;
+  }
+
   return (
     <div style={{ width, height }}>
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart
-          data={data}
-          margin={{ top: 2, right: 2, bottom: 0, left: 2 }}
-        >
-          <defs>
-            <linearGradient id={`spark-${color}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={color} stopOpacity={0.3} />
-              <stop offset="100%" stopColor={color} stopOpacity={0.05} />
-            </linearGradient>
-          </defs>
-          {interactive && (
-            <Tooltip
-              content={renderTooltip}
-              cursor={{ stroke: color, strokeOpacity: 0.3, strokeWidth: 1 }}
-              isAnimationActive={false}
-            />
-          )}
-          <Area
-            type="monotone"
-            dataKey="value"
-            stroke={color}
-            strokeWidth={1.5}
-            fill={`url(#spark-${color})`}
-            isAnimationActive={false}
-            activeDot={{
-              r: 3,
-              fill: color,
-              stroke: "#fff",
-              strokeWidth: 1.5,
-            }}
-          />
-        </AreaChart>
+        {chart}
       </ResponsiveContainer>
     </div>
   );
