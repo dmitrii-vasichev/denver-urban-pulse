@@ -1,114 +1,24 @@
 {
   "project_name": "denver-urban-pulse",
-  "work_type": "new_project",
-  "created_at": "2026-03-13T17:00:00Z",
-  "current_step": 7,
-  "current_step_name": "completed",
-  "current_phase": 6,
+  "work_type": "feature",
+  "created_at": "2026-03-16T12:00:00Z",
+  "current_step": 2,
+  "current_step_name": "design_brief",
+  "current_phase": null,
   "history": [
-    {
-      "step": 0,
-      "action": "completed",
-      "timestamp": "2026-03-13T17:00:00Z",
-      "details": "Project initialized, GitHub connected"
-    },
     {
       "step": 1,
       "action": "completed",
-      "timestamp": "2026-03-13T17:01:00Z",
-      "details": "PRD approved"
-    },
-    {
-      "step": 2,
-      "action": "completed",
-      "timestamp": "2026-03-13T17:02:00Z",
-      "details": "Design brief approved"
-    },
-    {
-      "step": 3,
-      "action": "completed",
-      "timestamp": "2026-03-13T17:03:00Z",
-      "details": "Phasing complete, starting Phase 1"
-    },
-    {
-      "step": 4,
-      "action": "completed",
-      "timestamp": "2026-03-13T17:04:00Z",
-      "details": "Phase 1 plan approved"
-    },
-    {
-      "step": 5,
-      "action": "completed",
-      "timestamp": "2026-03-13T17:05:00Z",
-      "details": "Issues #1-#6 created, added to project board #13"
-    },
-    {
-      "step": 6,
-      "action": "completed",
-      "timestamp": "2026-03-13T20:30:00Z",
-      "details": "Phase 1 implementation complete — all 6 tasks done, PRs #7-#12 merged"
-    },
-    {
-      "step": 7,
-      "action": "completed",
-      "timestamp": "2026-03-13T20:35:00Z",
-      "details": "Phase 1 review complete — all PRs merged to main"
-    },
-    {
-      "step": 6,
-      "action": "completed",
-      "timestamp": "2026-03-13T22:00:00Z",
-      "details": "Phase 3 implementation complete — 9 tasks, PRs #40-#48 merged, 51 new tests"
-    },
-    {
-      "step": 7,
-      "action": "completed",
-      "timestamp": "2026-03-13T22:05:00Z",
-      "details": "Phase 3 review complete — all PRs merged to main"
-    },
-    {
-      "step": 6,
-      "action": "completed",
-      "timestamp": "2026-03-13T23:30:00Z",
-      "details": "Phase 4 implementation complete — 7 tasks, PRs #56-#62, 15 new tests"
-    },
-    {
-      "step": 7,
-      "action": "completed",
-      "timestamp": "2026-03-13T23:45:00Z",
-      "details": "Phase 4 review complete — all PRs merged to main"
-    },
-    {
-      "step": 6,
-      "action": "completed",
-      "timestamp": "2026-03-13T25:00:00Z",
-      "details": "Phase 5 implementation complete — 7 tasks, PRs #75-#76 merged, 10 new tests"
-    },
-    {
-      "step": 7,
-      "action": "completed",
-      "timestamp": "2026-03-13T25:10:00Z",
-      "details": "Phase 5 review complete — all PRs merged to main"
-    },
-    {
-      "step": 6,
-      "action": "completed",
-      "timestamp": "2026-03-14T05:00:00Z",
-      "details": "Phase 6 implementation complete — 7 tasks, PRs #85-#91 merged, 6 new tests"
-    },
-    {
-      "step": 7,
-      "action": "completed",
-      "timestamp": "2026-03-14T05:10:00Z",
-      "details": "Phase 6 review complete — all PRs merged to main. Project complete!"
+      "timestamp": "2026-03-16T12:00:00Z",
+      "details": "PRD for dashboard restructuring approved"
     }
   ],
   "artifacts": {
-    "prd_file": "docs/prd-denver-urban-pulse.md",
+    "prd_file": "docs/prd-dashboard-restructuring.md",
     "design_brief_file": "docs/design-brief.md",
-    "plan_files": ["docs/plans/2026-03-13-phase-1-foundation.md", "docs/plans/2026-03-13-phase-2-data-pipeline.md", "docs/plans/2026-03-13-phase-3-frontend-shell.md", "docs/plans/2026-03-13-phase-4-city-pulse-screen.md", "docs/plans/2026-03-13-phase-5-environment-neighborhoods.md", "docs/plans/2026-03-13-phase-6-polish-deploy.md"],
-    "issue_numbers": [1, 2, 3, 4, 5, 6, 13, 14, 15, 16, 17, 18, 19, 20, 21, 31, 32, 33, 34, 35, 36, 37, 38, 39, 49, 50, 51, 52, 53, 54, 55, 64, 65, 66, 67, 68, 69, 70, 78, 79, 80, 81, 82, 83, 84],
-    "pr_numbers": [7, 8, 9, 10, 11, 12, 22, 40, 41, 42, 43, 44, 45, 46, 47, 48, 56, 57, 58, 59, 60, 61, 62, 75, 76, 85, 86, 87, 88, 89, 90, 91],
+    "plan_files": [],
+    "issue_numbers": [],
+    "pr_numbers": [],
     "project_board_number": 13
   }
 }
