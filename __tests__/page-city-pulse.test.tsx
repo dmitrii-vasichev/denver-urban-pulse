@@ -173,6 +173,41 @@ describe("CityPulsePage", () => {
     expect(container.querySelector(".grid-cols-1.md\\:grid-cols-2")).toBeInTheDocument();
   });
 
+  it("uses global effectiveThrough (min of city-pulse and environment)", () => {
+    mockUseCityPulseData.mockReturnValue({
+      kpis: null,
+      categories: {},
+      heatmap: [],
+      neighborhoods: [],
+      effectiveThrough: "2026-03-09",
+      lastUpdated: "2026-03-16T06:00:00Z",
+      loading: false,
+      error: null,
+      retry: jest.fn(),
+    });
+    mockUseEnvironmentData.mockReturnValue({
+      aqi: {
+        current: { aqi: 42, status: "Good" },
+        trend: [
+          { date: "2026-03-08", aqiMax: 40, aqiOzone: 30, aqiPm25: 20, aqiPm10: 15, category: "Good" },
+          { date: "2026-03-09", aqiMax: 45, aqiOzone: 35, aqiPm25: 25, aqiPm10: 18, category: "Good" },
+          { date: "2026-03-15", aqiMax: 50, aqiOzone: 40, aqiPm25: 30, aqiPm10: 20, category: "Good" },
+        ],
+      },
+      comparison: [],
+      effectiveThrough: "2026-03-15",
+      lastUpdated: "2026-03-16T06:00:00Z",
+      loading: false,
+      error: null,
+      retry: jest.fn(),
+    } as ReturnType<typeof useEnvironmentData>);
+
+    render(<CityPulsePage />);
+    // Header should show the earlier date (Mar 9), not the later one (Mar 15)
+    expect(screen.getByText(/Mar 9/)).toBeInTheDocument();
+    expect(screen.queryByText(/Mar 15/)).not.toBeInTheDocument();
+  });
+
   it("renders error state", () => {
     mockUseCityPulseData.mockReturnValue({
       kpis: null,

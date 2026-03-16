@@ -20,8 +20,18 @@ function CityPulseContent() {
   const { timeWindow, neighborhood } = useFilters();
   const { kpis, categories, heatmap, neighborhoods, loading, error, retry, effectiveThrough, lastUpdated } =
     useCityPulseData(timeWindow, neighborhood);
-  const { aqi, comparison, loading: envLoading, error: envError, retry: envRetry } =
+  const { aqi, comparison, loading: envLoading, error: envError, retry: envRetry, effectiveThrough: envEffectiveThrough } =
     useEnvironmentData(timeWindow, neighborhood);
+
+  // Global cutoff: the earliest effectiveThrough across all data sources
+  const globalEffectiveThrough = effectiveThrough && envEffectiveThrough
+    ? (effectiveThrough < envEffectiveThrough ? effectiveThrough : envEffectiveThrough)
+    : effectiveThrough ?? envEffectiveThrough;
+
+  // Filter AQI trend to global cutoff so all charts show the same date range
+  const trimmedAqiTrend = globalEffectiveThrough
+    ? aqi.trend.filter((p) => p.date <= globalEffectiveThrough)
+    : aqi.trend;
 
   const combinedError = error || envError;
 
@@ -44,7 +54,7 @@ function CityPulseContent() {
       title="Denver Urban Pulse"
       subtitle="Crime, crashes, 311 requests, and air quality across Denver"
       lastUpdated={lastUpdated}
-      effectiveThrough={effectiveThrough}
+      effectiveThrough={globalEffectiveThrough}
     >
       {/* Row 1: KPI Strip — 4 cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -92,9 +102,9 @@ function CityPulseContent() {
       </div>
 
       {/* Row 2: Neighborhood Map (60%) + Category Breakdown (40%) */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-3 items-stretch">
         <div className="lg:col-span-3">
-          <ChartCard title="Neighborhood Map" loading={loading}>
+          <ChartCard title="Neighborhood Map" loading={loading} className="h-full">
             <div className="h-64 md:h-[300px] -m-2 rounded-lg overflow-hidden">
               <DenverMapDynamic
                 geojson={geojson as unknown as GeoJSON.FeatureCollection}
@@ -105,7 +115,7 @@ function CityPulseContent() {
           </ChartCard>
         </div>
         <div className="lg:col-span-2">
-          <ChartCard title="Category Breakdown" loading={loading}>
+          <ChartCard title="Category Breakdown" loading={loading} className="h-full">
             <CategoryChart data={categories} />
           </ChartCard>
         </div>
@@ -114,7 +124,7 @@ function CityPulseContent() {
       {/* Row 3: AQI Trend (50%) + Time Heatmap (50%) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <ChartCard title="AQI Trend" loading={envLoading}>
-          <AqiTrendChart data={aqi.trend} />
+          <AqiTrendChart data={trimmedAqiTrend} />
         </ChartCard>
         <ChartCard title="Time Heatmap" loading={loading}>
           <HeatmapChart data={heatmap} />
