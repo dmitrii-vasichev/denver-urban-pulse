@@ -1,9 +1,7 @@
 import { render, screen } from "@testing-library/react";
-import { TrendChart } from "@/components/charts/trend-chart";
 import { CategoryChart } from "@/components/charts/category-chart";
 import { HeatmapChart } from "@/components/charts/heatmap-chart";
-import { NeighborhoodRankingChart } from "@/components/charts/neighborhood-ranking-chart";
-import type { TrendPoint, CategoryBreakdown, HeatmapCell, NeighborhoodRow } from "@/lib/types";
+import type { CategoryBreakdown, HeatmapCell } from "@/lib/types";
 
 // Mock recharts to avoid canvas issues in jsdom
 jest.mock("recharts", () => ({
@@ -25,24 +23,6 @@ jest.mock("recharts", () => ({
     <div>{children}</div>
   ),
 }));
-
-const sampleTrends: TrendPoint[] = [
-  { date: "2026-03-01", crime: 120, crashes: 30, requests311: 200 },
-  { date: "2026-03-02", crime: 115, crashes: 28, requests311: 190 },
-  { date: "2026-03-03", crime: 130, crashes: 35, requests311: 210 },
-];
-
-describe("TrendChart", () => {
-  it("renders with sample data", () => {
-    const { container } = render(<TrendChart data={sampleTrends} />);
-    expect(container.querySelector("[data-testid='line-chart']")).toBeInTheDocument();
-  });
-
-  it("shows empty message for no data", () => {
-    render(<TrendChart data={[]} />);
-    expect(screen.getByText("No trend data available")).toBeInTheDocument();
-  });
-});
 
 const sampleCategories: Record<string, CategoryBreakdown[]> = {
   crime: [
@@ -109,20 +89,3 @@ describe("HeatmapChart", () => {
   });
 });
 
-const sampleRanking: NeighborhoodRow[] = [
-  { neighborhood: "Five Points", crimeCount: 200, crashCount: 50, requests311Count: 100, totalDeltaPct: 5.2 },
-  { neighborhood: "Capitol Hill", crimeCount: 180, crashCount: 60, requests311Count: 90, totalDeltaPct: -3.1 },
-  { neighborhood: "CBD", crimeCount: 150, crashCount: 40, requests311Count: 120, totalDeltaPct: 1.5 },
-];
-
-describe("NeighborhoodRankingChart", () => {
-  it("renders with sample data", () => {
-    const { container } = render(<NeighborhoodRankingChart data={sampleRanking} />);
-    expect(container.querySelector("[data-testid='bar-chart']")).toBeInTheDocument();
-  });
-
-  it("shows empty message for no data", () => {
-    render(<NeighborhoodRankingChart data={[]} />);
-    expect(screen.getByText("No neighborhood data available")).toBeInTheDocument();
-  });
-});

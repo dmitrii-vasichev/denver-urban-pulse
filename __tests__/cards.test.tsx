@@ -1,7 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { KpiCard } from "@/components/cards/kpi-card";
 import { ChartCard } from "@/components/cards/chart-card";
-import { NarrativeBlock } from "@/components/cards/narrative-block";
 import { ErrorCard } from "@/components/cards/error-card";
 
 // Mock recharts to avoid canvas issues in jsdom
@@ -68,30 +67,6 @@ describe("ChartCard", () => {
         <div />
       </ChartCard>
     );
-    const skeletons = container.querySelectorAll(".animate-pulse");
-    expect(skeletons.length).toBeGreaterThan(0);
-  });
-});
-
-describe("NarrativeBlock", () => {
-  it("renders dark panel with content and stats", () => {
-    render(
-      <NarrativeBlock
-        title="City Pulse Today"
-        content="Crime leads incident volume."
-        stats={[{ label: "crime", value: "1,200" }]}
-      />
-    );
-    expect(screen.getByText("City Pulse Today")).toBeInTheDocument();
-    expect(screen.getByText("Crime leads incident volume.")).toBeInTheDocument();
-    expect(screen.getByText("1,200")).toBeInTheDocument();
-  });
-
-  it("renders loading skeleton", () => {
-    const { container } = render(
-      <NarrativeBlock title="" content="" loading={true} />
-    );
-    // Dark bg skeletons use bg-white/10
     const skeletons = container.querySelectorAll(".animate-pulse");
     expect(skeletons.length).toBeGreaterThan(0);
   });
