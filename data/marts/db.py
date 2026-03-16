@@ -44,3 +44,14 @@ def fetch_rows(sql: str, params: tuple = ()) -> list[tuple]:
             return cur.fetchall()
     finally:
         conn.close()
+
+
+def count_rows(table: str) -> int:
+    """Return the number of rows in a table."""
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(f"SELECT COUNT(*) FROM {table}")  # noqa: S608 — table name is always a literal from our code
+            return cur.fetchone()[0]
+    finally:
+        conn.close()
