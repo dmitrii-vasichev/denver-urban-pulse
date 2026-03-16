@@ -125,12 +125,12 @@ function CityPulseContent() {
         </div>
       </div>
 
-      {/* Row 3: AQI Trend (6/12) + Time Heatmap (6/12) */}
+      {/* Row 3: AQI Trend (7/12) + Time Heatmap (5/12) */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
-        <ChartCard title="AQI Trend" loading={envLoading} className="md:col-span-6">
+        <ChartCard title="AQI Trend" loading={envLoading} className="md:col-span-7">
           <AqiTrendChart data={trimmedAqiTrend} />
         </ChartCard>
-        <ChartCard title="Time Heatmap" loading={loading} className="md:col-span-6">
+        <ChartCard title="Time Heatmap" loading={loading} className="md:col-span-5">
           <HeatmapChart data={heatmap} />
         </ChartCard>
       </div>
@@ -175,10 +175,10 @@ function CityPulseSkeleton() {
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
-        <ChartCard title="AQI Trend" loading className="md:col-span-6">
+        <ChartCard title="AQI Trend" loading className="md:col-span-7">
           <div className="h-48" />
         </ChartCard>
-        <ChartCard title="Time Heatmap" loading className="md:col-span-6">
+        <ChartCard title="Time Heatmap" loading className="md:col-span-5">
           <div className="h-48" />
         </ChartCard>
       </div>
