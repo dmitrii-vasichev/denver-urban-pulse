@@ -8,7 +8,7 @@ Uses UPSERT (ON CONFLICT DO UPDATE) for idempotency.
 import logging
 import time
 
-from db import execute_sql, truncate_table
+from db import count_rows, execute_sql, truncate_table
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +69,16 @@ def build() -> dict:
     """Build the mart_city_pulse_daily table."""
     start = time.time()
     logger.info("Building mart_city_pulse_daily")
+
+    source_count = count_rows("stg_crime") + count_rows("stg_crashes") + count_rows("stg_311")
+    if source_count == 0:
+        logger.warning("All staging tables empty — skipping build to preserve existing mart data")
+        return {
+            "source": "mart_city_pulse_daily",
+            "status": "skipped",
+            "inserted": 0,
+            "duration_s": round(time.time() - start, 1),
+        }
 
     truncate_table("mart_city_pulse_daily")
     rows = execute_sql(BUILD_SQL)

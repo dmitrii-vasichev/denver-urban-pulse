@@ -9,7 +9,7 @@ Periods: 7d, 30d, 90d
 import logging
 import time
 
-from db import execute_sql, truncate_table
+from db import count_rows, execute_sql, truncate_table
 
 logger = logging.getLogger(__name__)
 
@@ -105,6 +105,16 @@ PERIODS = [("7d", 7), ("30d", 30), ("90d", 90)]
 def build() -> dict:
     start = time.time()
     logger.info("Building mart_category_breakdown")
+
+    source_count = count_rows("stg_crime") + count_rows("stg_crashes") + count_rows("stg_311")
+    if source_count == 0:
+        logger.warning("All staging tables empty — skipping build to preserve existing mart data")
+        return {
+            "source": "mart_category_breakdown",
+            "status": "skipped",
+            "inserted": 0,
+            "duration_s": round(time.time() - start, 1),
+        }
 
     truncate_table("mart_category_breakdown")
     total_rows = 0

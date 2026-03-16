@@ -14,7 +14,7 @@ Periods: 7d, 30d, 90d
 import logging
 import time
 
-from db import execute_sql, truncate_table
+from db import count_rows, execute_sql, truncate_table
 
 logger = logging.getLogger(__name__)
 
@@ -132,6 +132,21 @@ PERIODS = [("7d", 7), ("30d", 30), ("90d", 90)]
 def build() -> dict:
     start = time.time()
     logger.info("Building mart_narrative_signals")
+
+    source_count = (
+        count_rows("mart_city_pulse_neighborhood")
+        + count_rows("mart_neighborhood_ranking")
+        + count_rows("mart_category_breakdown")
+        + count_rows("mart_aqi_daily")
+    )
+    if source_count == 0:
+        logger.warning("All source marts empty — skipping build to preserve existing signals")
+        return {
+            "source": "mart_narrative_signals",
+            "status": "skipped",
+            "inserted": 0,
+            "duration_s": round(time.time() - start, 1),
+        }
 
     truncate_table("mart_narrative_signals")
     total_rows = 0
