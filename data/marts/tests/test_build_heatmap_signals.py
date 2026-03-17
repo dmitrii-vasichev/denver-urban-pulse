@@ -35,6 +35,11 @@ class TestHeatmapSQL:
     def test_three_periods(self):
         assert len(HM_PERIODS) == 3
 
+    def test_uses_data_anchor_not_now(self):
+        # Regression: NOW() caused empty results when data lagged behind current date
+        assert "data_anchor" in HEATMAP_SQL
+        assert "NOW() AT TIME ZONE" not in HEATMAP_SQL
+
 
 class TestCategoryBreakdownSQL:
     def test_inserts_into_correct_table(self):
@@ -54,6 +59,11 @@ class TestCategoryBreakdownSQL:
 
     def test_three_periods(self):
         assert len(CAT_PERIODS) == 3
+
+    def test_uses_data_anchor_not_now(self):
+        # Regression: NOW() caused empty results when data lagged behind current date
+        assert "data_anchor" in CAT_SQL
+        assert "NOW() AT TIME ZONE" not in CAT_SQL
 
 
 class TestNarrativeSignals:

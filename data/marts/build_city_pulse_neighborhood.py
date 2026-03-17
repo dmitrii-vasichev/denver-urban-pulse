@@ -17,6 +17,13 @@ logger = logging.getLogger(__name__)
 
 # Template SQL for one period
 PERIOD_SQL = """
+WITH data_anchor AS (
+    SELECT LEAST(
+        (SELECT MAX((reported_date AT TIME ZONE 'America/Denver')::date) FROM stg_crime),
+        (SELECT MAX((reported_date AT TIME ZONE 'America/Denver')::date) FROM stg_crashes),
+        (SELECT MAX((case_created_date AT TIME ZONE 'America/Denver')::date) FROM stg_311)
+    ) AS ref_date
+)
 INSERT INTO mart_city_pulse_neighborhood (
     neighborhood, period,
     crime_count, crash_count, requests_311_count, total_incidents,
@@ -49,6 +56,7 @@ SELECT
 FROM (
     SELECT canonical_name AS neighborhood FROM ref_neighborhoods
 ) n
+CROSS JOIN data_anchor
 LEFT JOIN (
     -- Current period counts
     SELECT neighborhood,
@@ -56,14 +64,14 @@ LEFT JOIN (
            SUM(CASE WHEN src = 'crashes' THEN 1 ELSE 0 END) AS crashes,
            SUM(CASE WHEN src = '311' THEN 1 ELSE 0 END) AS r311
     FROM (
-        SELECT neighborhood, 'crime' AS src FROM stg_crime
-        WHERE reported_date >= (NOW() AT TIME ZONE 'America/Denver')::date - %(days)s AND neighborhood IS NOT NULL
+        SELECT neighborhood, 'crime' AS src FROM stg_crime CROSS JOIN data_anchor
+        WHERE reported_date >= data_anchor.ref_date - %(days)s AND neighborhood IS NOT NULL
         UNION ALL
-        SELECT neighborhood, 'crashes' FROM stg_crashes
-        WHERE reported_date >= (NOW() AT TIME ZONE 'America/Denver')::date - %(days)s AND neighborhood IS NOT NULL
+        SELECT neighborhood, 'crashes' FROM stg_crashes CROSS JOIN data_anchor
+        WHERE reported_date >= data_anchor.ref_date - %(days)s AND neighborhood IS NOT NULL
         UNION ALL
-        SELECT neighborhood, '311' FROM stg_311
-        WHERE case_created_date >= (NOW() AT TIME ZONE 'America/Denver')::date - %(days)s AND neighborhood IS NOT NULL
+        SELECT neighborhood, '311' FROM stg_311 CROSS JOIN data_anchor
+        WHERE case_created_date >= data_anchor.ref_date - %(days)s AND neighborhood IS NOT NULL
     ) cur_all
     GROUP BY neighborhood
 ) cur ON cur.neighborhood = n.neighborhood
@@ -74,19 +82,19 @@ LEFT JOIN (
            SUM(CASE WHEN src = 'crashes' THEN 1 ELSE 0 END) AS crashes,
            SUM(CASE WHEN src = '311' THEN 1 ELSE 0 END) AS r311
     FROM (
-        SELECT neighborhood, 'crime' AS src FROM stg_crime
-        WHERE reported_date >= (NOW() AT TIME ZONE 'America/Denver')::date - %(days)s * 2
-          AND reported_date < (NOW() AT TIME ZONE 'America/Denver')::date - %(days)s
+        SELECT neighborhood, 'crime' AS src FROM stg_crime CROSS JOIN data_anchor
+        WHERE reported_date >= data_anchor.ref_date - %(days)s * 2
+          AND reported_date < data_anchor.ref_date - %(days)s
           AND neighborhood IS NOT NULL
         UNION ALL
-        SELECT neighborhood, 'crashes' FROM stg_crashes
-        WHERE reported_date >= (NOW() AT TIME ZONE 'America/Denver')::date - %(days)s * 2
-          AND reported_date < (NOW() AT TIME ZONE 'America/Denver')::date - %(days)s
+        SELECT neighborhood, 'crashes' FROM stg_crashes CROSS JOIN data_anchor
+        WHERE reported_date >= data_anchor.ref_date - %(days)s * 2
+          AND reported_date < data_anchor.ref_date - %(days)s
           AND neighborhood IS NOT NULL
         UNION ALL
-        SELECT neighborhood, '311' FROM stg_311
-        WHERE case_created_date >= (NOW() AT TIME ZONE 'America/Denver')::date - %(days)s * 2
-          AND case_created_date < (NOW() AT TIME ZONE 'America/Denver')::date - %(days)s
+        SELECT neighborhood, '311' FROM stg_311 CROSS JOIN data_anchor
+        WHERE case_created_date >= data_anchor.ref_date - %(days)s * 2
+          AND case_created_date < data_anchor.ref_date - %(days)s
           AND neighborhood IS NOT NULL
     ) prev_all
     GROUP BY neighborhood
