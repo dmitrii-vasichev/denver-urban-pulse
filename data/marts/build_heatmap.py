@@ -34,7 +34,8 @@ SELECT
     COUNT(*),
     NOW()
 FROM stg_crime CROSS JOIN data_anchor
-WHERE reported_date >= data_anchor.ref_date - %(days)s
+WHERE reported_date > (data_anchor.ref_date - %(days)s)::timestamp AT TIME ZONE 'America/Denver'
+  AND reported_date <= (data_anchor.ref_date + 1)::timestamp AT TIME ZONE 'America/Denver'
 GROUP BY
     EXTRACT(ISODOW FROM reported_date AT TIME ZONE 'America/Denver'),
     EXTRACT(HOUR FROM reported_date AT TIME ZONE 'America/Denver')
@@ -50,7 +51,8 @@ SELECT
     COUNT(*),
     NOW()
 FROM stg_crashes CROSS JOIN data_anchor
-WHERE reported_date >= data_anchor.ref_date - %(days)s
+WHERE reported_date > (data_anchor.ref_date - %(days)s)::timestamp AT TIME ZONE 'America/Denver'
+  AND reported_date <= (data_anchor.ref_date + 1)::timestamp AT TIME ZONE 'America/Denver'
 GROUP BY
     EXTRACT(ISODOW FROM reported_date AT TIME ZONE 'America/Denver'),
     EXTRACT(HOUR FROM reported_date AT TIME ZONE 'America/Denver')
@@ -66,7 +68,8 @@ SELECT
     COUNT(*),
     NOW()
 FROM stg_311 CROSS JOIN data_anchor
-WHERE case_created_date >= data_anchor.ref_date - %(days)s
+WHERE case_created_date > (data_anchor.ref_date - %(days)s)::timestamp AT TIME ZONE 'America/Denver'
+  AND case_created_date <= (data_anchor.ref_date + 1)::timestamp AT TIME ZONE 'America/Denver'
 GROUP BY
     EXTRACT(ISODOW FROM case_created_date AT TIME ZONE 'America/Denver'),
     EXTRACT(HOUR FROM case_created_date AT TIME ZONE 'America/Denver')
