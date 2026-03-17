@@ -180,7 +180,7 @@ function CityPulseContent() {
         </div>
       </div>
 
-      {/* Row 3: AQI Trend (7/12) + Time Heatmap (5/12) */}
+      {/* Row 3: AQI Trend (7/12) + Incidents by Day & Hour (5/12) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-stretch">
         <div className="lg:col-span-7">
           <ChartCard title="AQI Trend" loading={envLoading} className="h-full">
@@ -189,7 +189,7 @@ function CityPulseContent() {
         </div>
         <div className="lg:col-span-5">
           <ChartCard
-            title="Time Heatmap"
+            title="Incidents by Day & Hour"
             loading={loading}
             className="h-full"
             headerRight={
@@ -250,7 +250,7 @@ function CityPulseSkeleton() {
           </ChartCard>
         </div>
         <div className="lg:col-span-5">
-          <ChartCard title="Time Heatmap" loading>
+          <ChartCard title="Incidents by Day & Hour" loading>
             <div className="h-48" />
           </ChartCard>
         </div>
