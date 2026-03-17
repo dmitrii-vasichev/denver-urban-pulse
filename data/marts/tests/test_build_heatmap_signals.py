@@ -40,6 +40,18 @@ class TestHeatmapSQL:
         assert "data_anchor" in HEATMAP_SQL
         assert "NOW() AT TIME ZONE" not in HEATMAP_SQL
 
+    def test_uses_explicit_denver_timezone_in_where(self):
+        # Regression: implicit DATE→TIMESTAMPTZ cast used UTC session timezone,
+        # causing 7d period to return 0 crime/crash rows
+        assert "AT TIME ZONE 'America/Denver'" in HEATMAP_SQL
+        # Must NOT compare reported_date directly against a DATE without timezone
+        assert "reported_date >= data_anchor.ref_date" not in HEATMAP_SQL
+        assert "case_created_date >= data_anchor.ref_date" not in HEATMAP_SQL
+
+    def test_has_upper_bound_in_where(self):
+        # Each period filter must have both lower AND upper bound
+        assert "ref_date + 1" in HEATMAP_SQL
+
 
 class TestCategoryBreakdownSQL:
     def test_inserts_into_correct_table(self):
@@ -64,6 +76,12 @@ class TestCategoryBreakdownSQL:
         # Regression: NOW() caused empty results when data lagged behind current date
         assert "data_anchor" in CAT_SQL
         assert "NOW() AT TIME ZONE" not in CAT_SQL
+
+    def test_uses_explicit_denver_timezone_in_where(self):
+        # Regression: implicit DATE→TIMESTAMPTZ cast used UTC session timezone
+        assert "reported_date >= data_anchor.ref_date" not in CAT_SQL
+        assert "case_created_date >= data_anchor.ref_date" not in CAT_SQL
+        assert "ref_date + 1" in CAT_SQL
 
 
 class TestNarrativeSignals:

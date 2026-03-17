@@ -60,7 +60,8 @@ SELECT
     {crime_label},
     COUNT(*), 0, NOW()
 FROM stg_crime CROSS JOIN data_anchor
-WHERE reported_date >= data_anchor.ref_date - %(days)s
+WHERE reported_date > (data_anchor.ref_date - %(days)s)::timestamp AT TIME ZONE 'America/Denver'
+  AND reported_date <= (data_anchor.ref_date + 1)::timestamp AT TIME ZONE 'America/Denver'
 GROUP BY {crime_label}
 
 UNION ALL
@@ -71,7 +72,8 @@ SELECT
     {crash_label},
     COUNT(*), 0, NOW()
 FROM stg_crashes CROSS JOIN data_anchor
-WHERE reported_date >= data_anchor.ref_date - %(days)s
+WHERE reported_date > (data_anchor.ref_date - %(days)s)::timestamp AT TIME ZONE 'America/Denver'
+  AND reported_date <= (data_anchor.ref_date + 1)::timestamp AT TIME ZONE 'America/Denver'
 GROUP BY {crash_label}
 
 UNION ALL
@@ -82,7 +84,8 @@ SELECT
     COALESCE(NULLIF(agency, ''), 'Other'),
     COUNT(*), 0, NOW()
 FROM stg_311 CROSS JOIN data_anchor
-WHERE case_created_date >= data_anchor.ref_date - %(days)s
+WHERE case_created_date > (data_anchor.ref_date - %(days)s)::timestamp AT TIME ZONE 'America/Denver'
+  AND case_created_date <= (data_anchor.ref_date + 1)::timestamp AT TIME ZONE 'America/Denver'
 GROUP BY agency
 
 ON CONFLICT (period, domain, category) DO UPDATE SET
