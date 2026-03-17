@@ -23,15 +23,14 @@ function CityPulseContent() {
   const { aqi, comparison, loading: envLoading, error: envError, retry: envRetry, effectiveThrough: envEffectiveThrough } =
     useEnvironmentData(timeWindow, neighborhood);
 
-  // Global cutoff: the earliest effectiveThrough across all data sources
+  // Global cutoff: the earliest effectiveThrough across all data sources (for header display)
   const globalEffectiveThrough = effectiveThrough && envEffectiveThrough
     ? (effectiveThrough < envEffectiveThrough ? effectiveThrough : envEffectiveThrough)
     : effectiveThrough ?? envEffectiveThrough;
 
-  // Filter AQI trend to global cutoff so all charts show the same date range
-  const trimmedAqiTrend = globalEffectiveThrough
-    ? aqi.trend.filter((p) => p.date <= globalEffectiveThrough)
-    : aqi.trend;
+  // AQI data is already filtered by its own effectiveThrough in the API layer.
+  // Do NOT re-filter it by globalEffectiveThrough — when City Pulse data lags behind
+  // AQI data, the global cutoff would incorrectly trim most AQI points.
 
   const combinedError = error || envError;
 
@@ -50,14 +49,14 @@ function CityPulseContent() {
   const aqiInfo = aqi.current ? formatAqi(aqi.current.aqi) : null;
 
   // AQI sparkline: convert trend to ChartPoint[]
-  const aqiSparkline = trimmedAqiTrend.map((p) => ({
+  const aqiSparkline = aqi.trend.map((p) => ({
     date: p.date,
     value: p.aqiMax,
   }));
 
   // Dominant pollutant label from latest trend point
   const aqiInsight = (() => {
-    const latest = trimmedAqiTrend[trimmedAqiTrend.length - 1];
+    const latest = aqi.trend[aqi.trend.length - 1];
     if (!latest) return undefined;
     const pollutants = [
       { value: latest.aqiOzone, label: "Ozone" },
@@ -151,7 +150,7 @@ function CityPulseContent() {
       {/* Row 3: AQI Trend (7/12) + Time Heatmap (5/12) */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
         <ChartCard title="AQI Trend" loading={envLoading} className="md:col-span-7">
-          <AqiTrendChart data={trimmedAqiTrend} />
+          <AqiTrendChart data={aqi.trend} />
         </ChartCard>
         <ChartCard title="Time Heatmap" loading={loading} className="md:col-span-5">
           <HeatmapChart data={heatmap} />
