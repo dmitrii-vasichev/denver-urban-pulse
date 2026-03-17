@@ -16,6 +16,13 @@ logger = logging.getLogger(__name__)
 
 # Two-step: first insert raw counts, then update with normalized scores and ranks
 INSERT_COUNTS_SQL = """
+WITH data_anchor AS (
+    SELECT LEAST(
+        (SELECT MAX((reported_date AT TIME ZONE 'America/Denver')::date) FROM stg_crime),
+        (SELECT MAX((reported_date AT TIME ZONE 'America/Denver')::date) FROM stg_crashes),
+        (SELECT MAX((case_created_date AT TIME ZONE 'America/Denver')::date) FROM stg_311)
+    ) AS ref_date
+)
 INSERT INTO mart_neighborhood_ranking (
     period, neighborhood,
     crime_count, crash_count, requests_311_count,
@@ -31,20 +38,21 @@ SELECT
     0,  -- placeholder
     NOW()
 FROM ref_neighborhoods n
+CROSS JOIN data_anchor
 LEFT JOIN (
     SELECT neighborhood,
            SUM(CASE WHEN src = 'crime' THEN 1 ELSE 0 END) AS crime,
            SUM(CASE WHEN src = 'crashes' THEN 1 ELSE 0 END) AS crashes,
            SUM(CASE WHEN src = '311' THEN 1 ELSE 0 END) AS r311
     FROM (
-        SELECT neighborhood, 'crime' AS src FROM stg_crime
-        WHERE reported_date >= (NOW() AT TIME ZONE 'America/Denver')::date - %(days)s AND neighborhood IS NOT NULL
+        SELECT neighborhood, 'crime' AS src FROM stg_crime CROSS JOIN data_anchor
+        WHERE reported_date >= data_anchor.ref_date - %(days)s AND neighborhood IS NOT NULL
         UNION ALL
-        SELECT neighborhood, 'crashes' FROM stg_crashes
-        WHERE reported_date >= (NOW() AT TIME ZONE 'America/Denver')::date - %(days)s AND neighborhood IS NOT NULL
+        SELECT neighborhood, 'crashes' FROM stg_crashes CROSS JOIN data_anchor
+        WHERE reported_date >= data_anchor.ref_date - %(days)s AND neighborhood IS NOT NULL
         UNION ALL
-        SELECT neighborhood, '311' FROM stg_311
-        WHERE case_created_date >= (NOW() AT TIME ZONE 'America/Denver')::date - %(days)s AND neighborhood IS NOT NULL
+        SELECT neighborhood, '311' FROM stg_311 CROSS JOIN data_anchor
+        WHERE case_created_date >= data_anchor.ref_date - %(days)s AND neighborhood IS NOT NULL
     ) all_src
     GROUP BY neighborhood
 ) c ON c.neighborhood = n.canonical_name

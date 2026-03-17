@@ -44,6 +44,13 @@ CRASH_LABEL_SQL = """
 
 # Insert counts first, then update percentages
 INSERT_SQL = """
+WITH data_anchor AS (
+    SELECT LEAST(
+        (SELECT MAX((reported_date AT TIME ZONE 'America/Denver')::date) FROM stg_crime),
+        (SELECT MAX((reported_date AT TIME ZONE 'America/Denver')::date) FROM stg_crashes),
+        (SELECT MAX((case_created_date AT TIME ZONE 'America/Denver')::date) FROM stg_311)
+    ) AS ref_date
+)
 INSERT INTO mart_category_breakdown (
     period, domain, category, count, pct_of_total, updated_at
 )
@@ -52,8 +59,8 @@ SELECT
     %(period)s, 'crime',
     {crime_label},
     COUNT(*), 0, NOW()
-FROM stg_crime
-WHERE reported_date >= (NOW() AT TIME ZONE 'America/Denver')::date - %(days)s
+FROM stg_crime CROSS JOIN data_anchor
+WHERE reported_date >= data_anchor.ref_date - %(days)s
 GROUP BY {crime_label}
 
 UNION ALL
@@ -63,8 +70,8 @@ SELECT
     %(period)s, 'crashes',
     {crash_label},
     COUNT(*), 0, NOW()
-FROM stg_crashes
-WHERE reported_date >= (NOW() AT TIME ZONE 'America/Denver')::date - %(days)s
+FROM stg_crashes CROSS JOIN data_anchor
+WHERE reported_date >= data_anchor.ref_date - %(days)s
 GROUP BY {crash_label}
 
 UNION ALL
@@ -74,8 +81,8 @@ SELECT
     %(period)s, '311',
     COALESCE(NULLIF(agency, ''), 'Other'),
     COUNT(*), 0, NOW()
-FROM stg_311
-WHERE case_created_date >= (NOW() AT TIME ZONE 'America/Denver')::date - %(days)s
+FROM stg_311 CROSS JOIN data_anchor
+WHERE case_created_date >= data_anchor.ref_date - %(days)s
 GROUP BY agency
 
 ON CONFLICT (period, domain, category) DO UPDATE SET

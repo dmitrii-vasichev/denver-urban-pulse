@@ -15,6 +15,13 @@ from db import count_rows, execute_sql, truncate_table
 logger = logging.getLogger(__name__)
 
 HEATMAP_SQL = """
+WITH data_anchor AS (
+    SELECT LEAST(
+        (SELECT MAX((reported_date AT TIME ZONE 'America/Denver')::date) FROM stg_crime),
+        (SELECT MAX((reported_date AT TIME ZONE 'America/Denver')::date) FROM stg_crashes),
+        (SELECT MAX((case_created_date AT TIME ZONE 'America/Denver')::date) FROM stg_311)
+    ) AS ref_date
+)
 INSERT INTO mart_heatmap_hour_day (
     period, domain, day_of_week, hour_of_day, count, updated_at
 )
@@ -26,8 +33,8 @@ SELECT
     EXTRACT(HOUR FROM reported_date AT TIME ZONE 'America/Denver')::smallint,
     COUNT(*),
     NOW()
-FROM stg_crime
-WHERE reported_date >= (NOW() AT TIME ZONE 'America/Denver')::date - %(days)s
+FROM stg_crime CROSS JOIN data_anchor
+WHERE reported_date >= data_anchor.ref_date - %(days)s
 GROUP BY
     EXTRACT(ISODOW FROM reported_date AT TIME ZONE 'America/Denver'),
     EXTRACT(HOUR FROM reported_date AT TIME ZONE 'America/Denver')
@@ -42,8 +49,8 @@ SELECT
     EXTRACT(HOUR FROM reported_date AT TIME ZONE 'America/Denver')::smallint,
     COUNT(*),
     NOW()
-FROM stg_crashes
-WHERE reported_date >= (NOW() AT TIME ZONE 'America/Denver')::date - %(days)s
+FROM stg_crashes CROSS JOIN data_anchor
+WHERE reported_date >= data_anchor.ref_date - %(days)s
 GROUP BY
     EXTRACT(ISODOW FROM reported_date AT TIME ZONE 'America/Denver'),
     EXTRACT(HOUR FROM reported_date AT TIME ZONE 'America/Denver')
@@ -58,8 +65,8 @@ SELECT
     EXTRACT(HOUR FROM case_created_date AT TIME ZONE 'America/Denver')::smallint,
     COUNT(*),
     NOW()
-FROM stg_311
-WHERE case_created_date >= (NOW() AT TIME ZONE 'America/Denver')::date - %(days)s
+FROM stg_311 CROSS JOIN data_anchor
+WHERE case_created_date >= data_anchor.ref_date - %(days)s
 GROUP BY
     EXTRACT(ISODOW FROM case_created_date AT TIME ZONE 'America/Denver'),
     EXTRACT(HOUR FROM case_created_date AT TIME ZONE 'America/Denver')

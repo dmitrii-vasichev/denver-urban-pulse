@@ -41,6 +41,11 @@ class TestCityPulseNeighborhoodSQL:
         # Should have CASE WHEN ... > 0 to avoid div by zero
         assert "> 0" in NBHD_SQL
 
+    def test_uses_data_anchor_not_now(self):
+        # Regression: NOW() caused empty results when data lagged behind current date
+        assert "data_anchor" in NBHD_SQL
+        assert "NOW() AT TIME ZONE" not in NBHD_SQL
+
 
 class TestNeighborhoodRankingSQL:
     def test_inserts_into_correct_table(self):
@@ -63,6 +68,11 @@ class TestNeighborhoodRankingSQL:
     def test_three_periods(self):
         assert len(RANK_PERIODS) == 3
 
+    def test_uses_data_anchor_not_now(self):
+        # Regression: NOW() caused empty results when data lagged behind current date
+        assert "data_anchor" in INSERT_COUNTS_SQL
+        assert "NOW() AT TIME ZONE" not in INSERT_COUNTS_SQL
+
 
 class TestNeighborhoodComparisonSQL:
     def test_inserts_into_correct_table(self):
@@ -82,3 +92,8 @@ class TestNeighborhoodComparisonSQL:
 
     def test_three_periods(self):
         assert len(COMP_PERIODS) == 3
+
+    def test_uses_data_anchor_not_now(self):
+        # Regression: NOW() caused empty results when data lagged behind current date
+        assert "data_anchor" in COMPARISON_SQL
+        assert "NOW() AT TIME ZONE" not in COMPARISON_SQL
