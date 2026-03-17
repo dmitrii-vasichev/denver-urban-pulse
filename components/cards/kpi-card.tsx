@@ -70,7 +70,13 @@ export function KpiCard({
           <div className="text-[34px] font-bold text-[#102A43] leading-none mb-1">
             {formatNumber(value)}
           </div>
-          <DeltaBadge value={deltaPercent} />
+          {deltaPercent != null ? (
+            <DeltaBadge value={deltaPercent} />
+          ) : insight ? (
+            <p className="text-[10px] text-[#627D98] leading-tight line-clamp-1">{insight}</p>
+          ) : (
+            <div className="h-5" />
+          )}
         </div>
         <div className="min-w-0 flex-1 self-center">
           <Sparkline
@@ -82,7 +88,7 @@ export function KpiCard({
         </div>
       </div>
 
-      {insight && (
+      {insight && deltaPercent != null && (
         <p className="text-[10px] text-[#627D98] mt-1.5 leading-tight line-clamp-1">
           {insight}
         </p>

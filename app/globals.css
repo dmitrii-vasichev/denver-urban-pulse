@@ -137,7 +137,8 @@
   border-radius: 8px;
   padding: 6px 10px;
   box-shadow: 0 2px 6px rgba(16, 42, 67, 0.1);
-  font-family: inherit;
+  font-family: var(--font-sans, "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif);
+  line-height: 1.4;
 }
 
 .leaflet-tooltip-custom::before {
