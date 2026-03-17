@@ -51,8 +51,12 @@ describe("City Pulse API", () => {
 
   describe("GET /api/city-pulse/kpis", () => {
     it("returns KPI data with correct shape", async () => {
-      // effectiveThrough query (called first)
-      mockQuery.mockResolvedValueOnce([{ effective_through: "2026-03-12" }]);
+      // getDomainFreshness query (called first)
+      mockQuery.mockResolvedValueOnce([
+        { domain: "crime", max_date: "2026-03-12" },
+        { domain: "crashes", max_date: "2026-03-12" },
+        { domain: "311", max_date: "2026-03-12" },
+      ]);
       // sparkline query
       mockQuery.mockResolvedValueOnce([
         { date: "2026-03-12", crime_count: 10, crash_count: 5, requests_311_count: 20 },
@@ -82,12 +86,16 @@ describe("City Pulse API", () => {
       expect(body.effectiveThrough).toBe("2026-03-12");
     });
 
-    it("returns effectiveThrough in response", async () => {
-      // effectiveThrough query (called first)
-      mockQuery.mockResolvedValueOnce([{ effective_through: "2026-03-10" }]);
+    it("returns per-domain freshness and effectiveThrough in response", async () => {
+      // getDomainFreshness query
+      mockQuery.mockResolvedValueOnce([
+        { domain: "crime", max_date: "2026-03-09" },
+        { domain: "crashes", max_date: "2026-03-09" },
+        { domain: "311", max_date: "2026-03-14" },
+      ]);
       // sparkline query
       mockQuery.mockResolvedValueOnce([
-        { date: "2026-03-10", crime_count: 5, crash_count: 2, requests_311_count: 10 },
+        { date: "2026-03-09", crime_count: 5, crash_count: 2, requests_311_count: 10 },
       ]);
       // totals query
       mockQuery.mockResolvedValueOnce([
@@ -105,14 +113,23 @@ describe("City Pulse API", () => {
       const body = await res.json();
 
       expect(res.status).toBe(200);
-      expect(body.effectiveThrough).toBe("2026-03-10");
+      // effectiveThrough = MIN of domain dates
+      expect(body.effectiveThrough).toBe("2026-03-09");
+      // per-domain freshness
+      expect(body.domainFreshness.crime).toBe("2026-03-09");
+      expect(body.domainFreshness.crashes).toBe("2026-03-09");
+      expect(body.domainFreshness.requests311).toBe("2026-03-14");
       expect(body.data).toBeDefined();
       expect(body.lastUpdated).toBeDefined();
     });
 
-    it("anchors date range to MAX(date) instead of NOW()", async () => {
-      // effectiveThrough
-      mockQuery.mockResolvedValueOnce([{ effective_through: "2026-03-01" }]);
+    it("first query uses getDomainFreshness with MAX(date)", async () => {
+      // getDomainFreshness
+      mockQuery.mockResolvedValueOnce([
+        { domain: "crime", max_date: "2026-03-01" },
+        { domain: "crashes", max_date: "2026-03-01" },
+        { domain: "311", max_date: "2026-03-01" },
+      ]);
       // sparkline
       mockQuery.mockResolvedValueOnce([
         { date: "2026-03-01", crime_count: 5, crash_count: 2, requests_311_count: 10 },
@@ -124,10 +141,10 @@ describe("City Pulse API", () => {
 
       await getKpis(makeRequest("http://localhost/api/city-pulse/kpis?timeWindow=7d"));
 
-      // effectiveThrough query (1st call) should use MAX(date) not NOW()
-      const etSql = mockQuery.mock.calls[0][0] as string;
-      expect(etSql).toContain("MAX(date)");
-      expect(etSql).not.toContain("NOW()");
+      // getDomainFreshness query (1st call) should use MAX(date)
+      const freshSql = mockQuery.mock.calls[0][0] as string;
+      expect(freshSql).toContain("MAX(date)");
+      expect(freshSql).not.toContain("NOW()");
 
       // sparkline query (2nd call) should use MAX(date)
       const sparkSql = mockQuery.mock.calls[1][0] as string;

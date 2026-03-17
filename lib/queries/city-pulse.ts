@@ -188,16 +188,32 @@ export async function getKpiTotals(
   return rows[0] ?? null;
 }
 
-export async function getEffectiveThrough(_tw: TimeWindow): Promise<string | null> {
-  const rows = await query<{ effective_through: string | null }>(
-    `SELECT MIN(max_date)::text AS effective_through
-     FROM (
-       SELECT domain, MAX(date) AS max_date
-       FROM mart_incident_trends
-       GROUP BY domain
-     ) sub`
+export interface DomainFreshness {
+  crime: string | null;
+  crashes: string | null;
+  requests311: string | null;
+}
+
+export async function getDomainFreshness(): Promise<DomainFreshness> {
+  const rows = await query<{ domain: string; max_date: string }>(
+    `SELECT domain, MAX(date)::text AS max_date
+     FROM mart_incident_trends
+     GROUP BY domain`
   );
-  return rows[0]?.effective_through ?? null;
+  const map: Record<string, string> = {};
+  for (const r of rows) map[r.domain] = r.max_date;
+  return {
+    crime: map["crime"] ?? null,
+    crashes: map["crashes"] ?? null,
+    requests311: map["311"] ?? null,
+  };
+}
+
+export async function getEffectiveThrough(_tw: TimeWindow): Promise<string | null> {
+  const freshness = await getDomainFreshness();
+  const dates = [freshness.crime, freshness.crashes, freshness.requests311].filter(Boolean) as string[];
+  if (dates.length === 0) return null;
+  return dates.reduce((a, b) => (a < b ? a : b));
 }
 
 // --- Category Trends (sparklines per category) ---

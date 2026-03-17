@@ -5,12 +5,13 @@ import { TimeWindowFilter } from "./time-window-filter";
 import { NeighborhoodFilter } from "./neighborhood-filter";
 import { useFilters } from "@/lib/hooks/use-filters";
 import { formatDateShort } from "@/lib/format";
+import type { DomainFreshness } from "@/lib/types";
 
 interface HeaderProps {
   title: string;
   subtitle?: string;
   lastUpdated?: string | null;
-  effectiveThrough?: string | null;
+  domainFreshness?: DomainFreshness | null;
 }
 
 function formatPipelineDate(iso: string): string {
@@ -26,9 +27,18 @@ function formatPipelineDate(iso: string): string {
   }) + " UTC";
 }
 
-function HeaderInner({ lastUpdated, effectiveThrough }: HeaderProps) {
+const DOMAIN_LABELS: { key: keyof DomainFreshness; label: string }[] = [
+  { key: "crime", label: "Crime" },
+  { key: "crashes", label: "Crashes" },
+  { key: "requests311", label: "311" },
+  { key: "aqi", label: "AQI" },
+];
+
+function HeaderInner({ lastUpdated, domainFreshness }: HeaderProps) {
   const { timeWindow, neighborhood, setTimeWindow, setNeighborhood } =
     useFilters();
+
+  const hasFreshness = domainFreshness && DOMAIN_LABELS.some((d) => domainFreshness[d.key]);
 
   return (
     <header className="sticky top-0 z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 px-3 py-3 md:px-4 xl:px-5 bg-white border-b border-[#E6E9EE]">
@@ -37,11 +47,24 @@ function HeaderInner({ lastUpdated, effectiveThrough }: HeaderProps) {
           <h1 className="text-base font-bold text-[#102A43] leading-tight">
             Denver Urban Pulse
           </h1>
-          {(lastUpdated || effectiveThrough) && (
+          {(lastUpdated || hasFreshness) && (
             <p className="text-[10px] text-[#9FB3C8] mt-0.5">
               {lastUpdated && <>Pipeline ran: {formatPipelineDate(lastUpdated)}</>}
-              {lastUpdated && effectiveThrough && <span className="mx-1">·</span>}
-              {effectiveThrough && <>Data complete through: {formatDateShort(effectiveThrough)}</>}
+              {lastUpdated && hasFreshness && <span className="mx-1">·</span>}
+              {hasFreshness && (
+                <>
+                  Data through:{" "}
+                  {DOMAIN_LABELS
+                    .filter((d) => domainFreshness![d.key])
+                    .map((d, i, arr) => (
+                      <span key={d.key}>
+                        {d.label}{" "}
+                        <span className="font-semibold text-[#627D98]">{formatDateShort(domainFreshness![d.key]!)}</span>
+                        {i < arr.length - 1 && <span className="mx-1">·</span>}
+                      </span>
+                    ))}
+                </>
+              )}
             </p>
           )}
         </div>

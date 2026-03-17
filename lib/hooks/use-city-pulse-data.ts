@@ -5,6 +5,7 @@ import type {
   KpiData,
   CategoryBreakdown,
   CategoryTrends,
+  DomainFreshness,
   HeatmapCell,
   NeighborhoodRow,
   TimeWindow,
@@ -18,6 +19,7 @@ interface CityPulseData {
   heatmapCrashes: HeatmapCell[];
   neighborhoods: NeighborhoodRow[];
   effectiveThrough: string | null;
+  domainFreshness: DomainFreshness | null;
   lastUpdated: string | null;
   loading: boolean;
   error: string | null;
@@ -44,6 +46,7 @@ export function useCityPulseData(
     heatmapCrashes: [],
     neighborhoods: [],
     effectiveThrough: null,
+    domainFreshness: null,
     lastUpdated: null,
     loading: true,
     error: null,
@@ -83,6 +86,7 @@ export function useCityPulseData(
         heatmapCrashes,
         neighborhoods,
         effectiveThrough: kpisResp.effectiveThrough ?? null,
+        domainFreshness: kpisResp.domainFreshness ?? null,
         lastUpdated: kpisResp.lastUpdated ?? null,
         loading: false,
         error: null,
