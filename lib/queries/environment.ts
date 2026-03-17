@@ -21,7 +21,7 @@ export async function getAqiTrend(tw: TimeWindow): Promise<AqiRow[]> {
   return query<AqiRow>(
     `SELECT date::text, aqi_max, aqi_ozone, aqi_pm25, aqi_pm10, category
      FROM mart_aqi_daily
-     WHERE date >= CURRENT_DATE - $1::int
+     WHERE date > (SELECT MAX(date) FROM mart_aqi_daily) - $1::int
      ORDER BY date`,
     [days]
   );
@@ -41,7 +41,7 @@ export async function getAqiEffectiveThrough(tw: TimeWindow): Promise<string | n
   const rows = await query<{ effective_through: string }>(
     `SELECT MAX(date)::text AS effective_through
      FROM mart_aqi_daily
-     WHERE date >= CURRENT_DATE - $1::int`,
+     WHERE date > (SELECT MAX(date) FROM mart_aqi_daily) - $1::int`,
     [days]
   );
   return rows[0]?.effective_through ?? null;

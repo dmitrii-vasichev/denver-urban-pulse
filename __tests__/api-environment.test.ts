@@ -79,6 +79,32 @@ describe("Environment API", () => {
       expect(body.data.trend).toHaveLength(2);
       expect(body.data.trend.map((t: { date: string }) => t.date)).toEqual(["2026-03-12", "2026-03-13"]);
     });
+
+    it("anchors date range to MAX(date) instead of CURRENT_DATE", async () => {
+      // current
+      mockQuery.mockResolvedValueOnce([
+        { date: "2026-03-01", aqi_max: 40, aqi_ozone: 35, aqi_pm25: 40, aqi_pm10: 20, category: "Good" },
+      ]);
+      // trend
+      mockQuery.mockResolvedValueOnce([
+        { date: "2026-02-26", aqi_max: 55, aqi_ozone: 50, aqi_pm25: 55, aqi_pm10: 30, category: "Moderate" },
+        { date: "2026-03-01", aqi_max: 40, aqi_ozone: 35, aqi_pm25: 40, aqi_pm10: 20, category: "Good" },
+      ]);
+      // effectiveThrough
+      mockQuery.mockResolvedValueOnce([{ effective_through: "2026-03-01" }]);
+
+      await getAqi(req("http://localhost/api/environment/aqi?timeWindow=7d"));
+
+      // Trend query (2nd call) should use MAX(date) not CURRENT_DATE
+      const trendSql = mockQuery.mock.calls[1][0] as string;
+      expect(trendSql).toContain("MAX(date)");
+      expect(trendSql).not.toContain("CURRENT_DATE");
+
+      // EffectiveThrough query (3rd call) should also use MAX(date)
+      const etSql = mockQuery.mock.calls[2][0] as string;
+      expect(etSql).toContain("MAX(date)");
+      expect(etSql).not.toContain("CURRENT_DATE");
+    });
   });
 
   describe("GET /api/environment/comparison", () => {

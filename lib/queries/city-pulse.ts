@@ -33,8 +33,8 @@ export async function getKpiSparkline(
       return query<DailyRow>(
         `SELECT date::text, crime_count, crash_count, requests_311_count
          FROM mart_city_pulse_daily
-         WHERE date >= (NOW() AT TIME ZONE 'America/Denver')::date - $1::int
-           AND date < (NOW() AT TIME ZONE 'America/Denver')::date
+         WHERE date > (SELECT MAX(date) FROM mart_city_pulse_daily) - $1::int
+           AND date <= (SELECT MAX(date) FROM mart_city_pulse_daily)
          ORDER BY date DESC`,
         [days]
       );
@@ -46,41 +46,44 @@ export async function getKpiSparkline(
               SUM(crash_count)::int AS crash_count,
               SUM(requests_311_count)::int AS requests_311_count
        FROM mart_city_pulse_daily
-       WHERE date >= (NOW() AT TIME ZONE 'America/Denver')::date - $1::int
-         AND date < (NOW() AT TIME ZONE 'America/Denver')::date
+       WHERE date > (SELECT MAX(date) FROM mart_city_pulse_daily) - $1::int
+         AND date <= (SELECT MAX(date) FROM mart_city_pulse_daily)
        GROUP BY DATE_TRUNC('week', date)
        ORDER BY date DESC`,
       [days]
     );
   }
   // Neighborhood-specific sparkline from staging tables
+  // Anchor to max available date from mart_city_pulse_daily
   if (days <= 30) {
     return query<DailyRow>(
-      `SELECT d.date::text,
+      `WITH anchor AS (SELECT MAX(date) AS d FROM mart_city_pulse_daily)
+       SELECT d.date::text,
               COALESCE(cr.cnt, 0)::int AS crime_count,
               COALESCE(ca.cnt, 0)::int AS crash_count,
               COALESCE(r.cnt, 0)::int AS requests_311_count
-       FROM generate_series(
-              (NOW() AT TIME ZONE 'America/Denver')::date - $1::int,
-              (NOW() AT TIME ZONE 'America/Denver')::date - 1,
+       FROM anchor,
+            generate_series(
+              anchor.d - $1::int + 1,
+              anchor.d,
               '1 day'::interval
             ) AS d(date)
        LEFT JOIN (
          SELECT (reported_date AT TIME ZONE 'America/Denver')::date AS date, COUNT(*) AS cnt
          FROM stg_crime WHERE neighborhood = $2
-           AND reported_date >= (NOW() AT TIME ZONE 'America/Denver')::date - $1::int
+           AND reported_date >= ((SELECT d FROM anchor) - $1::int)::date
          GROUP BY 1
        ) cr ON cr.date = d.date
        LEFT JOIN (
          SELECT (reported_date AT TIME ZONE 'America/Denver')::date AS date, COUNT(*) AS cnt
          FROM stg_crashes WHERE neighborhood = $2
-           AND reported_date >= (NOW() AT TIME ZONE 'America/Denver')::date - $1::int
+           AND reported_date >= ((SELECT d FROM anchor) - $1::int)::date
          GROUP BY 1
        ) ca ON ca.date = d.date
        LEFT JOIN (
          SELECT (case_created_date AT TIME ZONE 'America/Denver')::date AS date, COUNT(*) AS cnt
          FROM stg_311 WHERE neighborhood = $2
-           AND case_created_date >= (NOW() AT TIME ZONE 'America/Denver')::date - $1::int
+           AND case_created_date >= ((SELECT d FROM anchor) - $1::int)::date
          GROUP BY 1
        ) r ON r.date = d.date
        ORDER BY d.date DESC`,
@@ -89,31 +92,33 @@ export async function getKpiSparkline(
   }
   // 90d + neighborhood: aggregate by week
   return query<DailyRow>(
-    `SELECT DATE_TRUNC('week', d.date)::date::text AS date,
+    `WITH anchor AS (SELECT MAX(date) AS d FROM mart_city_pulse_daily)
+     SELECT DATE_TRUNC('week', d.date)::date::text AS date,
             SUM(COALESCE(cr.cnt, 0))::int AS crime_count,
             SUM(COALESCE(ca.cnt, 0))::int AS crash_count,
             SUM(COALESCE(r.cnt, 0))::int AS requests_311_count
-     FROM generate_series(
-            (NOW() AT TIME ZONE 'America/Denver')::date - $1::int,
-            (NOW() AT TIME ZONE 'America/Denver')::date - 1,
+     FROM anchor,
+          generate_series(
+            anchor.d - $1::int + 1,
+            anchor.d,
             '1 day'::interval
           ) AS d(date)
      LEFT JOIN (
        SELECT (reported_date AT TIME ZONE 'America/Denver')::date AS date, COUNT(*) AS cnt
        FROM stg_crime WHERE neighborhood = $2
-         AND reported_date >= (NOW() AT TIME ZONE 'America/Denver')::date - $1::int
+         AND reported_date >= ((SELECT d FROM anchor) - $1::int)::date
        GROUP BY 1
      ) cr ON cr.date = d.date
      LEFT JOIN (
        SELECT (reported_date AT TIME ZONE 'America/Denver')::date AS date, COUNT(*) AS cnt
        FROM stg_crashes WHERE neighborhood = $2
-         AND reported_date >= (NOW() AT TIME ZONE 'America/Denver')::date - $1::int
+         AND reported_date >= ((SELECT d FROM anchor) - $1::int)::date
        GROUP BY 1
      ) ca ON ca.date = d.date
      LEFT JOIN (
        SELECT (case_created_date AT TIME ZONE 'America/Denver')::date AS date, COUNT(*) AS cnt
        FROM stg_311 WHERE neighborhood = $2
-         AND case_created_date >= (NOW() AT TIME ZONE 'America/Denver')::date - $1::int
+         AND case_created_date >= ((SELECT d FROM anchor) - $1::int)::date
        GROUP BY 1
      ) r ON r.date = d.date
      GROUP BY DATE_TRUNC('week', d.date)
@@ -131,10 +136,10 @@ export async function getKpiTotals(
     const days = daysForWindow(tw);
     const upperBound = effectiveThrough
       ? `$2::date + 1`
-      : `(NOW() AT TIME ZONE 'America/Denver')::date`;
+      : `(SELECT MAX(date) + 1 FROM mart_city_pulse_daily)`;
     const prevUpperBound = effectiveThrough
       ? `$2::date + 1 - $1::int`
-      : `(NOW() AT TIME ZONE 'America/Denver')::date - $1::int`;
+      : `(SELECT MAX(date) + 1 FROM mart_city_pulse_daily) - $1::int`;
     const params: (number | string)[] = effectiveThrough
       ? [days, effectiveThrough]
       : [days];
@@ -190,7 +195,7 @@ export async function getEffectiveThrough(tw: TimeWindow): Promise<string | null
      FROM (
        SELECT domain, MAX(date) AS max_date
        FROM mart_incident_trends
-       WHERE date >= (NOW() AT TIME ZONE 'America/Denver')::date - $1::int
+       WHERE date > (SELECT MAX(date) FROM mart_incident_trends) - $1::int
        GROUP BY domain
      ) sub`,
     [days]
@@ -215,8 +220,8 @@ export async function getCategoryTrends(
     return query<CategoryTrendRow>(
       `SELECT domain, category, date::text, count
        FROM mart_incident_trends
-       WHERE date >= (NOW() AT TIME ZONE 'America/Denver')::date - $1::int
-         AND date < (NOW() AT TIME ZONE 'America/Denver')::date
+       WHERE date > (SELECT MAX(date) FROM mart_incident_trends) - $1::int
+         AND date <= (SELECT MAX(date) FROM mart_incident_trends)
        ORDER BY domain, category, date`,
       [days]
     );
@@ -227,8 +232,8 @@ export async function getCategoryTrends(
             DATE_TRUNC('week', date)::date::text AS date,
             SUM(count)::int AS count
      FROM mart_incident_trends
-     WHERE date >= (NOW() AT TIME ZONE 'America/Denver')::date - $1::int
-       AND date < (NOW() AT TIME ZONE 'America/Denver')::date
+     WHERE date > (SELECT MAX(date) FROM mart_incident_trends) - $1::int
+       AND date <= (SELECT MAX(date) FROM mart_incident_trends)
      GROUP BY domain, category, DATE_TRUNC('week', date)
      ORDER BY domain, category, date`,
     [days]
@@ -306,4 +311,3 @@ export async function getNeighborhoodBreakdown(
     [tw]
   );
 }
-

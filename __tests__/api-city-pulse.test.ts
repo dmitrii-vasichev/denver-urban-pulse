@@ -109,6 +109,31 @@ describe("City Pulse API", () => {
       expect(body.data).toBeDefined();
       expect(body.lastUpdated).toBeDefined();
     });
+
+    it("anchors date range to MAX(date) instead of NOW()", async () => {
+      // effectiveThrough
+      mockQuery.mockResolvedValueOnce([{ effective_through: "2026-03-01" }]);
+      // sparkline
+      mockQuery.mockResolvedValueOnce([
+        { date: "2026-03-01", crime_count: 5, crash_count: 2, requests_311_count: 10 },
+      ]);
+      // totals
+      mockQuery.mockResolvedValueOnce([
+        { crime_count: 50, crash_count: 20, requests_311_count: 100, crime_delta_pct: null, crash_delta_pct: null, requests_311_delta_pct: null },
+      ]);
+
+      await getKpis(makeRequest("http://localhost/api/city-pulse/kpis?timeWindow=7d"));
+
+      // effectiveThrough query (1st call) should use MAX(date) not NOW()
+      const etSql = mockQuery.mock.calls[0][0] as string;
+      expect(etSql).toContain("MAX(date)");
+      expect(etSql).not.toContain("NOW()");
+
+      // sparkline query (2nd call) should use MAX(date)
+      const sparkSql = mockQuery.mock.calls[1][0] as string;
+      expect(sparkSql).toContain("MAX(date)");
+      expect(sparkSql).not.toContain("NOW()");
+    });
   });
 
   describe("GET /api/city-pulse/categories", () => {
