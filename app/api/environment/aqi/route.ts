@@ -4,6 +4,16 @@ import type { TimeWindow } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
+function daysForWindow(tw: TimeWindow): number {
+  return tw === "7d" ? 7 : tw === "30d" ? 30 : 90;
+}
+
+function subtractDays(dateStr: string, n: number): string {
+  const d = new Date(dateStr + "T00:00:00Z");
+  d.setUTCDate(d.getUTCDate() - n + 1);
+  return d.toISOString().split("T")[0];
+}
+
 export async function GET(request: NextRequest) {
   try {
     const tw = (request.nextUrl.searchParams.get("timeWindow") ?? "30d") as TimeWindow;
@@ -13,6 +23,11 @@ export async function GET(request: NextRequest) {
       getAqiTrend(tw),
       getAqiEffectiveThrough(tw),
     ]);
+
+    const days = daysForWindow(tw);
+    const dateRange = effectiveThrough
+      ? { from: subtractDays(effectiveThrough, days), to: effectiveThrough }
+      : null;
 
     return NextResponse.json({
       data: {
@@ -31,6 +46,7 @@ export async function GET(request: NextRequest) {
           })),
       },
       effectiveThrough,
+      dateRange,
       lastUpdated: new Date().toISOString(),
     });
   } catch (err) {

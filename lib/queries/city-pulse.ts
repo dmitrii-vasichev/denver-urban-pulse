@@ -25,10 +25,34 @@ interface NeighborhoodTotalRow {
 
 export async function getKpiSparkline(
   tw: TimeWindow,
-  neighborhood: string
+  neighborhood: string,
+  dateRange?: { from: string; to: string } | null
 ): Promise<DailyRow[]> {
   const days = daysForWindow(tw);
   if (neighborhood === "all") {
+    // When dateRange is provided, use explicit bounds to cover all per-domain windows
+    if (dateRange) {
+      if (days <= 30) {
+        return query<DailyRow>(
+          `SELECT date::text, crime_count, crash_count, requests_311_count
+           FROM mart_city_pulse_daily
+           WHERE date >= $1::date AND date <= $2::date
+           ORDER BY date DESC`,
+          [dateRange.from, dateRange.to]
+        );
+      }
+      return query<DailyRow>(
+        `SELECT DATE_TRUNC('week', date)::date::text AS date,
+                SUM(crime_count)::int AS crime_count,
+                SUM(crash_count)::int AS crash_count,
+                SUM(requests_311_count)::int AS requests_311_count
+         FROM mart_city_pulse_daily
+         WHERE date >= $1::date AND date <= $2::date
+         GROUP BY DATE_TRUNC('week', date)
+         ORDER BY date DESC`,
+        [dateRange.from, dateRange.to]
+      );
+    }
     if (days <= 30) {
       return query<DailyRow>(
         `SELECT date::text, crime_count, crash_count, requests_311_count
@@ -184,6 +208,68 @@ export async function getKpiTotals(
      FROM mart_city_pulse_neighborhood
      WHERE period = $1 AND neighborhood = $2`,
     [tw, neighborhood]
+  );
+  return rows[0] ?? null;
+}
+
+export async function getKpiTotalsPerDomain(
+  tw: TimeWindow,
+  domainFreshness: { crime: string | null; crashes: string | null; requests311: string | null }
+): Promise<NeighborhoodTotalRow | null> {
+  const days = daysForWindow(tw);
+  const crimeMax = domainFreshness.crime;
+  const crashesMax = domainFreshness.crashes;
+  const r311Max = domainFreshness.requests311;
+  if (!crimeMax && !crashesMax && !r311Max) return null;
+
+  // Use per-domain max dates as upper bounds for current and previous period
+  const rows = await query<NeighborhoodTotalRow>(
+    `WITH
+     crime_cur AS (
+       SELECT COALESCE(SUM(crime_count), 0)::int AS v
+       FROM mart_city_pulse_daily
+       WHERE date > $2::date - $1::int AND date <= $2::date
+     ),
+     crime_prev AS (
+       SELECT COALESCE(SUM(crime_count), 0)::int AS v
+       FROM mart_city_pulse_daily
+       WHERE date > $2::date - 2 * $1::int AND date <= $2::date - $1::int
+     ),
+     crashes_cur AS (
+       SELECT COALESCE(SUM(crash_count), 0)::int AS v
+       FROM mart_city_pulse_daily
+       WHERE date > $3::date - $1::int AND date <= $3::date
+     ),
+     crashes_prev AS (
+       SELECT COALESCE(SUM(crash_count), 0)::int AS v
+       FROM mart_city_pulse_daily
+       WHERE date > $3::date - 2 * $1::int AND date <= $3::date - $1::int
+     ),
+     r311_cur AS (
+       SELECT COALESCE(SUM(requests_311_count), 0)::int AS v
+       FROM mart_city_pulse_daily
+       WHERE date > $4::date - $1::int AND date <= $4::date
+     ),
+     r311_prev AS (
+       SELECT COALESCE(SUM(requests_311_count), 0)::int AS v
+       FROM mart_city_pulse_daily
+       WHERE date > $4::date - 2 * $1::int AND date <= $4::date - $1::int
+     )
+     SELECT
+       crime_cur.v AS crime_count,
+       crashes_cur.v AS crash_count,
+       r311_cur.v AS requests_311_count,
+       CASE WHEN crime_prev.v > 0
+            THEN ROUND(((crime_cur.v - crime_prev.v)::numeric / crime_prev.v) * 100, 1)
+            ELSE NULL END AS crime_delta_pct,
+       CASE WHEN crashes_prev.v > 0
+            THEN ROUND(((crashes_cur.v - crashes_prev.v)::numeric / crashes_prev.v) * 100, 1)
+            ELSE NULL END AS crash_delta_pct,
+       CASE WHEN r311_prev.v > 0
+            THEN ROUND(((r311_cur.v - r311_prev.v)::numeric / r311_prev.v) * 100, 1)
+            ELSE NULL END AS requests_311_delta_pct
+     FROM crime_cur, crime_prev, crashes_cur, crashes_prev, r311_cur, r311_prev`,
+    [days, crimeMax ?? '1970-01-01', crashesMax ?? '1970-01-01', r311Max ?? '1970-01-01']
   );
   return rows[0] ?? null;
 }

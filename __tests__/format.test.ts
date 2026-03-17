@@ -3,6 +3,7 @@ import {
   formatDelta,
   formatDate,
   formatDateShort,
+  formatDateRange,
   formatAqi,
 } from "../lib/format";
 
@@ -71,6 +72,31 @@ describe("formatDateShort", () => {
     expect(formatDateShort(null)).toBe("—");
     expect(formatDateShort(undefined)).toBe("—");
     expect(formatDateShort("bad")).toBe("—");
+  });
+});
+
+describe("formatDateRange", () => {
+  it("formats same-month range compactly", () => {
+    expect(formatDateRange("2026-03-03", "2026-03-09")).toBe("Mar 3 – 9");
+  });
+
+  it("formats cross-month range with both months", () => {
+    expect(formatDateRange("2026-02-28", "2026-03-09")).toBe("Feb 28 – Mar 9");
+  });
+
+  it("formats single-day range", () => {
+    expect(formatDateRange("2026-03-09", "2026-03-09")).toBe("Mar 9 – 9");
+  });
+
+  it("returns dash for null/undefined", () => {
+    expect(formatDateRange(null, "2026-03-09")).toBe("—");
+    expect(formatDateRange("2026-03-03", null)).toBe("—");
+    expect(formatDateRange(null, null)).toBe("—");
+    expect(formatDateRange(undefined, undefined)).toBe("—");
+  });
+
+  it("returns dash for invalid dates", () => {
+    expect(formatDateRange("bad", "2026-03-09")).toBe("—");
   });
 });
 
