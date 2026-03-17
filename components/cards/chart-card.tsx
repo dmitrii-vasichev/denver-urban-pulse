@@ -6,9 +6,10 @@ interface ChartCardProps {
   insight?: string;
   loading?: boolean;
   className?: string;
+  headerRight?: React.ReactNode;
 }
 
-export function ChartCard({ title, children, insight, loading, className }: ChartCardProps) {
+export function ChartCard({ title, children, insight, loading, className, headerRight }: ChartCardProps) {
   if (loading) {
     return (
       <div className={`rounded-[14px] bg-white border border-[#DDE3EA] p-3.5 shadow-[0_2px_6px_#102A4310] ${className ?? ""}`}>
@@ -21,7 +22,10 @@ export function ChartCard({ title, children, insight, loading, className }: Char
 
   return (
     <div className={`rounded-[14px] bg-white border border-[#DDE3EA] p-3.5 shadow-[0_2px_6px_#102A4310] flex flex-col ${className ?? ""}`}>
-      <h3 className="text-xs font-bold text-[#102A43] mb-2 truncate">{title}</h3>
+      <div className="flex items-center justify-between mb-2 gap-2">
+        <h3 className="text-xs font-bold text-[#102A43] truncate">{title}</h3>
+        {headerRight}
+      </div>
       <div className="bg-[#F8FAFC] rounded-lg p-2 flex-1 flex flex-col min-h-0">{children}</div>
       {insight && (
         <p className="text-[10px] text-[#6B7B8D] mt-2 leading-tight">

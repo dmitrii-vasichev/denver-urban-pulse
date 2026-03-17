@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { useState, Suspense } from "react";
 import { PageShell } from "@/components/layout/page-shell";
 import { KpiCard } from "@/components/cards/kpi-card";
 import { ChartCard } from "@/components/cards/chart-card";
@@ -16,8 +16,41 @@ import { ErrorCard } from "@/components/cards/error-card";
 import { formatAqi } from "@/lib/format";
 import geojson from "@/data/geo/denver-neighborhoods.json";
 
+type HeatmapDomain = "crime" | "crashes";
+
+function HeatmapDomainToggle({
+  value,
+  onChange,
+}: {
+  value: HeatmapDomain;
+  onChange: (v: HeatmapDomain) => void;
+}) {
+  const options: { key: HeatmapDomain; label: string }[] = [
+    { key: "crime", label: "Crime" },
+    { key: "crashes", label: "Crashes" },
+  ];
+  return (
+    <div className="flex rounded-md bg-[#F0F4F8] p-0.5 gap-0.5">
+      {options.map((o) => (
+        <button
+          key={o.key}
+          onClick={() => onChange(o.key)}
+          className={`px-2 py-0.5 text-[10px] font-semibold rounded transition-colors ${
+            value === o.key
+              ? "bg-white text-[#102A43] shadow-sm"
+              : "text-[#627D98] hover:text-[#334E68]"
+          }`}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function CityPulseContent() {
   const { timeWindow, neighborhood } = useFilters();
+  const [heatmapDomain, setHeatmapDomain] = useState<HeatmapDomain>("crime");
   const { kpis, categories, categoryTrends, heatmapCrime, heatmapCrashes, neighborhoods, loading, error, retry, effectiveThrough, lastUpdated } =
     useCityPulseData(timeWindow, neighborhood);
   const { aqi, comparison, loading: envLoading, error: envError, retry: envRetry, effectiveThrough: envEffectiveThrough } =
@@ -147,19 +180,28 @@ function CityPulseContent() {
         </div>
       </div>
 
-      {/* Row 3: AQI Trend (full-width) */}
-      <ChartCard title="AQI Trend" loading={envLoading}>
-        <AqiTrendChart data={aqi.trend} />
-      </ChartCard>
-
-      {/* Row 4: Heatmaps — Crime + Crashes side by side */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <ChartCard title="Crime by Hour & Day" loading={loading}>
-          <HeatmapChart data={heatmapCrime} />
-        </ChartCard>
-        <ChartCard title="Crashes by Hour & Day" loading={loading}>
-          <HeatmapChart data={heatmapCrashes} />
-        </ChartCard>
+      {/* Row 3: AQI Trend (7/12) + Time Heatmap (5/12) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-stretch">
+        <div className="lg:col-span-7">
+          <ChartCard title="AQI Trend" loading={envLoading} className="h-full">
+            <AqiTrendChart data={aqi.trend} />
+          </ChartCard>
+        </div>
+        <div className="lg:col-span-5">
+          <ChartCard
+            title="Time Heatmap"
+            loading={loading}
+            className="h-full"
+            headerRight={
+              <HeatmapDomainToggle
+                value={heatmapDomain}
+                onChange={setHeatmapDomain}
+              />
+            }
+          >
+            <HeatmapChart data={heatmapDomain === "crime" ? heatmapCrime : heatmapCrashes} />
+          </ChartCard>
+        </div>
       </div>
 
       {/* Row 5: Change Leaders (full-width) */}
@@ -201,16 +243,17 @@ function CityPulseSkeleton() {
           </ChartCard>
         </div>
       </div>
-      <ChartCard title="AQI Trend" loading>
-        <div className="h-48" />
-      </ChartCard>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <ChartCard title="Crime by Hour & Day" loading>
-          <div className="h-48" />
-        </ChartCard>
-        <ChartCard title="Crashes by Hour & Day" loading>
-          <div className="h-48" />
-        </ChartCard>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
+        <div className="lg:col-span-7">
+          <ChartCard title="AQI Trend" loading>
+            <div className="h-48" />
+          </ChartCard>
+        </div>
+        <div className="lg:col-span-5">
+          <ChartCard title="Time Heatmap" loading>
+            <div className="h-48" />
+          </ChartCard>
+        </div>
       </div>
       <ChartCard title="Change Leaders" loading>
         <div className="h-48" />
