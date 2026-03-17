@@ -41,7 +41,7 @@ function HeaderInner({ lastUpdated, domainFreshness }: HeaderProps) {
   const hasFreshness = domainFreshness && DOMAIN_LABELS.some((d) => domainFreshness[d.key]);
 
   return (
-    <header className="sticky top-0 z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 px-3 py-3 md:px-4 xl:px-5 bg-white border-b border-[#E6E9EE]">
+    <header className="sticky top-0 z-[700] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 px-3 py-3 md:px-4 xl:px-5 bg-white border-b border-[#E6E9EE]">
       <div className="flex items-center gap-3">
         <div>
           <h1 className="text-base font-bold text-[#102A43] leading-tight">
@@ -82,7 +82,7 @@ export function Header(props: HeaderProps) {
   return (
     <Suspense
       fallback={
-        <header className="sticky top-0 z-10 flex items-center justify-between px-3 py-3 md:px-4 xl:px-5 bg-white border-b border-[#E6E9EE]">
+        <header className="sticky top-0 z-[700] flex items-center justify-between px-3 py-3 md:px-4 xl:px-5 bg-white border-b border-[#E6E9EE]">
           <h1 className="text-base font-bold text-[#102A43]">Denver Urban Pulse</h1>
         </header>
       }
