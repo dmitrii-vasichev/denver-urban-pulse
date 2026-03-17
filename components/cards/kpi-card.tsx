@@ -3,8 +3,8 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { DeltaBadge } from "@/components/ui/delta-badge";
 import { Sparkline } from "@/components/ui/sparkline";
-import { formatNumber } from "@/lib/format";
-import type { ChartPoint } from "@/lib/types";
+import { formatNumber, formatDateRange } from "@/lib/format";
+import type { ChartPoint, DateRange } from "@/lib/types";
 
 interface KpiCardProps {
   title: string;
@@ -19,6 +19,7 @@ interface KpiCardProps {
   color: string;
   loading?: boolean;
   className?: string;
+  dateRange?: DateRange | null;
 }
 
 export function KpiCard({
@@ -33,6 +34,7 @@ export function KpiCard({
   color,
   loading,
   className,
+  dateRange,
 }: KpiCardProps) {
   if (loading) {
     return (
@@ -58,9 +60,9 @@ export function KpiCard({
         <span className="text-[11px] font-bold text-[#52667A] uppercase tracking-wide">
           {title}
         </span>
-        {(tag || secondaryTag) && (
+        {(tag || secondaryTag || dateRange) && (
           <span className="text-[10px] text-[#627D98]">
-            {secondaryTag ?? tag}
+            {secondaryTag ?? (dateRange ? formatDateRange(dateRange.from, dateRange.to) : tag)}
           </span>
         )}
       </div>

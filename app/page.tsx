@@ -13,7 +13,7 @@ import { useFilters } from "@/lib/hooks/use-filters";
 import { useCityPulseData } from "@/lib/hooks/use-city-pulse-data";
 import { useEnvironmentData } from "@/lib/hooks/use-environment-data";
 import { ErrorCard } from "@/components/cards/error-card";
-import { formatAqi } from "@/lib/format";
+import { formatAqi, formatDateRange } from "@/lib/format";
 import geojson from "@/data/geo/denver-neighborhoods.json";
 
 type HeatmapDomain = "crime" | "crashes";
@@ -53,7 +53,7 @@ function CityPulseContent() {
   const [heatmapDomain, setHeatmapDomain] = useState<HeatmapDomain>("crime");
   const { kpis, categories, categoryTrends, heatmapCrime, heatmapCrashes, neighborhoods, loading, error, retry, domainFreshness, lastUpdated } =
     useCityPulseData(timeWindow, neighborhood);
-  const { aqi, comparison, loading: envLoading, error: envError, retry: envRetry, effectiveThrough: envEffectiveThrough } =
+  const { aqi, comparison, loading: envLoading, error: envError, retry: envRetry, effectiveThrough: envEffectiveThrough, aqiDateRange } =
     useEnvironmentData(timeWindow, neighborhood);
 
   // Build per-domain freshness including AQI
@@ -75,6 +75,22 @@ function CityPulseContent() {
   }
 
   const tagLabel = timeWindow.toUpperCase();
+
+  // Compute date range subtitles for chart cards
+  // Category breakdown and heatmap use LEAST(max_dates) from pipeline, so use effectiveThrough
+  const days = timeWindow === "7d" ? 7 : timeWindow === "30d" ? 30 : 90;
+  const cityPulseSubtitle = (() => {
+    const et = domainFreshness
+      ? [domainFreshness.crime, domainFreshness.crashes, domainFreshness.requests311].filter(Boolean).reduce((a, b) => (a! < b! ? a : b), null as string | null)
+      : null;
+    if (!et) return undefined;
+    const from = new Date(et + "T00:00:00Z");
+    from.setUTCDate(from.getUTCDate() - days + 1);
+    return formatDateRange(from.toISOString().split("T")[0], et);
+  })();
+  const aqiSubtitle = aqiDateRange
+    ? formatDateRange(aqiDateRange.from, aqiDateRange.to)
+    : undefined;
   const aqiInfo = aqi.current ? formatAqi(aqi.current.aqi) : null;
 
   // AQI sparkline: convert trend to ChartPoint[]
@@ -117,6 +133,7 @@ function CityPulseContent() {
           insight={kpis?.crime.insight}
           color="#2458C6"
           loading={loading}
+          dateRange={kpis?.crime.dateRange}
         />
         <KpiCard
           className="lg:col-span-3"
@@ -129,6 +146,7 @@ function CityPulseContent() {
           insight={kpis?.crashes.insight}
           color="#D97904"
           loading={loading}
+          dateRange={kpis?.crashes.dateRange}
         />
         <KpiCard
           className="lg:col-span-3"
@@ -141,6 +159,7 @@ function CityPulseContent() {
           insight={kpis?.requests311.insight}
           color="#198754"
           loading={loading}
+          dateRange={kpis?.requests311.dateRange}
         />
         <KpiCard
           className="lg:col-span-3"
@@ -153,13 +172,14 @@ function CityPulseContent() {
           insight={aqiInsight}
           color="#0B4F8C"
           loading={envLoading}
+          dateRange={aqiDateRange}
         />
       </div>
 
       {/* Row 2: Neighborhood Map (7/12) + Category Breakdown (5/12) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-stretch">
         <div className="lg:col-span-7">
-          <ChartCard title="Neighborhood Map" loading={loading} className="h-full">
+          <ChartCard title="Neighborhood Map" subtitle={cityPulseSubtitle} loading={loading} className="h-full">
             <div className="flex-1 min-h-[200px] -m-2 rounded-lg overflow-hidden">
               <DenverMapDynamic
                 geojson={geojson as unknown as GeoJSON.FeatureCollection}
@@ -170,7 +190,7 @@ function CityPulseContent() {
           </ChartCard>
         </div>
         <div className="lg:col-span-5">
-          <ChartCard title="Category Breakdown" loading={loading} className="h-full">
+          <ChartCard title="Category Breakdown" subtitle={cityPulseSubtitle} loading={loading} className="h-full">
             <CategoryChart data={categories} trends={categoryTrends} />
           </ChartCard>
         </div>
@@ -179,13 +199,14 @@ function CityPulseContent() {
       {/* Row 3: AQI Trend (7/12) + Incidents by Day & Hour (5/12) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-stretch">
         <div className="lg:col-span-7">
-          <ChartCard title="AQI Trend" loading={envLoading} className="h-full">
+          <ChartCard title="AQI Trend" subtitle={aqiSubtitle} loading={envLoading} className="h-full">
             <AqiTrendChart data={aqi.trend} />
           </ChartCard>
         </div>
         <div className="lg:col-span-5">
           <ChartCard
             title="Incidents by Day & Hour"
+            subtitle={cityPulseSubtitle}
             loading={loading}
             className="h-full"
             headerRight={
@@ -201,7 +222,7 @@ function CityPulseContent() {
       </div>
 
       {/* Row 5: Change Leaders (full-width) */}
-      <ChartCard title="Change Leaders" loading={envLoading}>
+      <ChartCard title="Change Leaders" subtitle={cityPulseSubtitle} loading={envLoading}>
         <ChangeLeadersChart data={comparison} />
       </ChartCard>
     </PageShell>

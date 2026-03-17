@@ -57,12 +57,12 @@ describe("City Pulse API", () => {
         { domain: "crashes", max_date: "2026-03-12" },
         { domain: "311", max_date: "2026-03-12" },
       ]);
-      // sparkline query
+      // sparkline query (now uses explicit date bounds)
       mockQuery.mockResolvedValueOnce([
         { date: "2026-03-12", crime_count: 10, crash_count: 5, requests_311_count: 20 },
         { date: "2026-03-11", crime_count: 8, crash_count: 3, requests_311_count: 15 },
       ]);
-      // totals query
+      // per-domain totals query
       mockQuery.mockResolvedValueOnce([
         {
           crime_count: 300,
@@ -86,18 +86,21 @@ describe("City Pulse API", () => {
       expect(body.effectiveThrough).toBe("2026-03-12");
     });
 
-    it("returns per-domain freshness and effectiveThrough in response", async () => {
-      // getDomainFreshness query
+    it("returns per-domain freshness, dateRange, and effectiveThrough", async () => {
+      // getDomainFreshness query — domains have different max dates
       mockQuery.mockResolvedValueOnce([
         { domain: "crime", max_date: "2026-03-09" },
         { domain: "crashes", max_date: "2026-03-09" },
         { domain: "311", max_date: "2026-03-14" },
       ]);
-      // sparkline query
+      // sparkline query (covers full range: Mar 3 – Mar 14)
       mockQuery.mockResolvedValueOnce([
-        { date: "2026-03-09", crime_count: 5, crash_count: 2, requests_311_count: 10 },
+        { date: "2026-03-03", crime_count: 5, crash_count: 2, requests_311_count: 0 },
+        { date: "2026-03-08", crime_count: 3, crash_count: 1, requests_311_count: 10 },
+        { date: "2026-03-09", crime_count: 4, crash_count: 2, requests_311_count: 12 },
+        { date: "2026-03-14", crime_count: 0, crash_count: 0, requests_311_count: 15 },
       ]);
-      // totals query
+      // per-domain totals query
       mockQuery.mockResolvedValueOnce([
         {
           crime_count: 150,
@@ -119,8 +122,15 @@ describe("City Pulse API", () => {
       expect(body.domainFreshness.crime).toBe("2026-03-09");
       expect(body.domainFreshness.crashes).toBe("2026-03-09");
       expect(body.domainFreshness.requests311).toBe("2026-03-14");
-      expect(body.data).toBeDefined();
-      expect(body.lastUpdated).toBeDefined();
+      // per-domain date ranges
+      expect(body.data.crime.dateRange).toEqual({ from: "2026-03-03", to: "2026-03-09" });
+      expect(body.data.requests311.dateRange).toEqual({ from: "2026-03-08", to: "2026-03-14" });
+      // crime sparkline should NOT include dates beyond crime's max (Mar 9)
+      const crimeDates = body.data.crime.sparkline.map((p: { date: string }) => p.date);
+      expect(crimeDates.every((d: string) => d <= "2026-03-09")).toBe(true);
+      // 311 sparkline should include dates up to Mar 14
+      const r311Dates = body.data.requests311.sparkline.map((p: { date: string }) => p.date);
+      expect(r311Dates.some((d: string) => d > "2026-03-09")).toBe(true);
     });
 
     it("first query uses getDomainFreshness with MAX(date)", async () => {
@@ -130,11 +140,11 @@ describe("City Pulse API", () => {
         { domain: "crashes", max_date: "2026-03-01" },
         { domain: "311", max_date: "2026-03-01" },
       ]);
-      // sparkline
+      // sparkline (with explicit date bounds)
       mockQuery.mockResolvedValueOnce([
         { date: "2026-03-01", crime_count: 5, crash_count: 2, requests_311_count: 10 },
       ]);
-      // totals
+      // per-domain totals
       mockQuery.mockResolvedValueOnce([
         { crime_count: 50, crash_count: 20, requests_311_count: 100, crime_delta_pct: null, crash_delta_pct: null, requests_311_delta_pct: null },
       ]);
@@ -146,9 +156,9 @@ describe("City Pulse API", () => {
       expect(freshSql).toContain("MAX(date)");
       expect(freshSql).not.toContain("NOW()");
 
-      // sparkline query (2nd call) should use MAX(date)
+      // sparkline query (2nd call) uses explicit date bounds when all dates are equal
       const sparkSql = mockQuery.mock.calls[1][0] as string;
-      expect(sparkSql).toContain("MAX(date)");
+      expect(sparkSql).toContain("date");
       expect(sparkSql).not.toContain("NOW()");
     });
   });

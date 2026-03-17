@@ -2,6 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 interface ChartCardProps {
   title: string;
+  subtitle?: string;
   children: React.ReactNode;
   insight?: string;
   loading?: boolean;
@@ -9,7 +10,7 @@ interface ChartCardProps {
   headerRight?: React.ReactNode;
 }
 
-export function ChartCard({ title, children, insight, loading, className, headerRight }: ChartCardProps) {
+export function ChartCard({ title, subtitle, children, insight, loading, className, headerRight }: ChartCardProps) {
   if (loading) {
     return (
       <div className={`rounded-[14px] bg-white border border-[#DDE3EA] p-3.5 shadow-[0_2px_6px_#102A4310] ${className ?? ""}`}>
@@ -23,7 +24,12 @@ export function ChartCard({ title, children, insight, loading, className, header
   return (
     <div className={`rounded-[14px] bg-white border border-[#DDE3EA] p-3.5 shadow-[0_2px_6px_#102A4310] flex flex-col ${className ?? ""}`}>
       <div className="flex items-center justify-between mb-2 gap-2">
-        <h3 className="text-xs font-bold text-[#102A43] truncate">{title}</h3>
+        <div className="flex items-baseline gap-2 min-w-0">
+          <h3 className="text-xs font-bold text-[#102A43] truncate">{title}</h3>
+          {subtitle && (
+            <span className="text-[10px] text-[#627D98] whitespace-nowrap">{subtitle}</span>
+          )}
+        </div>
         {headerRight}
       </div>
       <div className="bg-[#F8FAFC] rounded-lg p-2 flex-1 flex flex-col min-h-0">{children}</div>

@@ -53,6 +53,30 @@ export function formatDateShort(
   });
 }
 
+/**
+ * Format a date range as "Mar 3 – 9" (same month) or "Feb 28 – Mar 9" (different months).
+ * Uses UTC to avoid timezone shifts with date-only strings.
+ */
+export function formatDateRange(
+  from: string | null | undefined,
+  to: string | null | undefined
+): string {
+  if (!from || !to) return "—";
+  const f = new Date(from);
+  const t = new Date(to);
+  if (isNaN(f.getTime()) || isNaN(t.getTime())) return "—";
+
+  const fMonth = f.toLocaleDateString("en-US", { month: "short", timeZone: "UTC" });
+  const tMonth = t.toLocaleDateString("en-US", { month: "short", timeZone: "UTC" });
+  const fDay = f.getUTCDate();
+  const tDay = t.getUTCDate();
+
+  if (fMonth === tMonth) {
+    return `${fMonth} ${fDay} – ${tDay}`;
+  }
+  return `${fMonth} ${fDay} – ${tMonth} ${tDay}`;
+}
+
 const AQI_BREAKPOINTS: { max: number; label: string; level: AqiLevel }[] = [
   { max: 50, label: "Good", level: "Good" },
   { max: 100, label: "Moderate", level: "Moderate" },

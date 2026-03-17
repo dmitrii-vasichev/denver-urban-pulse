@@ -48,6 +48,33 @@ describe("KpiCard", () => {
     const skeletons = container.querySelectorAll(".animate-pulse");
     expect(skeletons.length).toBeGreaterThan(0);
   });
+
+  it("renders date range instead of tag when dateRange is provided", () => {
+    render(
+      <KpiCard
+        title="Crime"
+        value={100}
+        color="#2458C6"
+        tag="7D"
+        dateRange={{ from: "2026-03-03", to: "2026-03-09" }}
+      />
+    );
+    expect(screen.getByText("Mar 3 – 9")).toBeInTheDocument();
+    expect(screen.queryByText("7D")).not.toBeInTheDocument();
+  });
+
+  it("falls back to tag when dateRange is null", () => {
+    render(
+      <KpiCard
+        title="Crime"
+        value={100}
+        color="#2458C6"
+        tag="30D"
+        dateRange={null}
+      />
+    );
+    expect(screen.getByText("30D")).toBeInTheDocument();
+  });
 });
 
 describe("ChartCard", () => {
@@ -94,6 +121,16 @@ describe("ChartCard", () => {
     );
     const card = container.firstChild as HTMLElement;
     expect(card.className).toContain("custom-class");
+  });
+
+  it("renders subtitle when provided", () => {
+    render(
+      <ChartCard title="AQI Trend" subtitle="Mar 10 – 16">
+        <div>chart</div>
+      </ChartCard>
+    );
+    expect(screen.getByText("AQI Trend")).toBeInTheDocument();
+    expect(screen.getByText("Mar 10 – 16")).toBeInTheDocument();
   });
 });
 

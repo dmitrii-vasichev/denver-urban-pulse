@@ -5,6 +5,7 @@ import type {
   AqiDailyPoint,
   AqiCurrent,
   ComparisonRow,
+  DateRange,
   TimeWindow,
 } from "@/lib/types";
 
@@ -12,6 +13,7 @@ interface EnvironmentData {
   aqi: { current: AqiCurrent | null; trend: AqiDailyPoint[] };
   comparison: ComparisonRow[];
   effectiveThrough: string | null;
+  aqiDateRange: DateRange | null;
   lastUpdated: string | null;
   loading: boolean;
   error: string | null;
@@ -34,6 +36,7 @@ export function useEnvironmentData(
     aqi: { current: null, trend: [] },
     comparison: [],
     effectiveThrough: null,
+    aqiDateRange: null,
     lastUpdated: null,
     loading: true,
     error: null,
@@ -57,6 +60,7 @@ export function useEnvironmentData(
         aqi: aqiResp.data,
         comparison,
         effectiveThrough: aqiResp.effectiveThrough ?? null,
+        aqiDateRange: aqiResp.dateRange ?? null,
         lastUpdated: aqiResp.lastUpdated ?? null,
         loading: false,
         error: null,

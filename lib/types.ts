@@ -9,6 +9,11 @@ export interface DomainFreshness {
   aqi: string | null;
 }
 
+export interface DateRange {
+  from: string;
+  to: string;
+}
+
 export interface KpiData {
   value: number;
   delta: number;
@@ -17,6 +22,7 @@ export interface KpiData {
   insight: string;
   tag: string;
   secondaryTag?: string;
+  dateRange?: DateRange | null;
 }
 
 export interface ChartPoint {
