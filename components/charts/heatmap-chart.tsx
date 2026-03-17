@@ -114,11 +114,14 @@ export function HeatmapChart({ data }: HeatmapChartProps) {
       {/* Tooltip */}
       {tooltip && (
         <div
-          className="absolute pointer-events-none z-10 rounded-md border border-[#DDE3EA] bg-white px-2 py-1 shadow-md -translate-x-1/2 -translate-y-full"
+          className="absolute pointer-events-none z-10 rounded-lg border border-[#DDE3EA] bg-white px-3 py-2 shadow-md -translate-x-1/2 -translate-y-full"
           style={{ left: tooltip.x, top: tooltip.y }}
         >
-          <p className="text-[10px] text-[#102A43] font-medium whitespace-nowrap">
-            {DAY_LABELS[tooltip.day]} {HOUR_LABELS[tooltip.hour]} — Avg per week: {tooltip.count} incidents
+          <p className="text-[11px] font-semibold text-[#102A43] whitespace-nowrap mb-0.5">
+            {DAY_LABELS[tooltip.day]} {HOUR_LABELS[tooltip.hour]}
+          </p>
+          <p className="text-[10px] text-[#52667A] whitespace-nowrap">
+            Avg per week: <span className="font-semibold text-[#102A43]">{tooltip.count}</span> incidents
           </p>
         </div>
       )}

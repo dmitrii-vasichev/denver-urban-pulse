@@ -34,10 +34,11 @@ export function Sparkline({
     const date = formatDateShort(point.payload?.date);
     const value = formatNumber(point.value as number);
     return (
-      <div className="rounded-lg bg-[#102A43] px-2.5 py-1.5 text-[11px] text-white shadow-lg">
-        <span className="font-medium">{date}</span>
-        <span className="mx-1 text-white/50">·</span>
-        <span>{value} {metricLabel}</span>
+      <div className="rounded-lg border border-[#DDE3EA] bg-white px-3 py-2 shadow-md">
+        <p className="text-[11px] font-semibold text-[#102A43] mb-0.5">{date}</p>
+        <p className="text-[10px] text-[#52667A]">
+          {metricLabel}: <span className="font-semibold text-[#102A43]">{value}</span>
+        </p>
       </div>
     );
   }, [metricLabel]);
