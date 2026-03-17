@@ -154,8 +154,7 @@ describe("CityPulsePage", () => {
     expect(screen.getByText("Neighborhood Map")).toBeInTheDocument();
     expect(screen.getByText("Category Breakdown")).toBeInTheDocument();
     expect(screen.getByText("AQI Trend")).toBeInTheDocument();
-    expect(screen.getByText("Crime by Hour & Day")).toBeInTheDocument();
-    expect(screen.getByText("Crashes by Hour & Day")).toBeInTheDocument();
+    expect(screen.getByText("Time Heatmap")).toBeInTheDocument();
     expect(screen.getByText("Change Leaders")).toBeInTheDocument();
   });
 
@@ -173,10 +172,9 @@ describe("CityPulsePage", () => {
     const { container } = render(<CityPulsePage />);
     // KPI row: 1-col mobile, 2-col sm, 12-col lg
     expect(container.querySelector(".grid-cols-1.sm\\:grid-cols-2.lg\\:grid-cols-12")).toBeInTheDocument();
-    // Map + categories row: 1-col mobile, 12-col lg
-    expect(container.querySelector(".grid-cols-1.lg\\:grid-cols-12")).toBeInTheDocument();
-    // Heatmap row: 1-col mobile, 2-col md
-    expect(container.querySelector(".grid-cols-1.md\\:grid-cols-2")).toBeInTheDocument();
+    // Map + categories row AND AQI + heatmap row: 1-col mobile, 12-col lg
+    const lgGridRows = container.querySelectorAll(".grid-cols-1.lg\\:grid-cols-12");
+    expect(lgGridRows.length).toBeGreaterThanOrEqual(2);
   });
 
   it("uses global effectiveThrough (min of city-pulse and environment) for header", () => {
