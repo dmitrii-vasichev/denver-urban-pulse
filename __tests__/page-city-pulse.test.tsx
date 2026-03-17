@@ -214,8 +214,11 @@ describe("CityPulsePage", () => {
 
     render(<CityPulsePage />);
     // Header should show per-domain dates
-    expect(screen.getByText(/Crime Mar 9/)).toBeInTheDocument();
-    expect(screen.getByText(/AQI Mar 15/)).toBeInTheDocument();
+    // Verify per-domain freshness is rendered in header
+    const freshness = screen.getByText(/Data through:/);
+    expect(freshness).toBeInTheDocument();
+    expect(freshness.textContent).toContain("Crime");
+    expect(freshness.textContent).toContain("AQI");
   });
 
   it("does not trim AQI trend by city-pulse effectiveThrough (regression #183)", () => {

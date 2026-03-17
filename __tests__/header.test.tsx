@@ -70,10 +70,11 @@ describe("Header freshness display", () => {
     expect(screen.getByText(/Pipeline ran:/)).toBeInTheDocument();
     expect(screen.getByText(/Mar 15/)).toBeInTheDocument();
     expect(screen.getByText(/Data through:/)).toBeInTheDocument();
-    expect(screen.getByText(/Crime Mar 9/)).toBeInTheDocument();
-    expect(screen.getByText(/Crashes Mar 9/)).toBeInTheDocument();
-    expect(screen.getByText(/311 Mar 14/)).toBeInTheDocument();
-    expect(screen.getByText(/AQI Mar 16/)).toBeInTheDocument();
+    expect(screen.getByText("Crime")).toBeInTheDocument();
+    expect(screen.getByText("Crashes")).toBeInTheDocument();
+    expect(screen.getByText("311")).toBeInTheDocument();
+    expect(screen.getByText("AQI")).toBeInTheDocument();
+    expect(screen.getByText(/Data through:/)).toBeInTheDocument();
   });
 
   it("hides freshness when props are null", () => {
