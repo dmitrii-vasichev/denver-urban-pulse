@@ -36,7 +36,7 @@ describe("CityPulsePage", () => {
 
   it("renders grid structure with expected sections", () => {
     const { container } = render(<CityPulsePage />);
-    // 3 grid sections: KPI row, map+categories row, AQI trend+heatmap row
+    // 3 grid sections: KPI row, map+categories row, heatmaps row
     const grids = container.querySelectorAll(".grid");
     expect(grids.length).toBe(3);
   });

@@ -18,7 +18,7 @@ import geojson from "@/data/geo/denver-neighborhoods.json";
 
 function CityPulseContent() {
   const { timeWindow, neighborhood } = useFilters();
-  const { kpis, categories, categoryTrends, heatmap, neighborhoods, loading, error, retry, effectiveThrough, lastUpdated } =
+  const { kpis, categories, categoryTrends, heatmapCrime, heatmapCrashes, neighborhoods, loading, error, retry, effectiveThrough, lastUpdated } =
     useCityPulseData(timeWindow, neighborhood);
   const { aqi, comparison, loading: envLoading, error: envError, retry: envRetry, effectiveThrough: envEffectiveThrough } =
     useEnvironmentData(timeWindow, neighborhood);
@@ -147,17 +147,22 @@ function CityPulseContent() {
         </div>
       </div>
 
-      {/* Row 3: AQI Trend (7/12) + Time Heatmap (5/12) */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
-        <ChartCard title="AQI Trend" loading={envLoading} className="md:col-span-7">
-          <AqiTrendChart data={aqi.trend} />
+      {/* Row 3: AQI Trend (full-width) */}
+      <ChartCard title="AQI Trend" loading={envLoading}>
+        <AqiTrendChart data={aqi.trend} />
+      </ChartCard>
+
+      {/* Row 4: Heatmaps — Crime + Crashes side by side */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <ChartCard title="Crime by Hour & Day" loading={loading}>
+          <HeatmapChart data={heatmapCrime} />
         </ChartCard>
-        <ChartCard title="Time Heatmap" loading={loading} className="md:col-span-5">
-          <HeatmapChart data={heatmap} />
+        <ChartCard title="Crashes by Hour & Day" loading={loading}>
+          <HeatmapChart data={heatmapCrashes} />
         </ChartCard>
       </div>
 
-      {/* Row 4: Change Leaders (full-width) */}
+      {/* Row 5: Change Leaders (full-width) */}
       <ChartCard title="Change Leaders" loading={envLoading}>
         <ChangeLeadersChart data={comparison} />
       </ChartCard>
@@ -196,11 +201,14 @@ function CityPulseSkeleton() {
           </ChartCard>
         </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
-        <ChartCard title="AQI Trend" loading className="md:col-span-7">
+      <ChartCard title="AQI Trend" loading>
+        <div className="h-48" />
+      </ChartCard>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <ChartCard title="Crime by Hour & Day" loading>
           <div className="h-48" />
         </ChartCard>
-        <ChartCard title="Time Heatmap" loading className="md:col-span-5">
+        <ChartCard title="Crashes by Hour & Day" loading>
           <div className="h-48" />
         </ChartCard>
       </div>

@@ -7,12 +7,13 @@ interface HeatmapChartProps {
   data: HeatmapCell[];
 }
 
+const CELL_HEIGHT = 12;
+const GAP = 1;
 const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const HOUR_LABELS = Array.from({ length: 24 }, (_, i) => `${i}:00`);
 const COLOR_LIGHT = "#EEF3F8";
 
 function interpolateColor(ratio: number): string {
-  // Linear interpolation from COLOR_LIGHT to COLOR_DARK
   const r1 = 0xee, g1 = 0xf3, b1 = 0xf8;
   const r2 = 0x0b, g2 = 0x4f, b2 = 0x8c;
   const r = Math.round(r1 + (r2 - r1) * ratio);
@@ -74,21 +75,21 @@ export function HeatmapChart({ data }: HeatmapChartProps) {
 
       {/* Grid */}
       <div className="flex">
-        {/* Hour labels (left) */}
-        <div className="flex flex-col w-10 shrink-0">
+        {/* Hour labels (left) — same gap-px as cells to stay aligned */}
+        <div className="flex flex-col w-10 shrink-0" style={{ gap: GAP }}>
           {HOUR_LABELS.map((h, i) => (
             <div
               key={h}
               className="flex items-center justify-end pr-1.5 text-[8px] text-[#627D98]"
-              style={{ height: 10 }}
+              style={{ height: CELL_HEIGHT }}
             >
-              {i % 3 === 0 ? h : ""}
+              {i % 2 === 0 ? h : ""}
             </div>
           ))}
         </div>
 
         {/* Cells */}
-        <div className="flex-1 grid grid-cols-7 gap-px">
+        <div className="flex-1 grid grid-cols-7" style={{ gap: GAP }}>
           {Array.from({ length: 24 }, (_, hour) =>
             Array.from({ length: 7 }, (_, day) => {
               const count = grid[hour][day];
@@ -99,7 +100,7 @@ export function HeatmapChart({ data }: HeatmapChartProps) {
                   data-cell
                   className="rounded-[1px] cursor-pointer transition-opacity hover:opacity-80"
                   style={{
-                    height: 10,
+                    height: CELL_HEIGHT,
                     backgroundColor: count > 0 ? interpolateColor(ratio) : COLOR_LIGHT,
                   }}
                   onMouseEnter={(e) => handleMouseEnter(hour, day, count, e)}
@@ -121,7 +122,7 @@ export function HeatmapChart({ data }: HeatmapChartProps) {
             {DAY_LABELS[tooltip.day]} {HOUR_LABELS[tooltip.hour]}
           </p>
           <p className="text-[10px] text-[#52667A] whitespace-nowrap">
-            Avg per week: <span className="font-semibold text-[#102A43]">{tooltip.count}</span> incidents
+            <span className="font-semibold text-[#102A43]">{tooltip.count.toLocaleString()}</span> incidents
           </p>
         </div>
       )}
