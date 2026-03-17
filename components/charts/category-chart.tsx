@@ -144,14 +144,17 @@ export function CategoryChart({ data, trends = {} }: CategoryChartProps) {
             transform: "translateY(-100%)",
           }}
         >
-          <div className="bg-[#102A43] text-white rounded-lg shadow-lg px-3 py-2.5 w-[200px]">
-            <p className="text-[11px] font-medium leading-tight mb-1">
+          <div className="rounded-lg border border-[#DDE3EA] bg-white px-3 py-2.5 shadow-md w-[200px]">
+            <p className="text-[11px] font-semibold text-[#102A43] leading-tight mb-1.5">
               {tooltip.category}
             </p>
-            <div className="flex items-center gap-2 text-[10px] text-white/70 mb-2">
-              <span>{formatNumber(tooltip.count)}</span>
-              <span className="text-white/40">·</span>
-              <span>{tooltip.percent.toFixed(1)}%</span>
+            <div className="flex items-center justify-between text-[10px] mb-2">
+              <span className="text-[#52667A]">
+                Count: <span className="font-semibold text-[#102A43]">{formatNumber(tooltip.count)}</span>
+              </span>
+              <span className="text-[#52667A]">
+                Share: <span className="font-semibold text-[#102A43]">{tooltip.percent.toFixed(1)}%</span>
+              </span>
             </div>
             {tooltip.sparkline.length > 1 && (
               <Sparkline
