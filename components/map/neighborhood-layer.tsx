@@ -70,13 +70,17 @@ export function NeighborhoodLayer({
       const row = dataMap.get(name);
 
       const lines = [
-        `<strong style="font-size:11px;color:#102A43">${name}</strong>`,
+        `<div style="font-size:11px;font-weight:600;color:#102A43;margin-bottom:2px">${name}</div>`,
         row
-          ? `<span style="font-size:10px;color:#52667A">Crime: ${formatNumber(row.crimeCount)} · Crashes: ${formatNumber(row.crashCount)} · 311: ${formatNumber(row.requests311Count)}</span>`
-          : '<span style="font-size:10px;color:#627D98">No data</span>',
+          ? [
+              `<div style="font-size:10px;color:#52667A">Crime: ${formatNumber(row.crimeCount)}</div>`,
+              `<div style="font-size:10px;color:#52667A">Crashes: ${formatNumber(row.crashCount)}</div>`,
+              `<div style="font-size:10px;color:#52667A">311: ${formatNumber(row.requests311Count)}</div>`,
+            ].join("")
+          : '<div style="font-size:10px;color:#627D98">No data</div>',
       ];
 
-      layer.bindTooltip(lines.join("<br/>"), {
+      layer.bindTooltip(lines.join(""), {
         sticky: true,
         direction: "top",
         className: "leaflet-tooltip-custom",
