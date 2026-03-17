@@ -188,17 +188,14 @@ export async function getKpiTotals(
   return rows[0] ?? null;
 }
 
-export async function getEffectiveThrough(tw: TimeWindow): Promise<string | null> {
-  const days = daysForWindow(tw);
+export async function getEffectiveThrough(_tw: TimeWindow): Promise<string | null> {
   const rows = await query<{ effective_through: string | null }>(
     `SELECT MIN(max_date)::text AS effective_through
      FROM (
        SELECT domain, MAX(date) AS max_date
        FROM mart_incident_trends
-       WHERE date > (SELECT MAX(date) FROM mart_incident_trends) - $1::int
        GROUP BY domain
-     ) sub`,
-    [days]
+     ) sub`
   );
   return rows[0]?.effective_through ?? null;
 }
