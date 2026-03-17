@@ -85,7 +85,8 @@ describe("CityPulsePage", () => {
     mockUseCityPulseData.mockReturnValue({
       kpis: null,
       categories: {},
-      heatmap: [],
+      heatmapCrime: [],
+      heatmapCrashes: [],
       neighborhoods: [],
       loading: true,
       error: null,
@@ -104,7 +105,8 @@ describe("CityPulsePage", () => {
         requests311: { value: 2500, delta: 0, deltaPercent: 1.0, sparkline: [], insight: "", tag: "30D" },
       },
       categories: { crime: [{ category: "Theft", count: 500, percent: 40 }] },
-      heatmap: [{ dayOfWeek: 0, hourOfDay: 12, count: 50 }],
+      heatmapCrime: [{ dayOfWeek: 0, hourOfDay: 12, count: 50 }],
+      heatmapCrashes: [{ dayOfWeek: 1, hourOfDay: 18, count: 30 }],
       neighborhoods: [{ neighborhood: "Five Points", crimeCount: 100, crashCount: 20, requests311Count: 50, totalDeltaPct: 3.5 }],
       loading: false,
       error: null,
@@ -123,7 +125,8 @@ describe("CityPulsePage", () => {
         requests311: { value: 200, delta: 0, deltaPercent: 0, sparkline: [], insight: "", tag: "30D" },
       },
       categories: {},
-      heatmap: [],
+      heatmapCrime: [],
+      heatmapCrashes: [],
       neighborhoods: [],
       loading: false,
       error: null,
@@ -140,7 +143,8 @@ describe("CityPulsePage", () => {
     mockUseCityPulseData.mockReturnValue({
       kpis: null,
       categories: {},
-      heatmap: [],
+      heatmapCrime: [],
+      heatmapCrashes: [],
       neighborhoods: [],
       loading: false,
       error: null,
@@ -150,7 +154,8 @@ describe("CityPulsePage", () => {
     expect(screen.getByText("Neighborhood Map")).toBeInTheDocument();
     expect(screen.getByText("Category Breakdown")).toBeInTheDocument();
     expect(screen.getByText("AQI Trend")).toBeInTheDocument();
-    expect(screen.getByText("Time Heatmap")).toBeInTheDocument();
+    expect(screen.getByText("Crime by Hour & Day")).toBeInTheDocument();
+    expect(screen.getByText("Crashes by Hour & Day")).toBeInTheDocument();
     expect(screen.getByText("Change Leaders")).toBeInTheDocument();
   });
 
@@ -158,7 +163,8 @@ describe("CityPulsePage", () => {
     mockUseCityPulseData.mockReturnValue({
       kpis: null,
       categories: {},
-      heatmap: [],
+      heatmapCrime: [],
+      heatmapCrashes: [],
       neighborhoods: [],
       loading: false,
       error: null,
@@ -169,15 +175,16 @@ describe("CityPulsePage", () => {
     expect(container.querySelector(".grid-cols-1.sm\\:grid-cols-2.lg\\:grid-cols-12")).toBeInTheDocument();
     // Map + categories row: 1-col mobile, 12-col lg
     expect(container.querySelector(".grid-cols-1.lg\\:grid-cols-12")).toBeInTheDocument();
-    // AQI + heatmap row: 1-col mobile, 12-col md
-    expect(container.querySelector(".grid-cols-1.md\\:grid-cols-12")).toBeInTheDocument();
+    // Heatmap row: 1-col mobile, 2-col md
+    expect(container.querySelector(".grid-cols-1.md\\:grid-cols-2")).toBeInTheDocument();
   });
 
   it("uses global effectiveThrough (min of city-pulse and environment) for header", () => {
     mockUseCityPulseData.mockReturnValue({
       kpis: null,
       categories: {},
-      heatmap: [],
+      heatmapCrime: [],
+      heatmapCrashes: [],
       neighborhoods: [],
       effectiveThrough: "2026-03-09",
       lastUpdated: "2026-03-16T06:00:00Z",
@@ -223,7 +230,8 @@ describe("CityPulsePage", () => {
     mockUseCityPulseData.mockReturnValue({
       kpis: null,
       categories: {},
-      heatmap: [],
+      heatmapCrime: [],
+      heatmapCrashes: [],
       neighborhoods: [],
       effectiveThrough: "2026-03-09",
       lastUpdated: "2026-03-16T06:00:00Z",
@@ -255,7 +263,8 @@ describe("CityPulsePage", () => {
     mockUseCityPulseData.mockReturnValue({
       kpis: null,
       categories: {},
-      heatmap: [],
+      heatmapCrime: [],
+      heatmapCrashes: [],
       neighborhoods: [],
       loading: false,
       error: "Connection refused",

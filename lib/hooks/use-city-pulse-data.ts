@@ -14,7 +14,8 @@ interface CityPulseData {
   kpis: { crime: KpiData; crashes: KpiData; requests311: KpiData } | null;
   categories: Record<string, CategoryBreakdown[]>;
   categoryTrends: CategoryTrends;
-  heatmap: HeatmapCell[];
+  heatmapCrime: HeatmapCell[];
+  heatmapCrashes: HeatmapCell[];
   neighborhoods: NeighborhoodRow[];
   effectiveThrough: string | null;
   lastUpdated: string | null;
@@ -39,7 +40,8 @@ export function useCityPulseData(
     kpis: null,
     categories: {},
     categoryTrends: {},
-    heatmap: [],
+    heatmapCrime: [],
+    heatmapCrashes: [],
     neighborhoods: [],
     effectiveThrough: null,
     lastUpdated: null,
@@ -59,14 +61,15 @@ export function useCityPulseData(
         return r.json();
       });
 
-      const [categories, categoryTrends, heatmap, neighborhoods] = await Promise.all([
+      const [categories, categoryTrends, heatmapCrime, heatmapCrashes, neighborhoods] = await Promise.all([
         fetchJson<Record<string, CategoryBreakdown[]>>(
           `/api/city-pulse/categories?${qs}`
         ),
         fetchJson<CategoryTrends>(
           `/api/city-pulse/category-trends?timeWindow=${timeWindow}`
         ),
-        fetchJson<HeatmapCell[]>(`/api/city-pulse/heatmap?${qs}`),
+        fetchJson<HeatmapCell[]>(`/api/city-pulse/heatmap?timeWindow=${timeWindow}&domain=crime`),
+        fetchJson<HeatmapCell[]>(`/api/city-pulse/heatmap?timeWindow=${timeWindow}&domain=crashes`),
         fetchJson<NeighborhoodRow[]>(
           `/api/city-pulse/neighborhoods?timeWindow=${timeWindow}`
         ),
@@ -76,7 +79,8 @@ export function useCityPulseData(
         kpis: kpisResp.data,
         categories,
         categoryTrends,
-        heatmap,
+        heatmapCrime,
+        heatmapCrashes,
         neighborhoods,
         effectiveThrough: kpisResp.effectiveThrough ?? null,
         lastUpdated: kpisResp.lastUpdated ?? null,
