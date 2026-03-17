@@ -81,7 +81,8 @@ export function AqiTrendChart({ data }: AqiTrendChartProps) {
   const ticks = evenlySpacedTicks(data);
 
   return (
-    <ResponsiveContainer width="100%" height={220}>
+    <div className="flex-1 min-h-0" style={{ minHeight: 180 }}>
+    <ResponsiveContainer width="100%" height="100%">
       <AreaChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: -12 }}>
         {AQI_BANDS.map((band) => (
           <ReferenceArea
@@ -130,5 +131,6 @@ export function AqiTrendChart({ data }: AqiTrendChartProps) {
         />
       </AreaChart>
     </ResponsiveContainer>
+    </div>
   );
 }
