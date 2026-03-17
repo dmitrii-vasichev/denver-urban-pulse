@@ -177,14 +177,19 @@ describe("CityPulsePage", () => {
     expect(lgGridRows.length).toBeGreaterThanOrEqual(2);
   });
 
-  it("uses global effectiveThrough (min of city-pulse and environment) for header", () => {
+  it("shows per-domain freshness dates in header", () => {
     mockUseCityPulseData.mockReturnValue({
       kpis: null,
       categories: {},
       heatmapCrime: [],
       heatmapCrashes: [],
       neighborhoods: [],
-      effectiveThrough: "2026-03-09",
+      domainFreshness: {
+        crime: "2026-03-09",
+        crashes: "2026-03-09",
+        requests311: "2026-03-14",
+        aqi: null,
+      },
       lastUpdated: "2026-03-16T06:00:00Z",
       loading: false,
       error: null,
@@ -208,8 +213,9 @@ describe("CityPulsePage", () => {
     } as ReturnType<typeof useEnvironmentData>);
 
     render(<CityPulsePage />);
-    // Header should show the earlier date (Mar 9)
-    expect(screen.getByText(/Mar 9/)).toBeInTheDocument();
+    // Header should show per-domain dates
+    expect(screen.getByText(/Crime Mar 9/)).toBeInTheDocument();
+    expect(screen.getByText(/AQI Mar 15/)).toBeInTheDocument();
   });
 
   it("does not trim AQI trend by city-pulse effectiveThrough (regression #183)", () => {

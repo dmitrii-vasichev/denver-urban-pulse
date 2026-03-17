@@ -51,19 +51,15 @@ function HeatmapDomainToggle({
 function CityPulseContent() {
   const { timeWindow, neighborhood } = useFilters();
   const [heatmapDomain, setHeatmapDomain] = useState<HeatmapDomain>("crime");
-  const { kpis, categories, categoryTrends, heatmapCrime, heatmapCrashes, neighborhoods, loading, error, retry, effectiveThrough, lastUpdated } =
+  const { kpis, categories, categoryTrends, heatmapCrime, heatmapCrashes, neighborhoods, loading, error, retry, domainFreshness, lastUpdated } =
     useCityPulseData(timeWindow, neighborhood);
   const { aqi, comparison, loading: envLoading, error: envError, retry: envRetry, effectiveThrough: envEffectiveThrough } =
     useEnvironmentData(timeWindow, neighborhood);
 
-  // Global cutoff: the earliest effectiveThrough across all data sources (for header display)
-  const globalEffectiveThrough = effectiveThrough && envEffectiveThrough
-    ? (effectiveThrough < envEffectiveThrough ? effectiveThrough : envEffectiveThrough)
-    : effectiveThrough ?? envEffectiveThrough;
-
-  // AQI data is already filtered by its own effectiveThrough in the API layer.
-  // Do NOT re-filter it by globalEffectiveThrough — when City Pulse data lags behind
-  // AQI data, the global cutoff would incorrectly trim most AQI points.
+  // Build per-domain freshness including AQI
+  const fullFreshness = domainFreshness
+    ? { ...domainFreshness, aqi: envEffectiveThrough }
+    : null;
 
   const combinedError = error || envError;
 
@@ -106,7 +102,7 @@ function CityPulseContent() {
       title="Denver Urban Pulse"
       subtitle="Crime, crashes, 311 requests, and air quality across Denver"
       lastUpdated={lastUpdated}
-      effectiveThrough={globalEffectiveThrough}
+      domainFreshness={fullFreshness}
     >
       {/* Row 1: KPI Strip — 4 cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">

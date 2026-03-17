@@ -2,6 +2,13 @@
 
 export type TimeWindow = "7d" | "30d" | "90d";
 
+export interface DomainFreshness {
+  crime: string | null;
+  crashes: string | null;
+  requests311: string | null;
+  aqi: string | null;
+}
+
 export interface KpiData {
   value: number;
   delta: number;
