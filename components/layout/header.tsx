@@ -58,8 +58,8 @@ function HeaderInner({ lastUpdated, domainFreshness }: HeaderProps) {
                     .filter((d) => domainFreshness![d.key])
                     .map((d, i, arr) => (
                       <span key={d.key}>
-                        <span className="font-semibold text-[#627D98]">{d.label}</span>
-                        {" "}{formatDateShort(domainFreshness![d.key]!)}
+                        {d.label}{" "}
+                        <span className="font-semibold text-[#627D98]">{formatDateShort(domainFreshness![d.key]!)}</span>
                         {i < arr.length - 1 && <span className="mx-1">·</span>}
                       </span>
                     ))}
