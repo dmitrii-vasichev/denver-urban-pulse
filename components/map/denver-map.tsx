@@ -9,12 +9,13 @@ interface DenverMapProps {
   geojson: GeoJSON.FeatureCollection;
   data: NeighborhoodRow[];
   selectedNeighborhood?: string;
+  colorBy?: "crime" | "crashes";
 }
 
 const DENVER_CENTER: [number, number] = [39.74, -104.99];
 const DEFAULT_ZOOM = 11;
 
-export function DenverMap({ geojson, data, selectedNeighborhood }: DenverMapProps) {
+export function DenverMap({ geojson, data, selectedNeighborhood, colorBy = "crime" }: DenverMapProps) {
   return (
     <MapContainer
       center={DENVER_CENTER}
@@ -32,6 +33,7 @@ export function DenverMap({ geojson, data, selectedNeighborhood }: DenverMapProp
         geojson={geojson}
         data={data}
         selectedNeighborhood={selectedNeighborhood}
+        colorBy={colorBy}
       />
     </MapContainer>
   );
