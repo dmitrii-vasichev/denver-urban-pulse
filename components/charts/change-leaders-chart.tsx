@@ -132,12 +132,14 @@ export function ChangeLeadersChart({ data, domain }: ChangeLeadersChartProps) {
                 fontWeight={isMI ? 700 : 400}
                 dominantBaseline="central"
               >
+                <title>{value}</title>
                 {isMI ? "★ " : ""}{truncate(value, 14)}
               </text>
             );
           }}
           axisLine={false}
           tickLine={false}
+          interval={0}
         />
         <ReferenceLine x={0} stroke="#DDE3EA" />
         <Tooltip content={<CustomTooltip />} />
