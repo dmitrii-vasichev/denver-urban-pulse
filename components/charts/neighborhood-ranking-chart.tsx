@@ -160,6 +160,7 @@ export function NeighborhoodRankingChart({
             <Cell
               key={i}
               fill={entry.isTop ? colors.strong : colors.normal}
+              opacity={0.8}
             />
           ))}
         </Bar>
