@@ -21,6 +21,13 @@ Add a Neighborhood Ranking chart alongside the existing Change Leaders chart in 
 - [ ] FR-7: Update Change Leaders info tooltip to reflect single-domain mode
 - [ ] FR-8: Ranking is computed on the frontend — sort existing mart data by crime_count or crash_count, take top-5 and bottom-5
 
+## Implementation Phases
+
+### Phase 1: Neighborhood Ranking + Domain Toggle (single phase)
+- FR-1 through FR-8 — all requirements delivered together
+- 4 tasks: new chart component, refactor Change Leaders, integrate in layout, tests
+- Plan: `docs/plans/2026-03-19-phase-1-neighborhood-ranking.md`
+
 ## Out of Scope
 - 311 domain in bottom row charts
 - Composite "All domains" mode
