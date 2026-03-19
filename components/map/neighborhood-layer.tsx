@@ -11,6 +11,7 @@ interface NeighborhoodLayerProps {
   geojson: GeoJSON.FeatureCollection;
   data: NeighborhoodRow[];
   selectedNeighborhood?: string;
+  colorBy?: "crime" | "crashes";
 }
 
 const COLOR_LIGHT = [0xee, 0xf3, 0xf8];
@@ -23,10 +24,15 @@ function interpolate(ratio: number): string {
   return `rgb(${r},${g},${b})`;
 }
 
+function getValue(row: NeighborhoodRow, colorBy: "crime" | "crashes"): number {
+  return colorBy === "crime" ? row.crimeCount : row.crashCount;
+}
+
 export function NeighborhoodLayer({
   geojson,
   data,
   selectedNeighborhood,
+  colorBy = "crime",
 }: NeighborhoodLayerProps) {
   const dataMap = useMemo(() => {
     const m = new Map<string, NeighborhoodRow>();
@@ -37,19 +43,17 @@ export function NeighborhoodLayer({
   const maxTotal = useMemo(() => {
     let max = 1;
     for (const row of data) {
-      const total = row.crimeCount + row.crashCount;
-      if (total > max) max = total;
+      const v = getValue(row, colorBy);
+      if (v > max) max = v;
     }
     return max;
-  }, [data]);
+  }, [data, colorBy]);
 
   const style = useCallback(
     (feature?: Feature<Geometry>): PathOptions => {
       const name = feature?.properties?.name as string | undefined;
       const row = name ? dataMap.get(name) : undefined;
-      const total = row
-        ? row.crimeCount + row.crashCount
-        : 0;
+      const total = row ? getValue(row, colorBy) : 0;
       const ratio = total / maxTotal;
       const isSelected = name === selectedNeighborhood;
 
@@ -61,7 +65,7 @@ export function NeighborhoodLayer({
         opacity: 1,
       };
     },
-    [dataMap, maxTotal, selectedNeighborhood]
+    [dataMap, maxTotal, selectedNeighborhood, colorBy]
   );
 
   const onEachFeature = useCallback(
@@ -102,7 +106,7 @@ export function NeighborhoodLayer({
 
   return (
     <GeoJSON
-      key={`${data.length}-${selectedNeighborhood}`}
+      key={`${data.length}-${selectedNeighborhood}-${colorBy}`}
       data={geojson}
       style={style}
       onEachFeature={onEachFeature}

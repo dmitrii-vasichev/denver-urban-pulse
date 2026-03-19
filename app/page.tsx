@@ -16,16 +16,16 @@ import { ErrorCard } from "@/components/cards/error-card";
 import { formatAqi, formatDateRange } from "@/lib/format";
 import geojson from "@/data/geo/denver-neighborhoods.json";
 
-type HeatmapDomain = "crime" | "crashes";
+type IncidentDomain = "crime" | "crashes";
 
-function HeatmapDomainToggle({
+function DomainToggle({
   value,
   onChange,
 }: {
-  value: HeatmapDomain;
-  onChange: (v: HeatmapDomain) => void;
+  value: IncidentDomain;
+  onChange: (v: IncidentDomain) => void;
 }) {
-  const options: { key: HeatmapDomain; label: string }[] = [
+  const options: { key: IncidentDomain; label: string }[] = [
     { key: "crime", label: "Crime" },
     { key: "crashes", label: "Crashes" },
   ];
@@ -50,7 +50,8 @@ function HeatmapDomainToggle({
 
 function CityPulseContent() {
   const { timeWindow, neighborhood } = useFilters();
-  const [heatmapDomain, setHeatmapDomain] = useState<HeatmapDomain>("crime");
+  const [heatmapDomain, setHeatmapDomain] = useState<IncidentDomain>("crime");
+  const [mapDomain, setMapDomain] = useState<IncidentDomain>("crime");
   const { kpis, categories, categoryTrends, heatmapCrime, heatmapCrashes, neighborhoods, loading, error, retry, domainFreshness, lastUpdated } =
     useCityPulseData(timeWindow, neighborhood);
   const { aqi, comparison, loading: envLoading, error: envError, retry: envRetry, effectiveThrough: envEffectiveThrough, aqiDateRange } =
@@ -179,12 +180,21 @@ function CityPulseContent() {
       {/* Row 2: Neighborhood Map (7/12) + Category Breakdown (5/12) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-stretch">
         <div className="lg:col-span-7">
-          <ChartCard title="Incidents by Neighborhood" subtitle={cityPulseSubtitle} loading={loading} className="h-full">
+          <ChartCard
+            title="Incidents by Neighborhood"
+            subtitle={cityPulseSubtitle}
+            loading={loading}
+            className="h-full"
+            headerRight={
+              <DomainToggle value={mapDomain} onChange={setMapDomain} />
+            }
+          >
             <div className="flex-1 min-h-[200px] -m-2 rounded-lg overflow-hidden">
               <DenverMapDynamic
                 geojson={geojson as unknown as GeoJSON.FeatureCollection}
                 data={neighborhoods}
                 selectedNeighborhood={neighborhood !== "all" ? neighborhood : undefined}
+                colorBy={mapDomain}
               />
             </div>
           </ChartCard>
@@ -210,7 +220,7 @@ function CityPulseContent() {
             loading={loading}
             className="h-full"
             headerRight={
-              <HeatmapDomainToggle
+              <DomainToggle
                 value={heatmapDomain}
                 onChange={setHeatmapDomain}
               />
