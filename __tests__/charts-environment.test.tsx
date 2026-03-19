@@ -1,7 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import { AqiTrendChart, evenlySpacedTicks } from "@/components/charts/aqi-trend-chart";
 import { ChangeLeadersChart, computeLeaders } from "@/components/charts/change-leaders-chart";
-import type { AqiDailyPoint, ComparisonRow } from "@/lib/types";
+import { NeighborhoodRankingChart, computeRanking } from "@/components/charts/neighborhood-ranking-chart";
+import type { AqiDailyPoint, ComparisonRow, NeighborhoodRow } from "@/lib/types";
 
 // Mock recharts to avoid canvas issues in jsdom
 jest.mock("recharts", () => ({
@@ -88,20 +89,99 @@ const sampleComparison: ComparisonRow[] = [
 
 describe("ChangeLeadersChart", () => {
   it("renders with sample data", () => {
-    const { container } = render(<ChangeLeadersChart data={sampleComparison} />);
+    const { container } = render(<ChangeLeadersChart data={sampleComparison} domain="crime" />);
     expect(container.querySelector("[data-testid='bar-chart']")).toBeInTheDocument();
   });
 
   it("shows empty message for no data", () => {
-    render(<ChangeLeadersChart data={[]} />);
+    render(<ChangeLeadersChart data={[]} domain="crime" />);
     expect(screen.getByText("No change data available")).toBeInTheDocument();
   });
 
-  it("marks the most improved neighborhood", () => {
-    const leaders = computeLeaders(sampleComparison);
+  it("uses crime delta when domain is crime", () => {
+    const leaders = computeLeaders(sampleComparison, "crime");
     const mostImproved = leaders.filter((l) => l.isMostImproved);
     expect(mostImproved).toHaveLength(1);
-    // Baker has the lowest avg delta: (-5 + -4 + -6) / 3 = -5.0
+    // Montbello has crimeDeltaPct = -6.0 (lowest)
+    expect(mostImproved[0].neighborhood).toBe("Montbello");
+    expect(mostImproved[0].delta).toBe(-6.0);
+  });
+
+  it("uses crash delta when domain is crashes", () => {
+    const leaders = computeLeaders(sampleComparison, "crashes");
+    const mostImproved = leaders.filter((l) => l.isMostImproved);
+    expect(mostImproved).toHaveLength(1);
+    // Baker has crashDeltaPct = -4.0 (lowest)
     expect(mostImproved[0].neighborhood).toBe("Baker");
+    expect(mostImproved[0].delta).toBe(-4.0);
+  });
+
+  it("does not include 311 data in computation", () => {
+    // All crime and crash deltas are 0, but 311 is non-zero
+    const data: ComparisonRow[] = [
+      { neighborhood: "TestHood", crimeRate: 1, crashRate: 1, requests311Rate: 1, crimeDeltaPct: 0, crashDeltaPct: 0, requests311DeltaPct: 50 },
+    ];
+    const leaders = computeLeaders(data, "crime");
+    expect(leaders[0].delta).toBe(0);
+  });
+});
+
+const sampleNeighborhoods: NeighborhoodRow[] = [
+  { neighborhood: "Five Points", crimeCount: 500, crashCount: 80, requests311Count: 200, totalDeltaPct: 5 },
+  { neighborhood: "Capitol Hill", crimeCount: 400, crashCount: 120, requests311Count: 150, totalDeltaPct: -3 },
+  { neighborhood: "CBD", crimeCount: 600, crashCount: 100, requests311Count: 300, totalDeltaPct: 8 },
+  { neighborhood: "Baker", crimeCount: 200, crashCount: 40, requests311Count: 100, totalDeltaPct: -5 },
+  { neighborhood: "RiNo", crimeCount: 350, crashCount: 90, requests311Count: 180, totalDeltaPct: 2 },
+  { neighborhood: "Highlands", crimeCount: 150, crashCount: 60, requests311Count: 80, totalDeltaPct: -1 },
+  { neighborhood: "LoDo", crimeCount: 700, crashCount: 130, requests311Count: 250, totalDeltaPct: 10 },
+  { neighborhood: "Montbello", crimeCount: 300, crashCount: 50, requests311Count: 160, totalDeltaPct: -6 },
+  { neighborhood: "Cherry Creek", crimeCount: 100, crashCount: 30, requests311Count: 50, totalDeltaPct: 0.5 },
+  { neighborhood: "Stapleton", crimeCount: 50, crashCount: 20, requests311Count: 30, totalDeltaPct: -0.5 },
+];
+
+describe("NeighborhoodRankingChart", () => {
+  it("renders with sample data", () => {
+    const { container } = render(<NeighborhoodRankingChart data={sampleNeighborhoods} domain="crime" />);
+    expect(container.querySelector("[data-testid='bar-chart']")).toBeInTheDocument();
+  });
+
+  it("shows empty message for no data", () => {
+    render(<NeighborhoodRankingChart data={[]} domain="crime" />);
+    expect(screen.getByText("No ranking data available")).toBeInTheDocument();
+  });
+});
+
+describe("computeRanking", () => {
+  it("returns top-5 and bottom-5 by crime count", () => {
+    const ranking = computeRanking(sampleNeighborhoods, "crime");
+    expect(ranking).toHaveLength(10);
+    // First 5 should be highest crime counts
+    expect(ranking[0].neighborhood).toBe("LoDo"); // 700
+    expect(ranking[0].count).toBe(700);
+    expect(ranking[0].isTop).toBe(true);
+    expect(ranking[4].neighborhood).toBe("RiNo"); // 350
+    // Last 5 should be lowest crime counts (reversed)
+    expect(ranking[5].neighborhood).toBe("Stapleton"); // 50
+    expect(ranking[9].neighborhood).toBe("Montbello"); // 300
+  });
+
+  it("sorts by crash count when domain is crashes", () => {
+    const ranking = computeRanking(sampleNeighborhoods, "crashes");
+    expect(ranking[0].neighborhood).toBe("LoDo"); // 130
+    expect(ranking[0].count).toBe(130);
+    expect(ranking[ranking.length - 1].count).toBeGreaterThan(ranking[5].count);
+  });
+
+  it("marks only the top entry", () => {
+    const ranking = computeRanking(sampleNeighborhoods, "crime");
+    const topEntries = ranking.filter((r) => r.isTop);
+    expect(topEntries).toHaveLength(1);
+    expect(topEntries[0].neighborhood).toBe("LoDo");
+  });
+
+  it("deduplicates when fewer than 10 neighborhoods", () => {
+    const small: NeighborhoodRow[] = sampleNeighborhoods.slice(0, 3);
+    const ranking = computeRanking(small, "crime");
+    expect(ranking).toHaveLength(3);
   });
 });

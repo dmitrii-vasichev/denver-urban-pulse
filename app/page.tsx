@@ -8,6 +8,7 @@ import { CategoryChart } from "@/components/charts/category-chart";
 import { HeatmapChart } from "@/components/charts/heatmap-chart";
 import { AqiTrendChart } from "@/components/charts/aqi-trend-chart";
 import { ChangeLeadersChart } from "@/components/charts/change-leaders-chart";
+import { NeighborhoodRankingChart } from "@/components/charts/neighborhood-ranking-chart";
 import { DenverMapDynamic } from "@/components/map/denver-map-dynamic";
 import { useFilters } from "@/lib/hooks/use-filters";
 import { useCityPulseData } from "@/lib/hooks/use-city-pulse-data";
@@ -17,7 +18,7 @@ import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { formatAqi, formatDateRange } from "@/lib/format";
 import geojson from "@/data/geo/denver-neighborhoods.json";
 
-type IncidentDomain = "crime" | "crashes";
+import type { IncidentDomain } from "@/lib/types";
 
 function DomainToggle({
   value,
@@ -53,6 +54,7 @@ function CityPulseContent() {
   const { timeWindow, neighborhood } = useFilters();
   const [heatmapDomain, setHeatmapDomain] = useState<IncidentDomain>("crime");
   const [mapDomain, setMapDomain] = useState<IncidentDomain>("crime");
+  const [bottomRowDomain, setBottomRowDomain] = useState<IncidentDomain>("crime");
   const { kpis, categories, categoryTrends, heatmapCrime, heatmapCrashes, neighborhoods, loading, error, retry, domainFreshness, lastUpdated } =
     useCityPulseData(timeWindow, neighborhood);
   const { aqi, comparison, loading: envLoading, error: envError, retry: envRetry, effectiveThrough: envEffectiveThrough, aqiDateRange } =
@@ -232,17 +234,31 @@ function CityPulseContent() {
         </div>
       </div>
 
-      {/* Row 5: Change Leaders (full-width) */}
-      <ChartCard
-        title="Change Leaders"
-        subtitle={cityPulseSubtitle}
-        loading={envLoading}
-        headerRight={
-          <InfoTooltip text="Top 5 most improved and top 5 most worsened neighborhoods. The metric is the average % change across crime, crashes, and 311 requests compared to the prior period of the same length. Counts are normalized by neighborhood area." />
-        }
-      >
-        <ChangeLeadersChart data={comparison} />
-      </ChartCard>
+      {/* Row 5: Neighborhood Ranking + Change Leaders */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 items-stretch">
+        <ChartCard
+          title="Neighborhood Ranking"
+          subtitle={cityPulseSubtitle}
+          loading={loading}
+          className="h-full"
+          headerRight={
+            <DomainToggle value={bottomRowDomain} onChange={setBottomRowDomain} />
+          }
+        >
+          <NeighborhoodRankingChart data={neighborhoods} domain={bottomRowDomain} />
+        </ChartCard>
+        <ChartCard
+          title="Change Leaders"
+          subtitle={cityPulseSubtitle}
+          loading={envLoading}
+          className="h-full"
+          headerRight={
+            <InfoTooltip text="Top 5 most improved and top 5 most worsened neighborhoods by % change in the selected incident type compared to the prior period of the same length. Rates are normalized by neighborhood area." />
+          }
+        >
+          <ChangeLeadersChart data={comparison} domain={bottomRowDomain} />
+        </ChartCard>
+      </div>
     </PageShell>
   );
 }
@@ -290,9 +306,14 @@ function CityPulseSkeleton() {
           </ChartCard>
         </div>
       </div>
-      <ChartCard title="Change Leaders" loading>
-        <div className="h-48" />
-      </ChartCard>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        <ChartCard title="Neighborhood Ranking" loading>
+          <div className="h-48" />
+        </ChartCard>
+        <ChartCard title="Change Leaders" loading>
+          <div className="h-48" />
+        </ChartCard>
+      </div>
     </PageShell>
   );
 }
