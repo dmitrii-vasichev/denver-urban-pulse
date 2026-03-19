@@ -7,7 +7,8 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   try {
     const tw = (request.nextUrl.searchParams.get("timeWindow") ?? "30d") as TimeWindow;
-    const rows = await getCategories(tw);
+    const neighborhood = request.nextUrl.searchParams.get("neighborhood") ?? "all";
+    const rows = await getCategories(tw, neighborhood);
 
     const grouped: Record<string, { category: string; count: number; percent: number }[]> = {
       crime: [],

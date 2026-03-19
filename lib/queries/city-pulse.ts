@@ -5,6 +5,31 @@ function daysForWindow(tw: TimeWindow): number {
   return tw === "7d" ? 7 : tw === "30d" ? 30 : 90;
 }
 
+// Category label SQL fragments — must match data/marts/build_category_breakdown.py
+const CRIME_LABEL_SQL = `
+  CASE COALESCE(offense_category, 'unknown')
+    WHEN 'all-other-crimes'        THEN 'Other'
+    WHEN 'theft-from-motor-vehicle' THEN 'Vehicle Theft'
+    WHEN 'white-collar-crime'       THEN 'White-Collar Crime'
+    WHEN 'murder'                   THEN 'Homicide'
+    ELSE INITCAP(REPLACE(COALESCE(offense_category, 'Unknown'), '-', ' '))
+  END`;
+
+const CRASH_LABEL_SQL = `
+  CASE TRIM(COALESCE(top_offense, 'Unknown'))
+    WHEN 'TRAF - ACCIDENT'             THEN 'Traffic Accident'
+    WHEN 'TRAF - ACCIDENT - HIT & RUN' THEN 'Hit & Run'
+    WHEN 'TRAF - ACCIDENT - DUI/DUID'  THEN 'DUI / DUID'
+    WHEN 'TRAF - ACCIDENT - SBI'       THEN 'Serious Bodily Injury'
+    WHEN 'TRAF - ACCIDENT - POLICE'    THEN 'Police Involved'
+    WHEN 'TRAF - ACCIDENT - FATAL'     THEN 'Fatal Crash'
+    WHEN 'TRAF - HABITUAL OFFENDER'    THEN 'Habitual Offender'
+    ELSE INITCAP(REPLACE(
+      REPLACE(TRIM(COALESCE(top_offense, 'Unknown')), 'TRAF - ACCIDENT - ', ''),
+      '-', ' '
+    ))
+  END`;
+
 // --- KPIs ---
 
 interface DailyRow {
@@ -312,30 +337,121 @@ interface CategoryTrendRow {
 }
 
 export async function getCategoryTrends(
-  tw: TimeWindow
+  tw: TimeWindow,
+  neighborhood: string = "all"
 ): Promise<CategoryTrendRow[]> {
   const days = daysForWindow(tw);
-  if (days <= 30) {
+  if (neighborhood === "all") {
+    if (days <= 30) {
+      return query<CategoryTrendRow>(
+        `SELECT domain, category, date::text, count
+         FROM mart_incident_trends
+         WHERE date > (SELECT MAX(date) FROM mart_incident_trends) - $1::int
+           AND date <= (SELECT MAX(date) FROM mart_incident_trends)
+         ORDER BY domain, category, date`,
+        [days]
+      );
+    }
     return query<CategoryTrendRow>(
-      `SELECT domain, category, date::text, count
+      `SELECT domain, category,
+              DATE_TRUNC('week', date)::date::text AS date,
+              SUM(count)::int AS count
        FROM mart_incident_trends
        WHERE date > (SELECT MAX(date) FROM mart_incident_trends) - $1::int
          AND date <= (SELECT MAX(date) FROM mart_incident_trends)
+       GROUP BY domain, category, DATE_TRUNC('week', date)
        ORDER BY domain, category, date`,
       [days]
     );
   }
-  // 90d: aggregate by week for cleaner sparklines
+  // For neighborhood: query staging tables, optional weekly aggregation for 90d
+  if (days <= 30) {
+    return query<CategoryTrendRow>(
+      `WITH anchor AS (SELECT MAX(date) AS d FROM mart_city_pulse_daily)
+       SELECT domain, category, date, count FROM (
+         SELECT 'crime' AS domain,
+                ${CRIME_LABEL_SQL} AS category,
+                (reported_date AT TIME ZONE 'America/Denver')::date::text AS date,
+                COUNT(*)::int AS count
+         FROM stg_crime CROSS JOIN anchor
+         WHERE neighborhood = $2
+           AND reported_date > (anchor.d - $1::int)::timestamp AT TIME ZONE 'America/Denver'
+           AND reported_date <= (anchor.d + 1)::timestamp AT TIME ZONE 'America/Denver'
+         GROUP BY (reported_date AT TIME ZONE 'America/Denver')::date, ${CRIME_LABEL_SQL}
+
+         UNION ALL
+
+         SELECT 'crashes' AS domain,
+                ${CRASH_LABEL_SQL} AS category,
+                (reported_date AT TIME ZONE 'America/Denver')::date::text AS date,
+                COUNT(*)::int AS count
+         FROM stg_crashes CROSS JOIN anchor
+         WHERE neighborhood = $2
+           AND reported_date > (anchor.d - $1::int)::timestamp AT TIME ZONE 'America/Denver'
+           AND reported_date <= (anchor.d + 1)::timestamp AT TIME ZONE 'America/Denver'
+         GROUP BY (reported_date AT TIME ZONE 'America/Denver')::date, ${CRASH_LABEL_SQL}
+
+         UNION ALL
+
+         SELECT '311' AS domain,
+                COALESCE(NULLIF(agency, ''), 'Other') AS category,
+                (case_created_date AT TIME ZONE 'America/Denver')::date::text AS date,
+                COUNT(*)::int AS count
+         FROM stg_311 CROSS JOIN anchor
+         WHERE neighborhood = $2
+           AND case_created_date > (anchor.d - $1::int)::timestamp AT TIME ZONE 'America/Denver'
+           AND case_created_date <= (anchor.d + 1)::timestamp AT TIME ZONE 'America/Denver'
+         GROUP BY (case_created_date AT TIME ZONE 'America/Denver')::date, agency
+       ) t
+       ORDER BY domain, category, date`,
+      [days, neighborhood]
+    );
+  }
+  // 90d + neighborhood: aggregate by week
   return query<CategoryTrendRow>(
-    `SELECT domain, category,
+    `WITH anchor AS (SELECT MAX(date) AS d FROM mart_city_pulse_daily),
+     daily AS (
+       SELECT 'crime' AS domain,
+              ${CRIME_LABEL_SQL} AS category,
+              (reported_date AT TIME ZONE 'America/Denver')::date AS date,
+              COUNT(*)::int AS count
+       FROM stg_crime CROSS JOIN anchor
+       WHERE neighborhood = $2
+         AND reported_date > (anchor.d - $1::int)::timestamp AT TIME ZONE 'America/Denver'
+         AND reported_date <= (anchor.d + 1)::timestamp AT TIME ZONE 'America/Denver'
+       GROUP BY (reported_date AT TIME ZONE 'America/Denver')::date, ${CRIME_LABEL_SQL}
+
+       UNION ALL
+
+       SELECT 'crashes' AS domain,
+              ${CRASH_LABEL_SQL} AS category,
+              (reported_date AT TIME ZONE 'America/Denver')::date AS date,
+              COUNT(*)::int AS count
+       FROM stg_crashes CROSS JOIN anchor
+       WHERE neighborhood = $2
+         AND reported_date > (anchor.d - $1::int)::timestamp AT TIME ZONE 'America/Denver'
+         AND reported_date <= (anchor.d + 1)::timestamp AT TIME ZONE 'America/Denver'
+       GROUP BY (reported_date AT TIME ZONE 'America/Denver')::date, ${CRASH_LABEL_SQL}
+
+       UNION ALL
+
+       SELECT '311' AS domain,
+              COALESCE(NULLIF(agency, ''), 'Other') AS category,
+              (case_created_date AT TIME ZONE 'America/Denver')::date AS date,
+              COUNT(*)::int AS count
+       FROM stg_311 CROSS JOIN anchor
+       WHERE neighborhood = $2
+         AND case_created_date > (anchor.d - $1::int)::timestamp AT TIME ZONE 'America/Denver'
+         AND case_created_date <= (anchor.d + 1)::timestamp AT TIME ZONE 'America/Denver'
+       GROUP BY (case_created_date AT TIME ZONE 'America/Denver')::date, agency
+     )
+     SELECT domain, category,
             DATE_TRUNC('week', date)::date::text AS date,
             SUM(count)::int AS count
-     FROM mart_incident_trends
-     WHERE date > (SELECT MAX(date) FROM mart_incident_trends) - $1::int
-       AND date <= (SELECT MAX(date) FROM mart_incident_trends)
+     FROM daily
      GROUP BY domain, category, DATE_TRUNC('week', date)
      ORDER BY domain, category, date`,
-    [days]
+    [days, neighborhood]
   );
 }
 
@@ -348,13 +464,59 @@ interface CategoryRow {
   pct_of_total: number;
 }
 
-export async function getCategories(tw: TimeWindow): Promise<CategoryRow[]> {
+export async function getCategories(tw: TimeWindow, neighborhood: string = "all"): Promise<CategoryRow[]> {
+  if (neighborhood === "all") {
+    return query<CategoryRow>(
+      `SELECT domain, category, count, pct_of_total
+       FROM mart_category_breakdown
+       WHERE period = $1
+       ORDER BY domain, count DESC`,
+      [tw]
+    );
+  }
+  const days = daysForWindow(tw);
   return query<CategoryRow>(
-    `SELECT domain, category, count, pct_of_total
-     FROM mart_category_breakdown
-     WHERE period = $1
-     ORDER BY domain, count DESC`,
-    [tw]
+    `WITH anchor AS (SELECT MAX(date) AS d FROM mart_city_pulse_daily),
+     raw AS (
+       SELECT 'crime' AS domain,
+              ${CRIME_LABEL_SQL} AS category,
+              COUNT(*)::int AS count
+       FROM stg_crime CROSS JOIN anchor
+       WHERE neighborhood = $2
+         AND reported_date > (anchor.d - $1::int)::timestamp AT TIME ZONE 'America/Denver'
+         AND reported_date <= (anchor.d + 1)::timestamp AT TIME ZONE 'America/Denver'
+       GROUP BY ${CRIME_LABEL_SQL}
+
+       UNION ALL
+
+       SELECT 'crashes' AS domain,
+              ${CRASH_LABEL_SQL} AS category,
+              COUNT(*)::int AS count
+       FROM stg_crashes CROSS JOIN anchor
+       WHERE neighborhood = $2
+         AND reported_date > (anchor.d - $1::int)::timestamp AT TIME ZONE 'America/Denver'
+         AND reported_date <= (anchor.d + 1)::timestamp AT TIME ZONE 'America/Denver'
+       GROUP BY ${CRASH_LABEL_SQL}
+
+       UNION ALL
+
+       SELECT '311' AS domain,
+              COALESCE(NULLIF(agency, ''), 'Other') AS category,
+              COUNT(*)::int AS count
+       FROM stg_311 CROSS JOIN anchor
+       WHERE neighborhood = $2
+         AND case_created_date > (anchor.d - $1::int)::timestamp AT TIME ZONE 'America/Denver'
+         AND case_created_date <= (anchor.d + 1)::timestamp AT TIME ZONE 'America/Denver'
+       GROUP BY agency
+     ),
+     totals AS (
+       SELECT domain, SUM(count) AS total FROM raw GROUP BY domain
+     )
+     SELECT raw.domain, raw.category, raw.count,
+            ROUND(raw.count::numeric / NULLIF(totals.total, 0) * 100, 1) AS pct_of_total
+     FROM raw JOIN totals ON raw.domain = totals.domain
+     ORDER BY raw.domain, raw.count DESC`,
+    [days, neighborhood]
   );
 }
 
@@ -368,24 +530,105 @@ interface HeatmapRow {
 
 export async function getHeatmap(
   tw: TimeWindow,
-  domain: string
+  domain: string,
+  neighborhood: string = "all"
 ): Promise<HeatmapRow[]> {
-  if (domain === "all") {
+  if (neighborhood === "all") {
+    if (domain === "all") {
+      return query<HeatmapRow>(
+        `SELECT day_of_week, hour_of_day, ROUND(AVG(count))::int AS count
+         FROM mart_heatmap_hour_day
+         WHERE period = $1
+         GROUP BY day_of_week, hour_of_day
+         ORDER BY day_of_week, hour_of_day`,
+        [tw]
+      );
+    }
     return query<HeatmapRow>(
-      `SELECT day_of_week, hour_of_day, ROUND(AVG(count))::int AS count
+      `SELECT day_of_week, hour_of_day, count
        FROM mart_heatmap_hour_day
-       WHERE period = $1
-       GROUP BY day_of_week, hour_of_day
+       WHERE period = $1 AND domain = $2
        ORDER BY day_of_week, hour_of_day`,
-      [tw]
+      [tw, domain]
     );
   }
+  // Neighborhood-specific: query staging tables directly
+  const days = daysForWindow(tw);
+  if (domain === "crime") {
+    return query<HeatmapRow>(
+      `WITH anchor AS (SELECT MAX(date) AS d FROM mart_city_pulse_daily)
+       SELECT EXTRACT(ISODOW FROM reported_date AT TIME ZONE 'America/Denver')::smallint - 1 AS day_of_week,
+              EXTRACT(HOUR FROM reported_date AT TIME ZONE 'America/Denver')::smallint AS hour_of_day,
+              COUNT(*)::int AS count
+       FROM stg_crime CROSS JOIN anchor
+       WHERE neighborhood = $2
+         AND reported_date > (anchor.d - $1::int)::timestamp AT TIME ZONE 'America/Denver'
+         AND reported_date <= (anchor.d + 1)::timestamp AT TIME ZONE 'America/Denver'
+       GROUP BY EXTRACT(ISODOW FROM reported_date AT TIME ZONE 'America/Denver'),
+                EXTRACT(HOUR FROM reported_date AT TIME ZONE 'America/Denver')
+       ORDER BY day_of_week, hour_of_day`,
+      [days, neighborhood]
+    );
+  }
+  if (domain === "crashes") {
+    return query<HeatmapRow>(
+      `WITH anchor AS (SELECT MAX(date) AS d FROM mart_city_pulse_daily)
+       SELECT EXTRACT(ISODOW FROM reported_date AT TIME ZONE 'America/Denver')::smallint - 1 AS day_of_week,
+              EXTRACT(HOUR FROM reported_date AT TIME ZONE 'America/Denver')::smallint AS hour_of_day,
+              COUNT(*)::int AS count
+       FROM stg_crashes CROSS JOIN anchor
+       WHERE neighborhood = $2
+         AND reported_date > (anchor.d - $1::int)::timestamp AT TIME ZONE 'America/Denver'
+         AND reported_date <= (anchor.d + 1)::timestamp AT TIME ZONE 'America/Denver'
+       GROUP BY EXTRACT(ISODOW FROM reported_date AT TIME ZONE 'America/Denver'),
+                EXTRACT(HOUR FROM reported_date AT TIME ZONE 'America/Denver')
+       ORDER BY day_of_week, hour_of_day`,
+      [days, neighborhood]
+    );
+  }
+  // domain === "all": union all three, then AVG across domains
   return query<HeatmapRow>(
-    `SELECT day_of_week, hour_of_day, count
-     FROM mart_heatmap_hour_day
-     WHERE period = $1 AND domain = $2
+    `WITH anchor AS (SELECT MAX(date) AS d FROM mart_city_pulse_daily),
+     per_domain AS (
+       SELECT EXTRACT(ISODOW FROM reported_date AT TIME ZONE 'America/Denver')::smallint - 1 AS day_of_week,
+              EXTRACT(HOUR FROM reported_date AT TIME ZONE 'America/Denver')::smallint AS hour_of_day,
+              COUNT(*)::int AS count
+       FROM stg_crime CROSS JOIN anchor
+       WHERE neighborhood = $2
+         AND reported_date > (anchor.d - $1::int)::timestamp AT TIME ZONE 'America/Denver'
+         AND reported_date <= (anchor.d + 1)::timestamp AT TIME ZONE 'America/Denver'
+       GROUP BY EXTRACT(ISODOW FROM reported_date AT TIME ZONE 'America/Denver'),
+                EXTRACT(HOUR FROM reported_date AT TIME ZONE 'America/Denver')
+
+       UNION ALL
+
+       SELECT EXTRACT(ISODOW FROM reported_date AT TIME ZONE 'America/Denver')::smallint - 1,
+              EXTRACT(HOUR FROM reported_date AT TIME ZONE 'America/Denver')::smallint,
+              COUNT(*)::int
+       FROM stg_crashes CROSS JOIN anchor
+       WHERE neighborhood = $2
+         AND reported_date > (anchor.d - $1::int)::timestamp AT TIME ZONE 'America/Denver'
+         AND reported_date <= (anchor.d + 1)::timestamp AT TIME ZONE 'America/Denver'
+       GROUP BY EXTRACT(ISODOW FROM reported_date AT TIME ZONE 'America/Denver'),
+                EXTRACT(HOUR FROM reported_date AT TIME ZONE 'America/Denver')
+
+       UNION ALL
+
+       SELECT EXTRACT(ISODOW FROM case_created_date AT TIME ZONE 'America/Denver')::smallint - 1,
+              EXTRACT(HOUR FROM case_created_date AT TIME ZONE 'America/Denver')::smallint,
+              COUNT(*)::int
+       FROM stg_311 CROSS JOIN anchor
+       WHERE neighborhood = $2
+         AND case_created_date > (anchor.d - $1::int)::timestamp AT TIME ZONE 'America/Denver'
+         AND case_created_date <= (anchor.d + 1)::timestamp AT TIME ZONE 'America/Denver'
+       GROUP BY EXTRACT(ISODOW FROM case_created_date AT TIME ZONE 'America/Denver'),
+                EXTRACT(HOUR FROM case_created_date AT TIME ZONE 'America/Denver')
+     )
+     SELECT day_of_week, hour_of_day, ROUND(AVG(count))::int AS count
+     FROM per_domain
+     GROUP BY day_of_week, hour_of_day
      ORDER BY day_of_week, hour_of_day`,
-    [tw, domain]
+    [days, neighborhood]
   );
 }
 
