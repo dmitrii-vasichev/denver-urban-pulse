@@ -7,7 +7,8 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   try {
     const tw = (request.nextUrl.searchParams.get("timeWindow") ?? "30d") as TimeWindow;
-    const rows = await getCategoryTrends(tw);
+    const neighborhood = request.nextUrl.searchParams.get("neighborhood") ?? "all";
+    const rows = await getCategoryTrends(tw, neighborhood);
 
     // Group: domain → category → ChartPoint[]
     const grouped: Record<string, Record<string, ChartPoint[]>> = {};

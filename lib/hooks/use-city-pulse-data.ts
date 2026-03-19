@@ -69,10 +69,10 @@ export function useCityPulseData(
           `/api/city-pulse/categories?${qs}`
         ),
         fetchJson<CategoryTrends>(
-          `/api/city-pulse/category-trends?timeWindow=${timeWindow}`
+          `/api/city-pulse/category-trends?${qs}`
         ),
-        fetchJson<HeatmapCell[]>(`/api/city-pulse/heatmap?timeWindow=${timeWindow}&domain=crime`),
-        fetchJson<HeatmapCell[]>(`/api/city-pulse/heatmap?timeWindow=${timeWindow}&domain=crashes`),
+        fetchJson<HeatmapCell[]>(`/api/city-pulse/heatmap?${qs}&domain=crime`),
+        fetchJson<HeatmapCell[]>(`/api/city-pulse/heatmap?${qs}&domain=crashes`),
         fetchJson<NeighborhoodRow[]>(
           `/api/city-pulse/neighborhoods?timeWindow=${timeWindow}`
         ),

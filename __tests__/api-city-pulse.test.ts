@@ -178,6 +178,23 @@ describe("City Pulse API", () => {
       expect(body.data.requests311).toHaveLength(1);
       expect(body.data.crime[0].category).toBe("Theft");
     });
+
+    it("passes neighborhood param to query when provided", async () => {
+      mockQuery.mockResolvedValueOnce([
+        { domain: "crime", category: "Theft", count: 10, pct_of_total: 100.0 },
+      ]);
+
+      const res = await getCategories(
+        makeRequest("http://localhost/api/city-pulse/categories?timeWindow=30d&neighborhood=Five%20Points")
+      );
+      const body = await res.json();
+
+      expect(res.status).toBe(200);
+      // Neighborhood query hits staging tables with neighborhood filter
+      const sql = mockQuery.mock.calls[0][0] as string;
+      expect(sql).toContain("neighborhood = $2");
+      expect(mockQuery.mock.calls[0][1]).toContain("Five Points");
+    });
   });
 
   describe("GET /api/city-pulse/heatmap", () => {
@@ -191,6 +208,22 @@ describe("City Pulse API", () => {
 
       expect(res.status).toBe(200);
       expect(body.data[0]).toEqual({ dayOfWeek: 0, hourOfDay: 12, count: 45 });
+    });
+
+    it("passes neighborhood param to query when provided", async () => {
+      mockQuery.mockResolvedValueOnce([
+        { day_of_week: 0, hour_of_day: 12, count: 5 },
+      ]);
+
+      const res = await getHeatmap(
+        makeRequest("http://localhost/api/city-pulse/heatmap?timeWindow=30d&domain=crime&neighborhood=Capitol%20Hill")
+      );
+      const body = await res.json();
+
+      expect(res.status).toBe(200);
+      const sql = mockQuery.mock.calls[0][0] as string;
+      expect(sql).toContain("neighborhood = $2");
+      expect(mockQuery.mock.calls[0][1]).toContain("Capitol Hill");
     });
   });
 
@@ -234,6 +267,22 @@ describe("City Pulse API", () => {
       expect(body.data.crime.Theft[0]).toEqual({ date: "2026-03-10", value: 12 });
       expect(body.data.crime.Assault).toHaveLength(1);
       expect(body.data.requests311.Graffiti).toHaveLength(1);
+    });
+
+    it("passes neighborhood param to query when provided", async () => {
+      mockQuery.mockResolvedValueOnce([
+        { domain: "crime", category: "Theft", date: "2026-03-10", count: 3 },
+      ]);
+
+      const res = await getCategoryTrends(
+        makeRequest("http://localhost/api/city-pulse/category-trends?timeWindow=7d&neighborhood=LoDo")
+      );
+      const body = await res.json();
+
+      expect(res.status).toBe(200);
+      const sql = mockQuery.mock.calls[0][0] as string;
+      expect(sql).toContain("neighborhood = $2");
+      expect(mockQuery.mock.calls[0][1]).toContain("LoDo");
     });
 
     it("returns 500 on error", async () => {

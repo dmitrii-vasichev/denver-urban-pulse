@@ -10,7 +10,8 @@ export async function GET(request: NextRequest) {
     const tw = (params.get("timeWindow") ?? "30d") as TimeWindow;
     const domain = params.get("domain") ?? "all";
 
-    const rows = await getHeatmap(tw, domain);
+    const neighborhood = params.get("neighborhood") ?? "all";
+    const rows = await getHeatmap(tw, domain, neighborhood);
     const data = rows.map((r) => ({
       dayOfWeek: r.day_of_week,
       hourOfDay: r.hour_of_day,
