@@ -144,6 +144,7 @@ export function NeighborhoodRankingChart({
                 fontWeight={isTopEntry ? 700 : 400}
                 dominantBaseline="central"
               >
+                <title>{value}</title>
                 {isTopEntry ? "▲ " : ""}
                 {truncate(value, 14)}
               </text>
@@ -151,6 +152,7 @@ export function NeighborhoodRankingChart({
           }}
           axisLine={false}
           tickLine={false}
+          interval={0}
         />
         <Tooltip content={<CustomTooltip />} />
         <Bar dataKey="count" isAnimationActive={false} radius={[4, 4, 4, 4]}>
