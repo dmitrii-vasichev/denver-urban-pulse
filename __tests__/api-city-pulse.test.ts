@@ -195,6 +195,27 @@ describe("City Pulse API", () => {
       expect(sql).toContain("neighborhood = $2");
       expect(mockQuery.mock.calls[0][1]).toContain("Five Points");
     });
+
+    it("returns percent as number even when pg returns numeric as string (closes #220)", async () => {
+      // PostgreSQL ROUND() returns numeric type, which pg driver serializes as string
+      mockQuery.mockResolvedValueOnce([
+        { domain: "crime", category: "Larceny", count: "118", pct_of_total: "44.2" },
+        { domain: "crashes", category: "Hit & Run", count: "15", pct_of_total: "60.0" },
+      ]);
+
+      const res = await getCategories(
+        makeRequest("http://localhost/api/city-pulse/categories?timeWindow=30d&neighborhood=Central%20Park")
+      );
+      const body = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(typeof body.data.crime[0].percent).toBe("number");
+      expect(body.data.crime[0].percent).toBe(44.2);
+      expect(typeof body.data.crime[0].count).toBe("number");
+      expect(body.data.crime[0].count).toBe(118);
+      expect(typeof body.data.crashes[0].percent).toBe("number");
+      expect(body.data.crashes[0].percent).toBe(60.0);
+    });
   });
 
   describe("GET /api/city-pulse/heatmap", () => {
