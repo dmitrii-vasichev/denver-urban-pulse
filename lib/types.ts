@@ -2,6 +2,8 @@
 
 export type TimeWindow = "7d" | "30d" | "90d";
 
+export type IncidentDomain = "crime" | "crashes";
+
 export interface DomainFreshness {
   crime: string | null;
   crashes: string | null;
