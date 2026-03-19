@@ -37,7 +37,7 @@ export function NeighborhoodLayer({
   const maxTotal = useMemo(() => {
     let max = 1;
     for (const row of data) {
-      const total = row.crimeCount + row.crashCount + row.requests311Count;
+      const total = row.crimeCount + row.crashCount;
       if (total > max) max = total;
     }
     return max;
@@ -48,7 +48,7 @@ export function NeighborhoodLayer({
       const name = feature?.properties?.name as string | undefined;
       const row = name ? dataMap.get(name) : undefined;
       const total = row
-        ? row.crimeCount + row.crashCount + row.requests311Count
+        ? row.crimeCount + row.crashCount
         : 0;
       const ratio = total / maxTotal;
       const isSelected = name === selectedNeighborhood;
@@ -75,7 +75,6 @@ export function NeighborhoodLayer({
           ? [
               `<div style="font-size:10px;color:#52667A">Crime: ${formatNumber(row.crimeCount)}</div>`,
               `<div style="font-size:10px;color:#52667A">Crashes: ${formatNumber(row.crashCount)}</div>`,
-              `<div style="font-size:10px;color:#52667A">311: ${formatNumber(row.requests311Count)}</div>`,
             ].join("")
           : '<div style="font-size:10px;color:#627D98">No data</div>',
       ];

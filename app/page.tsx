@@ -179,7 +179,7 @@ function CityPulseContent() {
       {/* Row 2: Neighborhood Map (7/12) + Category Breakdown (5/12) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-stretch">
         <div className="lg:col-span-7">
-          <ChartCard title="Neighborhood Map" subtitle={cityPulseSubtitle} loading={loading} className="h-full">
+          <ChartCard title="Incidents by Neighborhood" subtitle={cityPulseSubtitle} loading={loading} className="h-full">
             <div className="flex-1 min-h-[200px] -m-2 rounded-lg overflow-hidden">
               <DenverMapDynamic
                 geojson={geojson as unknown as GeoJSON.FeatureCollection}
@@ -250,7 +250,7 @@ function CityPulseSkeleton() {
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
         <div className="lg:col-span-7">
-          <ChartCard title="Neighborhood Map" loading>
+          <ChartCard title="Incidents by Neighborhood" loading>
             <div className="h-48" />
           </ChartCard>
         </div>

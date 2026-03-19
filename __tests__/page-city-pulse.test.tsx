@@ -151,7 +151,7 @@ describe("CityPulsePage", () => {
     });
 
     render(<CityPulsePage />);
-    expect(screen.getByText("Neighborhood Map")).toBeInTheDocument();
+    expect(screen.getByText("Incidents by Neighborhood")).toBeInTheDocument();
     expect(screen.getByText("Category Breakdown")).toBeInTheDocument();
     expect(screen.getByText("AQI Trend")).toBeInTheDocument();
     expect(screen.getByText("Incidents by Day & Hour")).toBeInTheDocument();
