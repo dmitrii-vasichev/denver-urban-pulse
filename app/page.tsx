@@ -234,30 +234,34 @@ function CityPulseContent() {
         </div>
       </div>
 
-      {/* Row 5: Neighborhood Ranking + Change Leaders */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 items-stretch">
-        <ChartCard
-          title="Neighborhood Ranking"
-          subtitle={cityPulseSubtitle}
-          loading={loading}
-          className="h-full"
-          headerRight={
-            <DomainToggle value={bottomRowDomain} onChange={setBottomRowDomain} />
-          }
-        >
-          <NeighborhoodRankingChart data={neighborhoods} domain={bottomRowDomain} />
-        </ChartCard>
-        <ChartCard
-          title="Change Leaders"
-          subtitle={cityPulseSubtitle}
-          loading={envLoading}
-          className="h-full"
-          headerRight={
-            <InfoTooltip text="Top 5 most improved and top 5 most worsened neighborhoods by % change in the selected incident type compared to the prior period of the same length. Rates are normalized by neighborhood area." />
-          }
-        >
-          <ChangeLeadersChart data={comparison} domain={bottomRowDomain} />
-        </ChartCard>
+      {/* Row 5: Neighborhood Ranking (7/12) + Change Leaders (5/12) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-stretch">
+        <div className="lg:col-span-7">
+          <ChartCard
+            title="Neighborhood Ranking"
+            subtitle={cityPulseSubtitle}
+            loading={loading}
+            className="h-full"
+            headerRight={
+              <DomainToggle value={bottomRowDomain} onChange={setBottomRowDomain} />
+            }
+          >
+            <NeighborhoodRankingChart data={neighborhoods} domain={bottomRowDomain} />
+          </ChartCard>
+        </div>
+        <div className="lg:col-span-5">
+          <ChartCard
+            title="Change Leaders"
+            subtitle={cityPulseSubtitle}
+            loading={envLoading}
+            className="h-full"
+            headerRight={
+              <InfoTooltip text="Top 5 most improved and top 5 most worsened neighborhoods by % change in the selected incident type compared to the prior period of the same length. Rates are normalized by neighborhood area." />
+            }
+          >
+            <ChangeLeadersChart data={comparison} domain={bottomRowDomain} />
+          </ChartCard>
+        </div>
       </div>
     </PageShell>
   );
