@@ -21,8 +21,8 @@ export async function GET(request: NextRequest) {
       if (key in grouped) {
         grouped[key].push({
           category: r.category,
-          count: r.count,
-          percent: r.pct_of_total,
+          count: Number(r.count),
+          percent: Number(r.pct_of_total),
         });
       }
     }
