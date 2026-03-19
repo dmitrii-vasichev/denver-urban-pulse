@@ -13,6 +13,7 @@ import { useFilters } from "@/lib/hooks/use-filters";
 import { useCityPulseData } from "@/lib/hooks/use-city-pulse-data";
 import { useEnvironmentData } from "@/lib/hooks/use-environment-data";
 import { ErrorCard } from "@/components/cards/error-card";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { formatAqi, formatDateRange } from "@/lib/format";
 import geojson from "@/data/geo/denver-neighborhoods.json";
 
@@ -232,7 +233,14 @@ function CityPulseContent() {
       </div>
 
       {/* Row 5: Change Leaders (full-width) */}
-      <ChartCard title="Change Leaders" subtitle={cityPulseSubtitle} loading={envLoading}>
+      <ChartCard
+        title="Change Leaders"
+        subtitle={cityPulseSubtitle}
+        loading={envLoading}
+        headerRight={
+          <InfoTooltip text="Top 5 most improved and top 5 most worsened neighborhoods. The metric is the average % change across crime, crashes, and 311 requests compared to the prior period of the same length. Counts are normalized by neighborhood area." />
+        }
+      >
         <ChangeLeadersChart data={comparison} />
       </ChartCard>
     </PageShell>
