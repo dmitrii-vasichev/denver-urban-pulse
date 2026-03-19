@@ -187,8 +187,6 @@ describe("City Pulse API", () => {
       const res = await getCategories(
         makeRequest("http://localhost/api/city-pulse/categories?timeWindow=30d&neighborhood=Five%20Points")
       );
-      const body = await res.json();
-
       expect(res.status).toBe(200);
       // Neighborhood query hits staging tables with neighborhood filter
       const sql = mockQuery.mock.calls[0][0] as string;
@@ -239,8 +237,6 @@ describe("City Pulse API", () => {
       const res = await getHeatmap(
         makeRequest("http://localhost/api/city-pulse/heatmap?timeWindow=30d&domain=crime&neighborhood=Capitol%20Hill")
       );
-      const body = await res.json();
-
       expect(res.status).toBe(200);
       const sql = mockQuery.mock.calls[0][0] as string;
       expect(sql).toContain("neighborhood = $2");
@@ -298,8 +294,6 @@ describe("City Pulse API", () => {
       const res = await getCategoryTrends(
         makeRequest("http://localhost/api/city-pulse/category-trends?timeWindow=7d&neighborhood=LoDo")
       );
-      const body = await res.json();
-
       expect(res.status).toBe(200);
       const sql = mockQuery.mock.calls[0][0] as string;
       expect(sql).toContain("neighborhood = $2");

@@ -320,13 +320,6 @@ export async function getDomainFreshness(): Promise<DomainFreshness> {
   };
 }
 
-export async function getEffectiveThrough(_tw: TimeWindow): Promise<string | null> {
-  const freshness = await getDomainFreshness();
-  const dates = [freshness.crime, freshness.crashes, freshness.requests311].filter(Boolean) as string[];
-  if (dates.length === 0) return null;
-  return dates.reduce((a, b) => (a < b ? a : b));
-}
-
 // --- Category Trends (sparklines per category) ---
 
 interface CategoryTrendRow {
