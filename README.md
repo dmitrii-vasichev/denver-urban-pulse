@@ -142,6 +142,14 @@ npm run dev
 | `npm test` | Jest test suite |
 | `npm start` | Start production server |
 
+## Author
+
+**Dmitrii Vasichev** — [dmitrii-vasichev.com](https://dmitrii-vasichev.com)
+
+[![GitHub](https://img.shields.io/badge/GitHub-dmitrii--vasichev-181717?logo=github)](https://github.com/dmitrii-vasichev)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-dmitrii--vasichev-0A66C2?logo=linkedin)](https://www.linkedin.com/in/dmitrii-vasichev)
+[![Telegram](https://img.shields.io/badge/Telegram-dmitrii__vasichev-26A5E4?logo=telegram)](https://t.me/dmitrii_vasichev)
+
 ## License
 
 MIT
