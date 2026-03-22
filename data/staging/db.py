@@ -11,6 +11,7 @@ import sys
 import time
 
 import psycopg2
+import psycopg2.errors
 import psycopg2.extras
 
 logger = logging.getLogger(__name__)
@@ -135,11 +136,13 @@ def bulk_upsert(table: str, records: list[dict], columns: list[str],
                 conn.commit()
                 total += len(batch)
                 break
-            except psycopg2.OperationalError as e:
+            except (psycopg2.OperationalError, psycopg2.IntegrityError) as e:
                 logger.warning(
-                    f"  Connection error at batch {batch_num} (attempt {attempt + 1}): {e}"
+                    f"  DB error at batch {batch_num} (attempt {attempt + 1}): {e}"
                 )
                 try:
+                    if conn:
+                        conn.rollback()
                     if cur:
                         cur.close()
                     if conn:

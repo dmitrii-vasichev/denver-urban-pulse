@@ -8,6 +8,7 @@ import sys
 import time
 
 import psycopg2
+import psycopg2.errors
 import psycopg2.extras
 
 logger = logging.getLogger(__name__)
@@ -70,10 +71,12 @@ def bulk_insert(table: str, records: list[dict], columns: list[str]) -> int:
                 conn.commit()
                 total += len(batch)
                 break
-            except psycopg2.OperationalError as e:
-                logger.warning(f"  SSL/connection error at batch {batch_num} (attempt {attempt + 1}): {e}")
+            except (psycopg2.OperationalError, psycopg2.IntegrityError) as e:
+                logger.warning(f"  DB error at batch {batch_num} (attempt {attempt + 1}): {e}")
                 # Force reconnect on next attempt
                 try:
+                    if conn:
+                        conn.rollback()
                     if cur:
                         cur.close()
                     if conn:

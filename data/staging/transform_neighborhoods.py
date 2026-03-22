@@ -70,7 +70,11 @@ def transform(dry_run: bool = False) -> dict:
             "duration_s": round(time.time() - start, 1),
         }
 
-    records = [transform_record(r) for r in raw_rows]
+    # Transform, skip records with NULL required fields
+    all_records = [transform_record(r) for r in raw_rows]
+    records = [r for r in all_records if r["nbhd_id"] is not None and r["nbhd_name"] is not None]
+    if len(records) < len(all_records):
+        logger.warning(f"  Skipped {len(all_records) - len(records)} records with NULL nbhd_id/nbhd_name")
 
     if dry_run:
         return {
@@ -82,7 +86,10 @@ def transform(dry_run: bool = False) -> dict:
         }
 
     truncate_table("stg_neighborhoods")
-    inserted = bulk_upsert("stg_neighborhoods", records, STG_COLUMNS)
+    inserted = bulk_upsert(
+        "stg_neighborhoods", records, STG_COLUMNS,
+        conflict_columns=["nbhd_id"],
+    )
 
     duration = round(time.time() - start, 1)
     logger.info(f"  Neighborhoods staging complete: {inserted} rows in {duration}s")
