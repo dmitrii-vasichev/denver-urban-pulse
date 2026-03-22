@@ -107,8 +107,26 @@ def transform(dry_run: bool = False) -> dict:
             "duration_s": round(time.time() - start, 1),
         }
 
-    # Transform
-    records = [transform_record(r, nbhd_map) for r in raw_rows]
+    # Transform, skip records with NULL required fields
+    records = []
+    skipped_null = 0
+    for r in raw_rows:
+        rec = transform_record(r, nbhd_map)
+        if rec["incident_id"] is None or rec["reported_date"] is None:
+            skipped_null += 1
+            continue
+        records.append(rec)
+    if skipped_null:
+        logger.warning(f"  Skipped {skipped_null} records with NULL required fields")
+
+    if not records:
+        return {
+            "source": "stg_crime",
+            "status": "warning",
+            "fetched": len(raw_rows),
+            "inserted": 0,
+            "duration_s": round(time.time() - start, 1),
+        }
 
     # Count unresolved neighborhoods
     unresolved = sum(1 for r in records if r["neighborhood"] is None)
@@ -126,9 +144,24 @@ def transform(dry_run: bool = False) -> dict:
             "duration_s": round(time.time() - start, 1),
         }
 
-    # Load: truncate + insert
+    # Deduplicate by (incident_id, offense_id) — ArcGIS pagination can return dupes
+    seen = set()
+    deduped = []
+    for r in records:
+        key = (r["incident_id"], r["offense_id"])
+        if key not in seen:
+            seen.add(key)
+            deduped.append(r)
+    if len(deduped) < len(records):
+        logger.info(f"  Deduped: {len(records)} → {len(deduped)} records")
+    records = deduped
+
+    # Load: truncate + upsert
     truncate_table("stg_crime")
-    inserted = bulk_upsert("stg_crime", records, STG_COLUMNS)
+    inserted = bulk_upsert(
+        "stg_crime", records, STG_COLUMNS,
+        conflict_columns=["incident_id", "offense_id"],
+    )
 
     duration = round(time.time() - start, 1)
     logger.info(f"  Crime staging complete: {inserted} rows in {duration}s")

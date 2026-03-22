@@ -57,14 +57,14 @@ def _run_script(name: str, script_path: str, cwd: str) -> dict:
         else:
             logger.error(f"  {name}: FAILED (exit {result.returncode}, {duration}s)")
             if result.stderr:
-                for line in result.stderr.strip().split("\n")[-10:]:
+                for line in result.stderr.strip().split("\n")[-50:]:
                     logger.error(f"    {line}")
             return {
                 "step": name,
                 "status": "error",
                 "exit_code": result.returncode,
                 "duration_s": duration,
-                "error": result.stderr[-500:] if result.stderr else "",
+                "error": result.stderr[-2000:] if result.stderr else "",
             }
     except subprocess.TimeoutExpired:
         duration = round(time.time() - start, 1)

@@ -123,7 +123,26 @@ def transform(dry_run: bool = False) -> dict:
             "duration_s": round(time.time() - start, 1),
         }
 
-    records = [transform_record(r, nbhd_map) for r in raw_rows]
+    # Transform, skip records with NULL required fields
+    records = []
+    skipped_null = 0
+    for r in raw_rows:
+        rec = transform_record(r, nbhd_map)
+        if rec["case_created_date"] is None:
+            skipped_null += 1
+            continue
+        records.append(rec)
+    if skipped_null:
+        logger.warning(f"  Skipped {skipped_null} records with NULL case_created_date")
+
+    if not records:
+        return {
+            "source": "stg_311",
+            "status": "warning",
+            "fetched": len(raw_rows),
+            "inserted": 0,
+            "duration_s": round(time.time() - start, 1),
+        }
 
     unresolved = sum(1 for r in records if r["neighborhood"] is None)
     if unresolved:
