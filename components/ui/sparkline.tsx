@@ -7,6 +7,7 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from "recharts";
+import type { TooltipContentProps } from "recharts";
 import { formatNumber, formatDateShort } from "@/lib/format";
 import type { ChartPoint } from "@/lib/types";
 
@@ -27,11 +28,10 @@ export function Sparkline({
   metricLabel = "incidents",
   interactive = true,
 }: SparklineProps) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const renderTooltip = useCallback(({ active, payload }: any) => {
+  const renderTooltip = useCallback(({ active, payload }: TooltipContentProps) => {
     if (!active || !payload?.length) return null;
     const point = payload[0];
-    const date = formatDateShort(point.payload?.date);
+    const date = formatDateShort(point.payload?.date as string | undefined);
     const value = formatNumber(point.value as number);
     return (
       <div className="rounded-lg border border-[#DDE3EA] bg-white px-3 py-2 shadow-md">
