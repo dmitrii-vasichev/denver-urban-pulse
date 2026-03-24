@@ -32,3 +32,13 @@ next-env.d.ts
 
 # testing
 coverage/
+
+# AI agent / workflow
+CLAUDE.md
+.workflow-state.json
+
+# generated reports
+data/validation/api_report.md
+
+# design files (binary, unreadable on GitHub)
+*.pen
