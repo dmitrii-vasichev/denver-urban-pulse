@@ -67,9 +67,10 @@ const mockUseCityPulseData = useCityPulseData as jest.MockedFunction<typeof useC
 const mockUseEnvironmentData = useEnvironmentData as jest.MockedFunction<typeof useEnvironmentData>;
 
 const defaultEnvData = {
-  aqi: { current: { aqi: 42, status: "Good" }, trend: [] },
+  aqi: { current: { aqi: 42, status: "Good", category: "Good" }, trend: [] },
   comparison: [],
   effectiveThrough: null,
+  aqiDateRange: null,
   lastUpdated: null,
   loading: false,
   error: null,
@@ -78,18 +79,23 @@ const defaultEnvData = {
 
 describe("CityPulsePage", () => {
   beforeEach(() => {
-    mockUseEnvironmentData.mockReturnValue(defaultEnvData as ReturnType<typeof useEnvironmentData>);
+    mockUseEnvironmentData.mockReturnValue(defaultEnvData as unknown as ReturnType<typeof useEnvironmentData>);
   });
 
   it("renders loading state", () => {
     mockUseCityPulseData.mockReturnValue({
       kpis: null,
       categories: {},
+      categoryTrends: {},
       heatmapCrime: [],
       heatmapCrashes: [],
       neighborhoods: [],
+      effectiveThrough: null,
+      domainFreshness: null,
+      lastUpdated: null,
       loading: true,
       error: null,
+      retry: jest.fn(),
     });
 
     const { container } = render(<CityPulsePage />);
@@ -105,11 +111,16 @@ describe("CityPulsePage", () => {
         requests311: { value: 2500, delta: 0, deltaPercent: 1.0, sparkline: [], insight: "", tag: "30D" },
       },
       categories: { crime: [{ category: "Theft", count: 500, percent: 40 }] },
+      categoryTrends: {},
       heatmapCrime: [{ dayOfWeek: 0, hourOfDay: 12, count: 50 }],
       heatmapCrashes: [{ dayOfWeek: 1, hourOfDay: 18, count: 30 }],
       neighborhoods: [{ neighborhood: "Five Points", crimeCount: 100, crashCount: 20, requests311Count: 50, totalDeltaPct: 3.5 }],
+      effectiveThrough: null,
+      domainFreshness: null,
+      lastUpdated: null,
       loading: false,
       error: null,
+      retry: jest.fn(),
     });
 
     render(<CityPulsePage />);
@@ -125,11 +136,16 @@ describe("CityPulsePage", () => {
         requests311: { value: 200, delta: 0, deltaPercent: 0, sparkline: [], insight: "", tag: "30D" },
       },
       categories: {},
+      categoryTrends: {},
       heatmapCrime: [],
       heatmapCrashes: [],
       neighborhoods: [],
+      effectiveThrough: null,
+      domainFreshness: null,
+      lastUpdated: null,
       loading: false,
       error: null,
+      retry: jest.fn(),
     });
 
     render(<CityPulsePage />);
@@ -143,11 +159,16 @@ describe("CityPulsePage", () => {
     mockUseCityPulseData.mockReturnValue({
       kpis: null,
       categories: {},
+      categoryTrends: {},
       heatmapCrime: [],
       heatmapCrashes: [],
       neighborhoods: [],
+      effectiveThrough: null,
+      domainFreshness: null,
+      lastUpdated: null,
       loading: false,
       error: null,
+      retry: jest.fn(),
     });
 
     render(<CityPulsePage />);
@@ -162,11 +183,16 @@ describe("CityPulsePage", () => {
     mockUseCityPulseData.mockReturnValue({
       kpis: null,
       categories: {},
+      categoryTrends: {},
       heatmapCrime: [],
       heatmapCrashes: [],
       neighborhoods: [],
+      effectiveThrough: null,
+      domainFreshness: null,
+      lastUpdated: null,
       loading: false,
       error: null,
+      retry: jest.fn(),
     });
 
     const { container } = render(<CityPulsePage />);
@@ -181,9 +207,11 @@ describe("CityPulsePage", () => {
     mockUseCityPulseData.mockReturnValue({
       kpis: null,
       categories: {},
+      categoryTrends: {},
       heatmapCrime: [],
       heatmapCrashes: [],
       neighborhoods: [],
+      effectiveThrough: "2026-03-14",
       domainFreshness: {
         crime: "2026-03-09",
         crashes: "2026-03-09",
@@ -197,7 +225,7 @@ describe("CityPulsePage", () => {
     });
     mockUseEnvironmentData.mockReturnValue({
       aqi: {
-        current: { aqi: 42, status: "Good" },
+        current: { aqi: 42, status: "Good", category: "Good" },
         trend: [
           { date: "2026-03-08", aqiMax: 40, aqiOzone: 30, aqiPm25: 20, aqiPm10: 15, category: "Good" },
           { date: "2026-03-09", aqiMax: 45, aqiOzone: 35, aqiPm25: 25, aqiPm10: 18, category: "Good" },
@@ -206,6 +234,7 @@ describe("CityPulsePage", () => {
       },
       comparison: [],
       effectiveThrough: "2026-03-15",
+      aqiDateRange: null,
       lastUpdated: "2026-03-16T06:00:00Z",
       loading: false,
       error: null,
@@ -237,10 +266,12 @@ describe("CityPulsePage", () => {
     mockUseCityPulseData.mockReturnValue({
       kpis: null,
       categories: {},
+      categoryTrends: {},
       heatmapCrime: [],
       heatmapCrashes: [],
       neighborhoods: [],
       effectiveThrough: "2026-03-09",
+      domainFreshness: null,
       lastUpdated: "2026-03-16T06:00:00Z",
       loading: false,
       error: null,
@@ -248,11 +279,12 @@ describe("CityPulsePage", () => {
     });
     mockUseEnvironmentData.mockReturnValue({
       aqi: {
-        current: { aqi: 44, status: "Good" },
+        current: { aqi: 44, status: "Good", category: "Good" },
         trend: aqiTrend,
       },
       comparison: [],
       effectiveThrough: "2026-03-15",
+      aqiDateRange: null,
       lastUpdated: "2026-03-16T06:00:00Z",
       loading: false,
       error: null,
@@ -270,11 +302,16 @@ describe("CityPulsePage", () => {
     mockUseCityPulseData.mockReturnValue({
       kpis: null,
       categories: {},
+      categoryTrends: {},
       heatmapCrime: [],
       heatmapCrashes: [],
       neighborhoods: [],
+      effectiveThrough: null,
+      domainFreshness: null,
+      lastUpdated: null,
       loading: false,
       error: "Connection refused",
+      retry: jest.fn(),
     });
 
     render(<CityPulsePage />);

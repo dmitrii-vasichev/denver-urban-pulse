@@ -4,6 +4,8 @@ Public BI dashboard built on live Denver open data, refreshed daily. Tracks the 
 
 **[Live Demo](https://denver-urban-pulse.vercel.app)**
 
+![Denver Urban Pulse Dashboard](docs/screenshots/Screenshot.png)
+
 ## Features
 
 - **KPI cards** with sparklines, deltas, and per-domain data freshness

@@ -16,7 +16,9 @@ import { useEnvironmentData } from "@/lib/hooks/use-environment-data";
 import { ErrorCard } from "@/components/cards/error-card";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { formatAqi, formatDateRange } from "@/lib/format";
-import geojson from "@/data/geo/denver-neighborhoods.json";
+import geojsonRaw from "@/data/geo/denver-neighborhoods.json";
+
+const geojson = geojsonRaw as unknown as GeoJSON.FeatureCollection;
 
 import type { IncidentDomain } from "@/lib/types";
 
@@ -194,7 +196,7 @@ function CityPulseContent() {
           >
             <div className="flex-1 min-h-[200px] -m-2 rounded-lg overflow-hidden">
               <DenverMapDynamic
-                geojson={geojson as unknown as GeoJSON.FeatureCollection}
+                geojson={geojson}
                 data={neighborhoods}
                 selectedNeighborhood={neighborhood !== "all" ? neighborhood : undefined}
                 colorBy={mapDomain}

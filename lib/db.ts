@@ -2,6 +2,8 @@ import { Pool } from "pg";
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
+  // Railway's PostgreSQL proxy uses a self-signed certificate;
+  // full verification (rejectUnauthorized: true) would reject the connection.
   ssl: { rejectUnauthorized: false },
   max: 10,
   idleTimeoutMillis: 30_000,
