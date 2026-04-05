@@ -32,16 +32,14 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def _run_script(name: str, script_path: str, cwd: str) -> dict:
-    """Run a Python script as a subprocess and capture result."""
+    """Run a Python script as a subprocess with streamed output."""
     start = time.time()
     logger.info(f"  Running {name}...")
 
     try:
         result = subprocess.run(
-            [sys.executable, script_path],
+            [sys.executable, "-u", script_path],
             cwd=cwd,
-            capture_output=True,
-            text=True,
             timeout=600,  # 10 min per step
             env={**os.environ},
         )
@@ -50,21 +48,14 @@ def _run_script(name: str, script_path: str, cwd: str) -> dict:
 
         if result.returncode == 0:
             logger.info(f"  {name}: OK ({duration}s)")
-            if result.stdout:
-                for line in result.stdout.strip().split("\n")[-5:]:
-                    logger.info(f"    {line}")
             return {"step": name, "status": "ok", "duration_s": duration}
         else:
             logger.error(f"  {name}: FAILED (exit {result.returncode}, {duration}s)")
-            if result.stderr:
-                for line in result.stderr.strip().split("\n")[-50:]:
-                    logger.error(f"    {line}")
             return {
                 "step": name,
                 "status": "error",
                 "exit_code": result.returncode,
                 "duration_s": duration,
-                "error": result.stderr[-2000:] if result.stderr else "",
             }
     except subprocess.TimeoutExpired:
         duration = round(time.time() - start, 1)
