@@ -1,8 +1,7 @@
--- Reclaim disk space: ingestion now writes directly to stg_* tables.
--- Raw tables are no longer populated (except raw_neighborhoods).
--- Keep table definitions for backwards compatibility, just empty them.
+-- Raw tables are no longer used (ingestion writes directly to stg_*).
+-- Drop them to reclaim disk space. Keep raw_neighborhoods (small, needed for ref_neighborhoods).
 
-TRUNCATE TABLE raw_crime RESTART IDENTITY;
-TRUNCATE TABLE raw_crashes RESTART IDENTITY;
-TRUNCATE TABLE raw_311 RESTART IDENTITY;
-TRUNCATE TABLE raw_aqi RESTART IDENTITY;
+DROP TABLE IF EXISTS raw_crime;
+DROP TABLE IF EXISTS raw_crashes;
+DROP TABLE IF EXISTS raw_311;
+DROP TABLE IF EXISTS raw_aqi;

@@ -1,10 +1,10 @@
 """
 Master pipeline runner — executes the complete daily refresh.
 
-Pipeline order:
+Pipeline order (v2 — raw tables dropped, ingestion writes to stg_* directly):
 1. Run migrations (idempotent)
-2. Run ingestion (API → stg_* tables directly, skipping raw)
-3. Run mart builds (staging → marts)
+2. Run ingestion (API → stg_* tables directly)
+3. Run mart builds (stg_* → mart_*)
 
 Exit code 0 if all succeeded, 1 if any step failed.
 
