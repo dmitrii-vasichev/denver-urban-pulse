@@ -1,18 +1,17 @@
 """
-Ingest AQI data from AirNow API into raw_aqi table.
+Ingest AQI data from AirNow API directly into stg_aqi.
 
 Source: AirNow REST API — historical observations for Denver metro.
-Strategy: Fetch last 90 days of daily observations, full refresh.
+Strategy: Fetch → transform → upsert to stg_aqi (skipping raw table).
 """
 
 import logging
 import os
-import sys
 from datetime import datetime, timedelta, timezone
 
 import requests
 
-from db import bulk_insert, truncate_table
+from db import bulk_insert
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +20,42 @@ BASE_URL = "https://www.airnowapi.org/aq/observation/latLong/historical/"
 DENVER_LAT = 39.7392
 DENVER_LON = -104.9903
 TIMEOUT = 30
+
+TZ_OFFSETS = {
+    "MST": -7,
+    "MDT": -6,
+    "MT": -7,
+}
+
+STG_COLUMNS = [
+    "observed_at",
+    "reporting_area",
+    "parameter_name",
+    "aqi",
+    "category",
+    "latitude",
+    "longitude",
+]
+
+CONFLICT_COLUMNS = ["observed_at", "reporting_area", "parameter_name"]
+
+
+def _build_observed_at(date_val, hour, tz_abbr) -> datetime | None:
+    """Combine date + hour + timezone into a TIMESTAMPTZ value."""
+    if not date_val:
+        return None
+    try:
+        if isinstance(date_val, datetime):
+            dt = datetime(date_val.year, date_val.month, date_val.day)
+        else:
+            dt = datetime.strptime(str(date_val).strip(), "%Y-%m-%d")
+    except (ValueError, AttributeError):
+        return None
+
+    h = int(hour) if hour is not None else 0
+    offset_hours = TZ_OFFSETS.get(tz_abbr, -7)
+    tz = timezone(timedelta(hours=offset_hours))
+    return dt.replace(hour=h, tzinfo=tz)
 
 
 def fetch_day(date: datetime) -> list[dict]:
@@ -34,7 +69,6 @@ def fetch_day(date: datetime) -> list[dict]:
         "date": date_str,
         "API_KEY": API_KEY,
     }
-
     try:
         resp = requests.get(BASE_URL, params=params, timeout=TIMEOUT)
         resp.raise_for_status()
@@ -44,28 +78,33 @@ def fetch_day(date: datetime) -> list[dict]:
         return []
 
 
-def transform_record(raw: dict) -> dict:
-    """Map AirNow response to raw_aqi columns."""
+def transform_record(raw: dict) -> dict | None:
+    """Transform AirNow response directly to stg_aqi format."""
+    reporting_area = raw.get("ReportingArea", "")
+    if reporting_area not in ("Denver", "Denver-Boulder"):
+        return None
+
+    observed_at = _build_observed_at(
+        raw.get("DateObserved"),
+        raw.get("HourObserved"),
+        raw.get("LocalTimeZone"),
+    )
+    if observed_at is None:
+        return None
+
+    aqi_val = raw.get("AQI")
+    if aqi_val is None:
+        return None
+
     return {
-        "date_observed": raw.get("DateObserved"),
-        "hour_observed": raw.get("HourObserved"),
-        "local_time_zone": raw.get("LocalTimeZone"),
-        "reporting_area": raw.get("ReportingArea"),
-        "state_code": raw.get("StateCode"),
+        "observed_at": observed_at,
+        "reporting_area": reporting_area,
+        "parameter_name": raw.get("ParameterName"),
+        "aqi": int(aqi_val),
+        "category": raw.get("Category", {}).get("Name", "Unknown"),
         "latitude": raw.get("Latitude"),
         "longitude": raw.get("Longitude"),
-        "parameter_name": raw.get("ParameterName"),
-        "aqi": raw.get("AQI"),
-        "category_number": raw.get("Category", {}).get("Number"),
-        "category_name": raw.get("Category", {}).get("Name"),
     }
-
-
-DB_COLUMNS = [
-    "date_observed", "hour_observed", "local_time_zone", "reporting_area",
-    "state_code", "latitude", "longitude", "parameter_name", "aqi",
-    "category_number", "category_name",
-]
 
 
 def ingest(days_back: int = 90) -> dict:
@@ -82,7 +121,9 @@ def ingest(days_back: int = 90) -> dict:
         date = now - timedelta(days=i)
         observations = fetch_day(date)
         for obs in observations:
-            all_records.append(transform_record(obs))
+            rec = transform_record(obs)
+            if rec:
+                all_records.append(rec)
 
         if (i + 1) % 10 == 0:
             logger.info(f"  Fetched {i + 1}/{days_back} days ({len(all_records)} records)")
@@ -93,9 +134,11 @@ def ingest(days_back: int = 90) -> dict:
 
     logger.info(f"Fetched {len(all_records)} AQI records total")
 
-    truncate_table("raw_aqi")
-    inserted = bulk_insert("raw_aqi", all_records, DB_COLUMNS)
-    logger.info(f"Inserted {inserted} AQI records")
+    inserted = bulk_insert(
+        "stg_aqi", all_records, STG_COLUMNS,
+        conflict_columns=CONFLICT_COLUMNS,
+    )
+    logger.info(f"Inserted {inserted} AQI records into stg_aqi")
 
     return {"source": "aqi", "status": "ok", "fetched": len(all_records), "inserted": inserted}
 

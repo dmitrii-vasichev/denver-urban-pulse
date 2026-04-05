@@ -1,5 +1,8 @@
 """
 Shared database utilities for ingestion scripts.
+
+Includes neighborhood resolution helpers (formerly in staging/db.py)
+for direct API → stg_* ingestion without intermediate raw tables.
 """
 
 import logging
@@ -31,18 +34,64 @@ def get_connection():
     return psycopg2.connect(_get_db_url(), sslmode="require", connect_timeout=10)
 
 
-def bulk_insert(table: str, records: list[dict], columns: list[str]) -> int:
+def load_neighborhood_map(conn) -> dict[str, str]:
+    """
+    Load neighborhood name mapping from ref_neighborhoods.
+
+    Returns dict mapping all known alternate names (lowered) → canonical_name.
+    """
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT canonical_name, crime_name, crash_name, name_311 "
+            "FROM ref_neighborhoods"
+        )
+        rows = cur.fetchall()
+
+    mapping = {}
+    for canonical, crime, crash, n311 in rows:
+        mapping[canonical.lower().strip()] = canonical
+        for alt in (crime, crash, n311):
+            if alt:
+                mapping[alt.lower().strip()] = canonical
+    return mapping
+
+
+def resolve_neighborhood(raw_name: str | None, nbhd_map: dict[str, str]) -> str | None:
+    """Resolve a raw neighborhood name to canonical via the mapping."""
+    if not raw_name:
+        return None
+    key = raw_name.lower().strip()
+    resolved = nbhd_map.get(key)
+    if resolved:
+        return resolved
+    normalized = key.replace("-", " - ").replace("  ", " ")
+    return nbhd_map.get(normalized)
+
+
+def bulk_insert(table: str, records: list[dict], columns: list[str],
+                conflict_columns: list[str] | None = None) -> int:
     """
     Insert records using execute_values for high throughput.
 
-    Reconnects every 50 batches (~25k rows) to avoid Railway SSL drops.
+    If conflict_columns specified, does ON CONFLICT DO UPDATE (upsert).
+    Reconnects every 10 batches (~5k rows) to avoid Railway SSL drops.
     """
     if not records:
         return 0
 
     col_str = ", ".join(columns)
     template = "(" + ", ".join(f"%({c})s" for c in columns) + ")"
-    sql = f"INSERT INTO {table} ({col_str}) VALUES %s"
+
+    if conflict_columns:
+        conflict_str = ", ".join(conflict_columns)
+        update_cols = [c for c in columns if c not in conflict_columns]
+        update_str = ", ".join(f"{c} = EXCLUDED.{c}" for c in update_cols)
+        sql = (
+            f"INSERT INTO {table} ({col_str}) VALUES %s "
+            f"ON CONFLICT ({conflict_str}) DO UPDATE SET {update_str}"
+        )
+    else:
+        sql = f"INSERT INTO {table} ({col_str}) VALUES %s"
 
     batch_size = 500
     reconnect_every = 10  # reconnect every 10 batches (~5k rows)

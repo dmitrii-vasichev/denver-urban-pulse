@@ -3,10 +3,8 @@ Master pipeline runner — executes the complete daily refresh.
 
 Pipeline order:
 1. Run migrations (idempotent)
-2. Run ingestion (raw data from APIs)
-3. Sync neighborhoods (populate ref_neighborhoods alternate names)
-4. Run staging transforms (raw → staging)
-5. Run mart builds (staging → marts)
+2. Run ingestion (API → stg_* tables directly, skipping raw)
+3. Run mart builds (staging → marts)
 
 Exit code 0 if all succeeded, 1 if any step failed.
 
@@ -77,9 +75,7 @@ def main():
     steps = [
         ("1_migrations", "migrations/run_migrations.py", BASE_DIR),
         ("2_ingestion", "ingestion/run_all.py", os.path.join(BASE_DIR, "ingestion")),
-        ("3_sync_neighborhoods", "staging/sync_neighborhoods.py", os.path.join(BASE_DIR, "staging")),
-        ("4_staging", "staging/run_all.py", os.path.join(BASE_DIR, "staging")),
-        ("5_marts", "marts/run_all.py", os.path.join(BASE_DIR, "marts")),
+        ("3_marts", "marts/run_all.py", os.path.join(BASE_DIR, "marts")),
     ]
 
     results = []
