@@ -8,6 +8,7 @@ import type {
   DomainFreshness,
   HeatmapCell,
   NeighborhoodRow,
+  SourceFreshness,
   TimeWindow,
 } from "@/lib/types";
 
@@ -20,6 +21,7 @@ interface CityPulseData {
   neighborhoods: NeighborhoodRow[];
   effectiveThrough: string | null;
   domainFreshness: DomainFreshness | null;
+  sourceFreshness: SourceFreshness[];
   lastUpdated: string | null;
   loading: boolean;
   error: string | null;
@@ -47,6 +49,7 @@ export function useCityPulseData(
     neighborhoods: [],
     effectiveThrough: null,
     domainFreshness: null,
+    sourceFreshness: [],
     lastUpdated: null,
     loading: true,
     error: null,
@@ -87,6 +90,7 @@ export function useCityPulseData(
         neighborhoods,
         effectiveThrough: kpisResp.effectiveThrough ?? null,
         domainFreshness: kpisResp.domainFreshness ?? null,
+        sourceFreshness: kpisResp.sourceFreshness ?? [],
         lastUpdated: kpisResp.lastUpdated ?? null,
         loading: false,
         error: null,

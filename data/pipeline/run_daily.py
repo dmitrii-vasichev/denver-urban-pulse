@@ -76,6 +76,7 @@ def main():
         ("1_migrations", "migrations/run_migrations.py", BASE_DIR),
         ("2_ingestion", "ingestion/run_all.py", os.path.join(BASE_DIR, "ingestion")),
         ("3_marts", "marts/run_all.py", os.path.join(BASE_DIR, "marts")),
+        ("4_freshness_check", "ingestion/freshness_check.py", os.path.join(BASE_DIR, "ingestion")),
     ]
 
     results = []
