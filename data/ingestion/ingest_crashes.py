@@ -1,71 +1,44 @@
 """
-Ingest traffic accident data from Denver Open Data into raw_crashes table.
+Ingest traffic crash data from Denver Open Data directly into stg_crashes.
 
 Source: ArcGIS Feature Service — ODC_CRIME_TRAFFICACCIDENTS5YR_P (Layer 325)
-Strategy: Full refresh — truncate and reload recent data (last 90 days).
+Strategy: Fetch → transform → write to stg_crashes (skipping raw table).
 """
 
 import logging
 from datetime import datetime, timedelta, timezone
 
 from arcgis_client import fetch_all_records
-from db import bulk_insert, truncate_table
+from db import (
+    bulk_insert,
+    get_connection,
+    load_neighborhood_map,
+    truncate_table,
+)
 
 logger = logging.getLogger(__name__)
 
 URL = "https://services1.arcgis.com/zdB7qR0BtYrg0Xpl/arcgis/rest/services/ODC_CRIME_TRAFFICACCIDENTS5YR_P/FeatureServer/325"
 
-COLUMN_MAP = {
-    "incident_id": "incident_id",
-    "offense_id": "offense_id",
-    "offense_code": "offense_code",
-    "offense_code_extension": "offense_code_extension",
-    "top_traffic_accident_offense": "top_traffic_accident_offense",
-    "first_occurrence_date": "first_occurrence_date",
-    "last_occurrence_date": "last_occurrence_date",
-    "reported_date": "reported_date",
-    "incident_address": "incident_address",
-    "geo_x": "geo_x",
-    "geo_y": "geo_y",
-    "geo_lon": "geo_lon",
-    "geo_lat": "geo_lat",
-    "district_id": "district_id",
-    "precinct_id": "precinct_id",
-    "neighborhood_id": "neighborhood_id",
-    "bicycle_ind": "bicycle_ind",
-    "pedestrian_ind": "pedestrian_ind",
-    "HARMFUL_EVENT_SEQ_1": "harmful_event_seq_1",
-    "HARMFUL_EVENT_SEQ_2": "harmful_event_seq_2",
-    "HARMFUL_EVENT_SEQ_3": "harmful_event_seq_3",
-    "road_location": "road_location",
-    "ROAD_DESCRIPTION": "road_description",
-    "ROAD_CONTOUR": "road_contour",
-    "ROAD_CONDITION": "road_condition",
-    "LIGHT_CONDITION": "light_condition",
-    "TU1_VEHICLE_TYPE": "tu1_vehicle_type",
-    "TU1_TRAVEL_DIRECTION": "tu1_travel_direction",
-    "TU1_VEHICLE_MOVEMENT": "tu1_vehicle_movement",
-    "TU1_DRIVER_ACTION": "tu1_driver_action",
-    "TU1_DRIVER_HUMANCONTRIBFACTOR": "tu1_driver_humancontribfactor",
-    "TU1_PEDESTRIAN_ACTION": "tu1_pedestrian_action",
-    "TU2_VEHICLE_TYPE": "tu2_vehicle_type",
-    "TU2_TRAVEL_DIRECTION": "tu2_travel_direction",
-    "TU2_VEHICLE_MOVEMENT": "tu2_vehicle_movement",
-    "TU2_DRIVER_ACTION": "tu2_driver_action",
-    "TU2_DRIVER_HUMANCONTRIBFACTOR": "tu2_driver_humancontribfactor",
-    "TU2_PEDESTRIAN_ACTION": "tu2_pedestrian_action",
-    "SERIOUSLY_INJURED": "seriously_injured",
-    "FATALITIES": "fatalities",
-    "FATALITY_MODE_1": "fatality_mode_1",
-    "FATALITY_MODE_2": "fatality_mode_2",
-    "SERIOUSLY_INJURED_MODE_1": "seriously_injured_mode_1",
-    "SERIOUSLY_INJURED_MODE_2": "seriously_injured_mode_2",
-    "POINT_X": "point_x",
-    "POINT_Y": "point_y",
-}
-
-DB_COLUMNS = list(COLUMN_MAP.values())
-DATE_FIELDS = {"first_occurrence_date", "last_occurrence_date", "reported_date"}
+STG_COLUMNS = [
+    "incident_id",
+    "offense_id",
+    "top_offense",
+    "first_occurrence_date",
+    "reported_date",
+    "incident_address",
+    "longitude",
+    "latitude",
+    "district_id",
+    "precinct_id",
+    "neighborhood",
+    "bicycle_involved",
+    "pedestrian_involved",
+    "seriously_injured",
+    "fatalities",
+    "road_condition",
+    "light_condition",
+]
 
 
 def _ts_to_dt(ts):
@@ -74,38 +47,82 @@ def _ts_to_dt(ts):
     return datetime.fromtimestamp(ts / 1000, tz=timezone.utc)
 
 
-def transform_record(raw: dict) -> dict:
-    record = {}
-    for src, dst in COLUMN_MAP.items():
-        val = raw.get(src)
-        if dst in DATE_FIELDS:
-            val = _ts_to_dt(val)
-        record[dst] = val
-    return record
+def transform_record(raw: dict, nbhd_map: dict[str, str]) -> dict | None:
+    """Transform ArcGIS record directly to stg_crashes format."""
+    reported = _ts_to_dt(raw.get("reported_date"))
+    if reported is None:
+        return None
+
+    nbhd_id = raw.get("neighborhood_id") or ""
+    bicycle = raw.get("bicycle_ind")
+    pedestrian = raw.get("pedestrian_ind")
+
+    return {
+        "incident_id": raw.get("incident_id"),
+        "offense_id": raw.get("offense_id"),
+        "top_offense": raw.get("top_traffic_accident_offense"),
+        "first_occurrence_date": _ts_to_dt(raw.get("first_occurrence_date")),
+        "reported_date": reported,
+        "incident_address": raw.get("incident_address"),
+        "longitude": raw.get("geo_lon"),
+        "latitude": raw.get("geo_lat"),
+        "district_id": raw.get("district_id"),
+        "precinct_id": raw.get("precinct_id"),
+        "neighborhood": nbhd_map.get(nbhd_id.lower().strip()),
+        "bicycle_involved": bool(bicycle) if bicycle is not None else False,
+        "pedestrian_involved": bool(pedestrian) if pedestrian is not None else False,
+        "seriously_injured": raw.get("SERIOUSLY_INJURED") or 0,
+        "fatalities": raw.get("FATALITIES") or 0,
+        "road_condition": raw.get("ROAD_CONDITION"),
+        "light_condition": raw.get("LIGHT_CONDITION"),
+    }
 
 
 def ingest(days_back: int = 90) -> dict:
     logger.info(f"Ingesting crash data (last {days_back} days)")
 
+    conn = get_connection()
+    try:
+        nbhd_map = load_neighborhood_map(conn)
+    finally:
+        conn.close()
+    logger.info(f"  Loaded {len(nbhd_map)} neighborhood mappings")
+
     since = datetime.now(tz=timezone.utc) - timedelta(days=days_back)
-    records = fetch_all_records(
+    raw_records = fetch_all_records(
         URL,
         date_field="reported_date",
         since_date=since,
     )
 
-    if not records:
+    if not raw_records:
         logger.warning("No crash records fetched")
         return {"source": "crashes", "status": "warning", "fetched": 0, "inserted": 0}
 
-    transformed = [transform_record(r) for r in records]
-    logger.info(f"Fetched {len(transformed)} crash records")
+    logger.info(f"Fetched {len(raw_records)} raw crash records from API")
 
-    truncate_table("raw_crashes")
-    inserted = bulk_insert("raw_crashes", transformed, DB_COLUMNS)
-    logger.info(f"Inserted {inserted} crash records")
+    # Transform + filter + dedup
+    seen = set()
+    records = []
+    for r in raw_records:
+        rec = transform_record(r, nbhd_map)
+        if rec is None or rec["incident_id"] is None:
+            continue
+        key = (rec["incident_id"], rec["offense_id"])
+        if key not in seen:
+            seen.add(key)
+            records.append(rec)
 
-    return {"source": "crashes", "status": "ok", "fetched": len(records), "inserted": inserted}
+    logger.info(f"Transformed: {len(records)} records (filtered from {len(raw_records)})")
+
+    truncate_table("stg_crashes")
+    inserted = bulk_insert(
+        "stg_crashes", records, STG_COLUMNS,
+        conflict_columns=["incident_id", "offense_id"],
+    )
+    logger.info(f"Inserted {inserted} crash records into stg_crashes")
+
+    return {"source": "crashes", "status": "ok", "fetched": len(raw_records), "inserted": inserted}
 
 
 if __name__ == "__main__":
