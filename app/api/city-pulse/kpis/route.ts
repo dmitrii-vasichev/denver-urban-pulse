@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getKpiSparkline, getKpiTotals, getKpiTotalsPerDomain, getDomainFreshness } from "@/lib/queries/city-pulse";
+import { getKpiSparkline, getKpiTotals, getKpiTotalsPerDomain, getDomainFreshness, getSourceFreshness } from "@/lib/queries/city-pulse";
 import type { TimeWindow } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -31,7 +31,10 @@ export async function GET(request: NextRequest) {
     }
 
     const days = daysForWindow(tw);
-    const domainFreshness = await getDomainFreshness();
+    const [domainFreshness, sourceFreshness] = await Promise.all([
+      getDomainFreshness(),
+      getSourceFreshness(),
+    ]);
     const dates = [domainFreshness.crime, domainFreshness.crashes, domainFreshness.requests311].filter(Boolean) as string[];
     const effectiveThrough = dates.length > 0 ? dates.reduce((a, b) => (a < b ? a : b)) : null;
 
@@ -99,6 +102,7 @@ export async function GET(request: NextRequest) {
       lastUpdated: new Date().toISOString(),
       effectiveThrough,
       domainFreshness,
+      sourceFreshness,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";

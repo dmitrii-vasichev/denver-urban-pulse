@@ -57,7 +57,7 @@ function CityPulseContent() {
   const [heatmapDomain, setHeatmapDomain] = useState<IncidentDomain>("crime");
   const [mapDomain, setMapDomain] = useState<IncidentDomain>("crime");
   const [bottomRowDomain, setBottomRowDomain] = useState<IncidentDomain>("crime");
-  const { kpis, categories, categoryTrends, heatmapCrime, heatmapCrashes, neighborhoods, loading, error, retry, domainFreshness, lastUpdated } =
+  const { kpis, categories, categoryTrends, heatmapCrime, heatmapCrashes, neighborhoods, loading, error, retry, domainFreshness, sourceFreshness, lastUpdated } =
     useCityPulseData(timeWindow, neighborhood);
   const { aqi, comparison, loading: envLoading, error: envError, retry: envRetry, effectiveThrough: envEffectiveThrough, aqiDateRange } =
     useEnvironmentData(timeWindow, neighborhood);
@@ -125,6 +125,7 @@ function CityPulseContent() {
       subtitle="Crime, crashes, 311 requests, and air quality across Denver"
       lastUpdated={lastUpdated}
       domainFreshness={fullFreshness}
+      sourceFreshness={sourceFreshness}
     >
       {/* Row 1: KPI Strip — 4 cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">

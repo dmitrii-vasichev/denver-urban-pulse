@@ -51,12 +51,14 @@ describe("City Pulse API", () => {
 
   describe("GET /api/city-pulse/kpis", () => {
     it("returns KPI data with correct shape", async () => {
-      // getDomainFreshness query (called first)
+      // getDomainFreshness query (runs in Promise.all with source freshness)
       mockQuery.mockResolvedValueOnce([
         { domain: "crime", max_date: "2026-03-12" },
         { domain: "crashes", max_date: "2026-03-12" },
         { domain: "311", max_date: "2026-03-12" },
       ]);
+      // getSourceFreshness query (runs in Promise.all with domain freshness)
+      mockQuery.mockResolvedValueOnce([]);
       // sparkline query (now uses explicit date bounds)
       mockQuery.mockResolvedValueOnce([
         { date: "2026-03-12", crime_count: 10, crash_count: 5, requests_311_count: 20 },
@@ -93,6 +95,8 @@ describe("City Pulse API", () => {
         { domain: "crashes", max_date: "2026-03-09" },
         { domain: "311", max_date: "2026-03-14" },
       ]);
+      // getSourceFreshness query
+      mockQuery.mockResolvedValueOnce([]);
       // sparkline query (covers full range: Mar 3 – Mar 14)
       mockQuery.mockResolvedValueOnce([
         { date: "2026-03-03", crime_count: 5, crash_count: 2, requests_311_count: 0 },
@@ -140,6 +144,8 @@ describe("City Pulse API", () => {
         { domain: "crashes", max_date: "2026-03-01" },
         { domain: "311", max_date: "2026-03-01" },
       ]);
+      // getSourceFreshness
+      mockQuery.mockResolvedValueOnce([]);
       // sparkline (with explicit date bounds)
       mockQuery.mockResolvedValueOnce([
         { date: "2026-03-01", crime_count: 5, crash_count: 2, requests_311_count: 10 },
@@ -156,10 +162,89 @@ describe("City Pulse API", () => {
       expect(freshSql).toContain("MAX(date)");
       expect(freshSql).not.toContain("NOW()");
 
-      // sparkline query (2nd call) uses explicit date bounds when all dates are equal
-      const sparkSql = mockQuery.mock.calls[1][0] as string;
+      // getSourceFreshness query (2nd call) should read from pipeline_source_freshness
+      const sourceSql = mockQuery.mock.calls[1][0] as string;
+      expect(sourceSql).toContain("pipeline_source_freshness");
+
+      // sparkline query (3rd call) uses explicit date bounds when all dates are equal
+      const sparkSql = mockQuery.mock.calls[2][0] as string;
       expect(sparkSql).toContain("date");
       expect(sparkSql).not.toContain("NOW()");
+    });
+
+    it("includes sourceFreshness array in response", async () => {
+      // getDomainFreshness
+      mockQuery.mockResolvedValueOnce([
+        { domain: "crime", max_date: "2026-04-02" },
+        { domain: "crashes", max_date: "2026-03-09" },
+        { domain: "311", max_date: "2026-03-31" },
+      ]);
+      // getSourceFreshness — include crashes as source_lag (the crashes scenario)
+      mockQuery.mockResolvedValueOnce([
+        {
+          source: "crashes",
+          source_max_date: "2026-03-09",
+          db_max_date: "2026-03-09",
+          drift_days: 0,
+          source_age_days: 27,
+          status: "source_lag",
+          checked_at: "2026-04-05T06:00:00.000Z",
+        },
+        {
+          source: "crime",
+          source_max_date: "2026-04-02",
+          db_max_date: "2026-04-02",
+          drift_days: 0,
+          source_age_days: 3,
+          status: "ok",
+          checked_at: "2026-04-05T06:00:00.000Z",
+        },
+      ]);
+      // sparkline
+      mockQuery.mockResolvedValueOnce([
+        { date: "2026-03-09", crime_count: 1, crash_count: 1, requests_311_count: 1 },
+      ]);
+      // totals
+      mockQuery.mockResolvedValueOnce([
+        { crime_count: 10, crash_count: 10, requests_311_count: 10, crime_delta_pct: 0, crash_delta_pct: 0, requests_311_delta_pct: 0 },
+      ]);
+
+      const res = await getKpis(makeRequest("http://localhost/api/city-pulse/kpis?timeWindow=7d"));
+      const body = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(body.sourceFreshness).toBeDefined();
+      expect(Array.isArray(body.sourceFreshness)).toBe(true);
+      expect(body.sourceFreshness).toHaveLength(2);
+
+      const crashesEntry = body.sourceFreshness.find((s: { source: string }) => s.source === "crashes");
+      expect(crashesEntry).toBeDefined();
+      expect(crashesEntry.status).toBe("source_lag");
+      expect(crashesEntry.sourceAgeDays).toBe(27);
+      expect(crashesEntry.driftDays).toBe(0);
+    });
+
+    it("returns empty sourceFreshness array when table is missing", async () => {
+      // getDomainFreshness
+      mockQuery.mockResolvedValueOnce([
+        { domain: "crime", max_date: "2026-04-02" },
+      ]);
+      // getSourceFreshness — simulate table missing (DB throws)
+      mockQuery.mockRejectedValueOnce(new Error('relation "pipeline_source_freshness" does not exist'));
+      // sparkline
+      mockQuery.mockResolvedValueOnce([
+        { date: "2026-04-02", crime_count: 1, crash_count: 0, requests_311_count: 0 },
+      ]);
+      // totals
+      mockQuery.mockResolvedValueOnce([
+        { crime_count: 1, crash_count: 0, requests_311_count: 0, crime_delta_pct: null, crash_delta_pct: null, requests_311_delta_pct: null },
+      ]);
+
+      const res = await getKpis(makeRequest("http://localhost/api/city-pulse/kpis?timeWindow=7d"));
+      const body = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(body.sourceFreshness).toEqual([]);
     });
   });
 

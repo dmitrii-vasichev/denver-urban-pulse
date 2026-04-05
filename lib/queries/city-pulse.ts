@@ -1,5 +1,10 @@
 import { query } from "@/lib/db";
-import type { TimeWindow } from "@/lib/types";
+import type {
+  FreshnessSourceKey,
+  FreshnessStatus,
+  SourceFreshness,
+  TimeWindow,
+} from "@/lib/types";
 
 function daysForWindow(tw: TimeWindow): number {
   return tw === "7d" ? 7 : tw === "30d" ? 30 : 90;
@@ -318,6 +323,62 @@ export async function getDomainFreshness(): Promise<DomainFreshness> {
     crashes: map["crashes"] ?? null,
     requests311: map["311"] ?? null,
   };
+}
+
+// --- Source freshness (from pipeline_source_freshness table) ---
+
+// Map from DB source key to frontend TS key
+const SOURCE_KEY_MAP: Record<string, FreshnessSourceKey> = {
+  crime: "crime",
+  crashes: "crashes",
+  "311": "requests311",
+  aqi: "aqi",
+};
+
+interface SourceFreshnessRow {
+  source: string;
+  source_max_date: string | null;
+  db_max_date: string | null;
+  drift_days: number | null;
+  source_age_days: number | null;
+  status: string;
+  checked_at: string | null;
+}
+
+export async function getSourceFreshness(): Promise<SourceFreshness[]> {
+  try {
+    const rows = await query<SourceFreshnessRow>(
+      `SELECT source,
+              source_max_date::text AS source_max_date,
+              db_max_date::text     AS db_max_date,
+              drift_days,
+              source_age_days,
+              status,
+              checked_at::text      AS checked_at
+       FROM pipeline_source_freshness`
+    );
+
+    return rows
+      .map((r) => {
+        const key = SOURCE_KEY_MAP[r.source];
+        if (!key) return null;
+        return {
+          source: key,
+          dbDate: r.db_max_date,
+          sourceDate: r.source_max_date,
+          driftDays: r.drift_days,
+          sourceAgeDays: r.source_age_days,
+          status: (r.status as FreshnessStatus) ?? "unknown",
+          checkedAt: r.checked_at,
+        };
+      })
+      .filter((r): r is SourceFreshness => r !== null);
+  } catch {
+    // Table missing (fresh DB pre-migration) or transient DB error — treat as
+    // "no freshness info available" so the dashboard still loads. The hard
+    // fail in freshness_check.py is the source of truth for alerting.
+    return [];
+  }
 }
 
 // --- Category Trends (sparklines per category) ---

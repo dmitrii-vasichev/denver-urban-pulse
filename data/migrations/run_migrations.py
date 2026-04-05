@@ -72,6 +72,7 @@ def main():
             "mart_aqi_daily", "mart_neighborhood_comparison",
             "mart_narrative_signals",
             "ref_neighborhoods",
+            "pipeline_source_freshness",
         ]
 
         missing = [t for t in expected if t not in tables]

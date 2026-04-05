@@ -11,6 +11,20 @@ export interface DomainFreshness {
   aqi: string | null;
 }
 
+export type FreshnessStatus = "ok" | "source_lag" | "pipeline_behind" | "unknown";
+
+export type FreshnessSourceKey = "crime" | "crashes" | "requests311" | "aqi";
+
+export interface SourceFreshness {
+  source: FreshnessSourceKey;
+  dbDate: string | null;
+  sourceDate: string | null;
+  driftDays: number | null;
+  sourceAgeDays: number | null;
+  status: FreshnessStatus;
+  checkedAt: string | null;
+}
+
 export interface DateRange {
   from: string;
   to: string;
