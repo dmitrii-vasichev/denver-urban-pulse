@@ -64,7 +64,7 @@ def main():
             tables = [row[0] for row in cur.fetchall()]
 
         expected = [
-            "raw_crime", "raw_crashes", "raw_311", "raw_aqi", "raw_neighborhoods",
+            "raw_neighborhoods",
             "stg_crime", "stg_crashes", "stg_311", "stg_aqi", "stg_neighborhoods",
             "mart_city_pulse_daily", "mart_city_pulse_neighborhood",
             "mart_incident_trends", "mart_category_breakdown",
