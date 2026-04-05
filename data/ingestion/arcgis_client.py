@@ -48,8 +48,7 @@ def fetch_all_records(
         List of attribute dictionaries (one per record).
     """
     if since_date and date_field:
-        timestamp_ms = int(since_date.timestamp() * 1000)
-        where = f"{date_field} >= {timestamp_ms}"
+        where = f"{date_field} >= DATE '{since_date.strftime('%Y-%m-%d')}'"
 
     oid_field = _get_oid_field(url)
     all_records = []
