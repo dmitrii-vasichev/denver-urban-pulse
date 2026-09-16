@@ -38,6 +38,7 @@ try {
     await page.waitForLoadState('networkidle');
     assert(responses.every(r => r.status === 200));
     assert.equal(errors.length, 0, errors.join('\n'));
+    await page.waitForTimeout(400); // Let Leaflet's pan transition settle before visual inspection.
     await map.screenshot({ path: `${output}/${name}.png` });
     await writeFile(`${output}/${name}.json`, JSON.stringify({ base, viewport, responses, errors, zoom: 'PASS', pan: 'PASS', attribution: 'PASS' }, null, 2));
     console.log(`${name}: PASS; ${responses.length} tile responses; zoom, pan, attribution; inspect ${output}/${name}.png for watermark`);
