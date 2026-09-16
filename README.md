@@ -2,7 +2,7 @@
 
 Public BI dashboard built on live Denver open data, refreshed daily. Tracks the city's operational pulse across **crime**, **traffic crashes**, **311 service requests**, and **air quality** — broken down by neighborhood.
 
-**[Live Demo](https://denver-urban-pulse.vercel.app)**
+**[Live Demo](https://urbanpulse.dmitrii-vasichev.com)**
 
 ![Denver Urban Pulse Dashboard](docs/screenshots/Screenshot.png)
 
@@ -147,3 +147,9 @@ npm run dev
 ## License
 
 MIT
+
+## Map tiles and smoke verification
+
+The small public demo uses standard OpenStreetMap raster tiles with visible contributor attribution. Browser caching and referrer headers remain enabled; no prefetching, offline downloads, proxy, or API key is used. Follow the [tile usage policy](https://operations.osmfoundation.org/policies/tiles/) and move to a suitable hosted provider if traffic grows.
+
+For a bounded interactive check, install Playwright and Google Chrome, start the application, and run `node scripts/smoke-map.mjs`. Set `MAP_SMOKE_URL` to a preview URL when needed. `PLAYWRIGHT_MODULE` can point to an existing Playwright module. The check opens a fresh browser context for desktop and mobile, checks tile HTTP responses and attribution, exercises one zoom and pan, and saves screenshots for watermark inspection.
